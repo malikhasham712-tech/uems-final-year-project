@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Register - UEMS</title>
+</head>
+<body>
+
+<h2>Register</h2>
+
+<form method="post">
+    {% csrf_token %}
+
+    <p>
+        <label>Username:</label><br>
+        {{ form.username }}
+    </p>
+
+    <p>
+        <label>Email:</label><br>
+        {{ form.email }}
+    </p>
+
+    <p>
+        <label>Password:</label><br>
+        {{ form.password }}
+    </p>
+
+    <p>
+        <label>Role:</label><br>
+        {{ form.role }}
+    </p>
+
+    <button type="submit">Register</button>
+</form>
+
+{% if messages %}
+    {% for message in messages %}
+        <p style="color: green;">{{ message }}</p>
+    {% endfor %}
+{% endif %}
+
+</body>
+</html>
