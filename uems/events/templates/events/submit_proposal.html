@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Submit Event Proposal</h2>
+
+<form method="POST">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Submit Proposal</button>
+</form>
+
+<a href="{% url 'my_events' %}">Back to My Proposals</a>
+{% endblock %}

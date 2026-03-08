@@ -1,0 +1,39 @@
+<h2>Event Proposals (Faculty Panel)</h2>
+
+<table border="1">
+
+<tr>
+<th>Event</th>
+<th>Organizer</th>
+<th>Venue</th>
+<th>Status</th>
+<th>Action</th>
+</tr>
+
+{% for proposal in proposals %}
+
+<tr>
+
+<td>{{ proposal.event_name }}</td>
+
+<td>{{ proposal.organizer.username }}</td>
+
+<td>{{ proposal.proposed_venue }}</td>
+
+<td>{{ proposal.status }}</td>
+
+<td>
+
+<a href="{% url 'approve_proposal' proposal.id %}">Approve</a>
+
+|
+
+<a href="{% url 'reject_proposal' proposal.id %}">Reject</a>
+
+</td>
+
+</tr>
+
+{% endfor %}
+
+</table>

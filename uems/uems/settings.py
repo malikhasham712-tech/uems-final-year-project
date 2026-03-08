@@ -59,8 +59,8 @@ ROOT_URLCONF = 'uems.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],  # empty is fine since we are using app templates
-        'APP_DIRS': True,  # MUST be True
+        'DIRS': [BASE_DIR / 'templates'],  # Add this
+        'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.debug',
