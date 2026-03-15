@@ -1,0 +1,49 @@
+/* Admin Header */
+
+#header {
+    background-color: #1e3a5f;
+}
+
+/* Table Alignment */
+
+#result_list {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#result_list th {
+    text-align: center;
+    font-weight: bold;
+}
+
+#result_list td {
+    text-align: center;
+}
+
+/* Table Spacing */
+
+#result_list th,
+#result_list td {
+    padding: 10px;
+}
+
+/* Buttons */
+
+.button,
+input[type=submit],
+.submit-row input {
+    background-color: #1e3a5f;
+    border-radius: 4px;
+}
+
+/* Inline Proposal Table */
+
+.inline-group table {
+    width: 100%;
+}
+
+.inline-group th,
+.inline-group td {
+    text-align: center;
+    padding: 8px;
+}

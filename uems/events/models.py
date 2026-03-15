@@ -14,10 +14,12 @@ class Category(models.Model):
 
 class Event(models.Model):
     STATUS_CHOICES = [
-        ('created', 'Created'),
-        ('approved', 'Approved'),
-        ('completed', 'Completed'),
+    ('created', 'Created'),
+    ('approved', 'Approved'),
+    ('announced', 'Announced'),
+    ('completed', 'Completed'),
     ]
+    
     name = models.CharField(max_length=200)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     description = models.TextField(blank=True)
