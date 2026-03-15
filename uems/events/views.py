@@ -1,93 +1,51 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from .models import Event, EventProposal
-from .forms import EventProposalForm
+from .forms import ProposalForm
 
 
-# =========================
-# My Assigned Events
-# =========================
+# My Events
 @login_required
 def my_events(request):
-
+    # show only events created by logged-in user
     events = Event.objects.filter(organizer=request.user)
-
-    context = {
-        'events': events
-    }
-
-    return render(request, 'events/my_events.html', context)
+    return render(request, 'events/my_events.html', {'events': events})
 
 
-# =========================
-# Submit Proposal
-# =========================
+# Submit Proposal for specific event
 @login_required
-def submit_proposal(request):
+def submit_proposal(request, event_id):
+
+    event = get_object_or_404(Event, id=event_id)
 
     if request.method == 'POST':
-        form = EventProposalForm(request.POST)
+        form = ProposalForm(request.POST)
 
         if form.is_valid():
             proposal = form.save(commit=False)
-            proposal.organizer = request.user
+
+            proposal.event = event
+            proposal.organizer = request.user   # correct field from your model
+
             proposal.save()
 
             return redirect('my_proposals')
 
     else:
-        form = EventProposalForm()
+        form = ProposalForm()
 
-    return render(request, 'events/submit_proposal.html', {'form': form})
+    return render(request, 'events/submit_proposal.html', {
+        'form': form,
+        'event': event
+    })
 
 
-# =========================
-# My Proposals (Student View)
-# =========================
+# My Proposals
 @login_required
 def my_proposals(request):
 
-    proposals = EventProposal.objects.filter(
-        organizer=request.user
-    ).order_by('-submitted_at')
+    proposals = EventProposal.objects.filter(organizer=request.user)
 
-    return render(request, 'events/my_proposals.html', {'proposals': proposals})
-
-
-# =========================
-# Faculty Panel (Sir Ubaid)
-# =========================
-@login_required
-def faculty_proposals(request):
-
-    proposals = EventProposal.objects.filter(status='Pending')
-
-    return render(request, 'events/faculty_proposals.html', {'proposals': proposals})
-
-
-# =========================
-# Approve Proposal
-# =========================
-@login_required
-def approve_proposal(request, proposal_id):
-
-    proposal = get_object_or_404(EventProposal, id=proposal_id)
-
-    proposal.status = 'Approved'
-    proposal.save()
-
-    return redirect('faculty_proposals')
-
-
-# =========================
-# Reject Proposal
-# =========================
-@login_required
-def reject_proposal(request, proposal_id):
-
-    proposal = get_object_or_404(EventProposal, id=proposal_id)
-
-    proposal.status = 'Rejected'
-    proposal.save()
-
-    return redirect('faculty_proposals')
+    return render(request, 'events/my_proposals.html', {
+        'proposals': proposals
+    })

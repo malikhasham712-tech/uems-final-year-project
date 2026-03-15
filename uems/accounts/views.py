@@ -7,10 +7,13 @@ from django.conf import settings
 from django.urls import reverse
 from .forms import RegisterForm
 from .models import Profile
+from events.models import Event  # Import your Event model
+import uuid
 
 # Home
 def home(request):
     return render(request, 'accounts/home.html')
+
 
 # Register
 def register(request):
@@ -19,15 +22,16 @@ def register(request):
         if form.is_valid():
             user = form.save(commit=False)
             user.set_password(form.cleaned_data['password'])
-            user.is_active = True
+            user.is_active = True  # Email verification will control login separately
             user.save()
 
             role = form.cleaned_data['role']
-            profile = Profile.objects.create(user=user, role=role)
+            verification_token = str(uuid.uuid4())
+            profile = Profile.objects.create(user=user, role=role, verification_token=verification_token)
 
-            # 🔔 Send verification email
+            # Send verification email
             verify_link = request.build_absolute_uri(
-                reverse('verify-email', args=[profile.verification_token])
+                reverse('verify-email', args=[verification_token])
             )
 
             send_mail(
@@ -38,15 +42,15 @@ def register(request):
                 fail_silently=False,
             )
 
-            messages.success(
-                request,
-                'Account created! Please check your email to verify your account.'
-            )
+            messages.success(request, 'Account created! Please check your email to verify your account.')
             return redirect('login')
+        else:
+            messages.error(request, 'Please correct the errors below.')
     else:
         form = RegisterForm()
 
     return render(request, 'accounts/register.html', {'form': form})
+
 
 # Verify Email
 def verify_email(request, token):
@@ -59,6 +63,7 @@ def verify_email(request, token):
         messages.error(request, 'Invalid or expired verification link.')
 
     return redirect('login')
+
 
 # Login
 def login_view(request):
@@ -73,7 +78,8 @@ def login_view(request):
                     messages.error(request, 'Please verify your email before login.')
                     return redirect('login')
             except Profile.DoesNotExist:
-                pass
+                messages.error(request, 'Profile missing. Contact admin.')
+                return redirect('login')
 
             login(request, user)
             return redirect('dashboard')
@@ -82,11 +88,14 @@ def login_view(request):
 
     return render(request, 'accounts/login.html')
 
+
 # Dashboard
 def dashboard(request):
-    return render(request, 'accounts/dashboard.html')
+    user_events = Event.objects.filter(organizer=request.user)  # Only events created by logged-in user
+    return render(request, 'accounts/dashboard.html', {'user_events': user_events})
 
-# Logout (FIXED)
+
+# Logout
 def logout_view(request):
     logout(request)
     return redirect('login')

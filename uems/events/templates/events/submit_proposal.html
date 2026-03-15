@@ -1,13 +1,19 @@
-{% extends 'base.html' %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Submit Proposal - {{ event.name }}</title>
+</head>
+<body>
 
-{% block content %}
-<h2>Submit Event Proposal</h2>
+<h2>Submit Proposal for: {{ event.name }}</h2>
 
 <form method="POST">
     {% csrf_token %}
     {{ form.as_p }}
-    <button type="submit">Submit Proposal</button>
+    <button type="submit">Submit</button>
 </form>
 
-<a href="{% url 'my_events' %}">Back to My Proposals</a>
-{% endblock %}
+<a href="{% url 'my_events' %}">Back to My Events</a>
+
+</body>
+</html>

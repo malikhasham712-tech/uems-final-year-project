@@ -1,24 +1,27 @@
-{% extends 'base.html' %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Events - UEMS</title>
+</head>
+<body>
 
-{% block content %}
-<h2>My Event Proposals</h2>
-<a href="{% url 'submit_proposal' %}">Submit New Proposal</a>
-<table border="1" cellpadding="5" cellspacing="0">
-    <tr>
-        <th>Event Name</th>
-        <th>Venue</th>
-        <th>Status</th>
-        <th>Submitted At</th>
-    </tr>
-    {% for proposal in proposals %}
-    <tr>
-        <td>{{ proposal.event_name }}</td>
-        <td>{{ proposal.proposed_venue }}</td>
-        <td>{{ proposal.get_status_display }}</td>
-        <td>{{ proposal.submitted_at|date:"d M Y H:i" }}</td>
-    </tr>
-    {% empty %}
-    <tr><td colspan="4">No proposals submitted yet.</td></tr>
+<h2>My Events</h2>
+
+{% if events %}
+    <ul>
+    {% for event in events %}
+        <li>
+            {{ event.name }} - {{ event.status }}
+            <!-- Link to submit proposal for this event -->
+            <a href="{% url 'submit_proposal' event.id %}">Submit Proposal</a>
+        </li>
     {% endfor %}
-</table>
-{% endblock %}
+    </ul>
+{% else %}
+    <p>You have no events yet.</p>
+{% endif %}
+
+<a href="{% url 'dashboard' %}">Back to Dashboard</a>
+
+</body>
+</html>
