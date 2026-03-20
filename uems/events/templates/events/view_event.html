@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+
+    <h2>Event Details: {{ event.name }}</h2>
+
+    <p><strong>Description:</strong> {{ event.description }}</p>  <!-- ✅ added -->
+    <p><strong>Venue:</strong> {{ event.venue }}</p>
+    <p><strong>Status:</strong> {{ event.status }}</p>
+    <p><strong>Organizer:</strong> {{ event.organizer.username }}</p>
+
+    <hr>
+
+    <a href="{% url 'my_events' %}" class="btn btn-secondary mt-3">Back</a>
+
+</div>
+{% endblock %}

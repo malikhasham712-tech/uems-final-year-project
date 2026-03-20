@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+
+    <h2 class="mb-4">Proposals for {{ event.name }}</h2>
+
+    {% if proposals %}
+    <table class="table table-bordered table-hover align-middle">
+
+        <thead class="table-dark">
+            <tr>
+                <th>Proposal Name</th>
+                <th>Venue</th>
+                <th>Status</th>
+                <th>Submitted At</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for proposal in proposals %}
+            <tr>
+
+                <!-- Proposal Name -->
+                <td><strong>Proposal {{ forloop.counter }}</strong></td>
+
+                <!-- Venue -->
+                <td>{{ event.venue }}</td>
+
+                <!-- Status -->
+                <td>
+                    {% if proposal.status == "approved" %}
+                        <span class="badge bg-success">Approved</span>
+                    {% elif proposal.status == "pending" %}
+                        <span class="badge bg-warning text-dark">Pending</span>
+                    {% else %}
+                        <span class="badge bg-secondary text-capitalize">
+                            {{ proposal.status }}
+                        </span>
+                    {% endif %}
+                </td>
+
+                <!-- Submitted At -->
+                <td>
+                    {% if proposal.created_at %}
+                        {{ proposal.created_at|date:"d M Y H:i" }}
+                    {% else %}
+                        —
+                    {% endif %}
+                </td>
+
+            </tr>
+            {% endfor %}
+        </tbody>
+
+    </table>
+
+    {% else %}
+        <div class="alert alert-info text-center">
+            No proposals submitted yet.
+        </div>
+    {% endif %}
+
+    <!-- Back Button -->
+    <div class="mt-3">
+        <a href="{% url 'my_events' %}" class="btn btn-outline-dark">← Back</a>
+    </div>
+
+</div>
+{% endblock %}
