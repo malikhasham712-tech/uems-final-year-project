@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+
+<h2 class="text-primary mb-4">{{ event.name }}</h2>
+
+<form method="POST">
+{% csrf_token %}
+
+<input class="form-control mb-2" name="student_name" placeholder="Student Name" required>
+<input class="form-control mb-2" name="registration_no" placeholder="Registration No" required>
+<input class="form-control mb-2" name="semester" placeholder="Semester" required>
+<input class="form-control mb-2" name="department" placeholder="Department" required>
+<input class="form-control mb-2" name="email" placeholder="Email" required>
+<input class="form-control mb-2" name="contact_no" placeholder="Contact No" required>
+
+<button class="btn btn-success">Submit</button>
+
+</form>
+
+</div>
+{% endblock %}

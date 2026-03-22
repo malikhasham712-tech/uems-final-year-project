@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+
+<h2 class="mb-4">Available Events</h2>
+
+<table class="table table-bordered table-hover">
+<thead class="table-dark">
+<tr>
+<th>Event</th>
+<th>Venue</th>
+<th>Details</th>
+<th>Organizer</th>
+<th>Action</th>
+</tr>
+</thead>
+
+<tbody>
+{% for event in events %}
+<tr>
+<td>{{ event.name }}</td>
+<td>{{ event.venue }}</td>
+<td>{{ event.description }}</td>
+<td>{{ event.organizer.username }}</td>
+
+<td>
+{% if event.id in registered_events %}
+<span class="badge bg-success">Registered</span>
+{% else %}
+<a href="{% url 'register_event' event.id %}" class="btn btn-success btn-sm">Register</a>
+{% endif %}
+</td>
+
+</tr>
+{% endfor %}
+</tbody>
+
+</table>
+
+</div>
+{% endblock %}

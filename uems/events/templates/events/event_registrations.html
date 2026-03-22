@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+
+<h2>Registrations for {{ event.name }}</h2>
+
+<table class="table table-bordered">
+<thead class="table-dark">
+<tr>
+<th>Name</th>
+<th>Reg No</th>
+<th>Semester</th>
+<th>Department</th>
+<th>Email</th>
+<th>Contact</th>
+</tr>
+</thead>
+
+<tbody>
+{% for r in registrations %}
+<tr>
+<td>{{ r.student_name }}</td>
+<td>{{ r.registration_no }}</td>
+<td>{{ r.semester }}</td>
+<td>{{ r.department }}</td>
+<td>{{ r.email }}</td>
+<td>{{ r.contact_no }}</td>
+</tr>
+{% endfor %}
+</tbody>
+
+</table>
+
+</div>
+{% endblock %}

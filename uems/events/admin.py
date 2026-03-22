@@ -1,47 +1,68 @@
 from django.contrib import admin
 from django.urls import reverse
 from django.utils.html import format_html
-from .models import Category, Event, EventProposal
+from .models import Category, Event, EventProposal, EventRegistration
 
 
-# -----------------------------
-# Hide EventProposal from sidebar
-# -----------------------------
+# Hide EventProposal
 class EventProposalAdmin(admin.ModelAdmin):
     list_display = ('event', 'organizer', 'proposed_venue', 'status', 'submitted_at')
 
     def get_model_perms(self, request):
-        return {}  # hides it from admin sidebar
+        return {}
 
 
-# -----------------------------
-# Category Admin
-# -----------------------------
+# Hide EventRegistration
+class EventRegistrationAdmin(admin.ModelAdmin):
+    list_display = (
+        'student',
+        'event',
+        'student_name',
+        'registration_no',
+        'semester',
+        'department',
+        'email',
+        'contact_no',
+        'registered_at'
+    )
+
+    def get_model_perms(self, request):
+        return {}
+
+
+# Category
 class CategoryAdmin(admin.ModelAdmin):
     list_display = ('name',)
-    ordering = ('name',)
 
 
-# -----------------------------
-# Event Admin
-# -----------------------------
+# Event
 class EventAdmin(admin.ModelAdmin):
-    list_display = ('name', 'venue', 'date', 'status', 'view_proposals')
-    ordering = ('-date',)
+    list_display = (
+        'name',
+        'venue',
+        'date',
+        'status',
+        'view_proposals',
+        'view_registrations'
+    )
 
     def view_proposals(self, obj):
-        url = (
-            reverse("admin:events_eventproposal_changelist")
-            + f"?event__id__exact={obj.id}"
+        url = reverse("admin:events_eventproposal_changelist") + f"?event__id__exact={obj.id}"
+        return format_html(
+            '<a href="{}" style="background-color:#2196F3;color:white;padding:5px 10px;border-radius:5px;text-decoration:none;">View Proposals</a>',
+            url
         )
-        return format_html('<a class="button" href="{}">View Proposals</a>', url)
 
-    view_proposals.short_description = "Proposals"
+    def view_registrations(self, obj):
+        url = reverse("admin:events_eventregistration_changelist") + f"?event__id__exact={obj.id}"
+        return format_html(
+            '<a href="{}" style="background-color:#4CAF50;color:white;padding:5px 10px;border-radius:5px;text-decoration:none;">View Registrations</a>',
+            url
+        )
 
 
-# -----------------------------
-# Register Models
-# -----------------------------
+# Register
 admin.site.register(Category, CategoryAdmin)
 admin.site.register(Event, EventAdmin)
 admin.site.register(EventProposal, EventProposalAdmin)
+admin.site.register(EventRegistration, EventRegistrationAdmin)
