@@ -1,23 +1,33 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container mt-4">
+<div class="container mx-auto mt-8 max-w-lg">
+  <div class="bg-white shadow rounded-lg p-6">
+    <h2 class="text-2xl font-bold text-gray-800 mb-6">Register for {{ event.name }}</h2>
 
-<h2 class="text-primary mb-4">{{ event.name }}</h2>
-
-<form method="POST">
-{% csrf_token %}
-
-<input class="form-control mb-2" name="student_name" placeholder="Student Name" required>
-<input class="form-control mb-2" name="registration_no" placeholder="Registration No" required>
-<input class="form-control mb-2" name="semester" placeholder="Semester" required>
-<input class="form-control mb-2" name="department" placeholder="Department" required>
-<input class="form-control mb-2" name="email" placeholder="Email" required>
-<input class="form-control mb-2" name="contact_no" placeholder="Contact No" required>
-
-<button class="btn btn-success">Submit</button>
-
-</form>
-
+    <form method="POST" class="space-y-4">
+      {% csrf_token %}
+      
+      <input type="text" name="student_name" placeholder="Student Name" required
+             class="w-full px-4 py-2 border rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+      
+      <input type="text" name="registration_no" placeholder="Registration No" required
+             class="w-full px-4 py-2 border rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+      
+      <input type="text" name="semester" placeholder="Semester" required
+             class="w-full px-4 py-2 border rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+      
+      <input type="text" name="department" placeholder="Department" required
+             class="w-full px-4 py-2 border rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+      
+      <input type="email" name="email" placeholder="Email" required
+             class="w-full px-4 py-2 border rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+      
+      <input type="text" name="contact_no" placeholder="Contact No" required
+             class="w-full px-4 py-2 border rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+      
+      <button type="submit" class="w-full bg-green-500 hover:bg-green-600 text-white py-2 rounded shadow font-medium">Submit Registration</button>
+    </form>
+  </div>
 </div>
 {% endblock %}

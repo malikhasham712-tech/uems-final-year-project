@@ -78,5 +78,8 @@ class EventRegistration(models.Model):
 
     registered_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        unique_together = ('event', 'student')  # <-- prevent duplicates
+
     def __str__(self):
         return f"{self.student_name} - {self.event.name}"

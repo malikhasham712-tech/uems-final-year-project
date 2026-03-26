@@ -7,7 +7,7 @@ from django.conf import settings
 from django.urls import reverse
 from .forms import RegisterForm
 from .models import Profile
-from events.models import Event  # Import your Event model
+from events.models import Event  # Import Event model
 import uuid
 
 # Home
@@ -22,7 +22,7 @@ def register(request):
         if form.is_valid():
             user = form.save(commit=False)
             user.set_password(form.cleaned_data['password'])
-            user.is_active = True  # Email verification will control login separately
+            user.is_active = True
             user.save()
 
             role = form.cleaned_data['role']
@@ -30,10 +30,7 @@ def register(request):
             profile = Profile.objects.create(user=user, role=role, verification_token=verification_token)
 
             # Send verification email
-            verify_link = request.build_absolute_uri(
-                reverse('verify-email', args=[verification_token])
-            )
-
+            verify_link = request.build_absolute_uri(reverse('verify-email', args=[verification_token]))
             send_mail(
                 subject='Verify your UEMS Account',
                 message=f'Click the link to verify your account:\n{verify_link}',
@@ -61,7 +58,6 @@ def verify_email(request, token):
         messages.success(request, 'Email verified successfully! You can now login.')
     except Profile.DoesNotExist:
         messages.error(request, 'Invalid or expired verification link.')
-
     return redirect('login')
 
 
@@ -70,9 +66,9 @@ def login_view(request):
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
-
         user = authenticate(request, username=username, password=password)
-        if user is not None:
+
+        if user:
             try:
                 if not user.profile.email_verified:
                     messages.error(request, 'Please verify your email before login.')
@@ -82,16 +78,21 @@ def login_view(request):
                 return redirect('login')
 
             login(request, user)
-            return redirect('dashboard')
+
+            # Redirect based on role
+            if user.is_superuser:
+                return redirect('dashboard')
+            else:
+                return redirect('my_events')  # Organizer → directly to My Events
         else:
-            messages.error(request, 'Invalid username or password')
+            messages.error(request, 'Invalid username or password.')
 
     return render(request, 'accounts/login.html')
 
 
-# Dashboard
+# Dashboard (Admin only)
 def dashboard(request):
-    user_events = Event.objects.filter(organizer=request.user)  # Only events created by logged-in user
+    user_events = Event.objects.filter(status='announced')
     return render(request, 'accounts/dashboard.html', {'user_events': user_events})
 
 

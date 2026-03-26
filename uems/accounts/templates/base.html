@@ -6,41 +6,44 @@
 
     {% load static %}
 
-    <!-- 1️⃣ Bootstrap CSS (add in head) -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- TailwindCSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.3.3/dist/tailwind.min.css" rel="stylesheet">
 
-    <!-- 2️⃣ Custom CSS -->
+    <!-- Custom CSS -->
     <link rel="stylesheet" type="text/css" href="{% static 'css/custom.css' %}">
 
     {% block extrastyle %}{% endblock %}
 </head>
-<body>
-    <!-- Header -->
-    <header class="bg-primary text-white p-3 mb-4">
-        <div class="container d-flex justify-content-between align-items-center">
-            <h1 class="h3 mb-0">University Event Management System</h1>
-            <nav>
-                <a href="{% url 'my_events' %}" class="text-white me-3">My Events</a>
-                {% if request.user.is_superuser %}
-                    <a href="{% url 'my_proposals' %}" class="text-white me-3">My Proposals</a>
+<body class="bg-gray-100 text-gray-800 font-sans flex flex-col min-h-screen">
+
+    <!-- Header / Navbar -->
+    <header class="bg-blue-700 text-white shadow">
+        <div class="container mx-auto flex justify-between items-center p-4">
+            <h1 class="text-xl font-bold">University Event Management System</h1>
+            <nav class="space-x-4">
+                {% if request.user.is_authenticated %}
+                    {% if request.user.is_superuser %}
+                        <a href="{% url 'dashboard' %}" class="hover:text-gray-300 font-medium">Dashboard</a>
+                    {% endif %}
+                    <a href="{% url 'my_events' %}" class="hover:text-gray-300 font-medium">My Events</a>
+                    <a href="{% url 'logout' %}" class="hover:text-gray-300 font-medium">Logout</a>
+                {% else %}
+                    <a href="{% url 'login' %}" class="hover:text-gray-300 font-medium">Login</a>
+                    <a href="{% url 'register' %}" class="hover:text-gray-300 font-medium">Register</a>
                 {% endif %}
-                <a href="{% url 'logout' %}" class="text-white">Logout</a>
             </nav>
         </div>
     </header>
 
-    <!-- Main content -->
-    <main class="container mb-5">
+    <!-- Main Content -->
+    <main class="flex-1 container mx-auto py-6 px-4">
         {% block content %}{% endblock %}
     </main>
 
     <!-- Footer -->
-    <footer class="bg-light text-center p-3">
-        <p class="mb-0">&copy; 2026 UEMS</p>
+    <footer class="bg-white text-center py-4 shadow mt-8">
+        <p class="text-gray-600 text-sm">&copy; 2026 University Event Management System</p>
     </footer>
-
-    <!-- 3️⃣ Bootstrap JS (add before closing body) -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
     {% block extrascript %}{% endblock %}
 </body>

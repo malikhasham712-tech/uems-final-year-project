@@ -1,38 +1,45 @@
-{% extends 'base.html' %}
-{% load static %}
+{% extends "base.html" %}
+{% block content %}
+<div class="container mx-auto mt-8">
+  <h2 class="text-2xl font-bold mb-4 text-gray-800">My Events</h2>
 
-{% block extrastyle %}
-<link rel="stylesheet" type="text/css" href="{% static 'css/custom.css' %}">
-{% endblock %}
-<h2>My Events</h2>
-
-<table class="table table-striped table-bordered">
-    <thead>
+  <div class="overflow-x-auto">
+    <table class="min-w-full bg-white border rounded shadow">
+      <thead class="bg-gray-200">
         <tr>
-            <th>Event Name</th>
-            <th>Venue</th>
-            <th>Status</th>
-            <th>Actions</th>
+          <th class="py-2 px-4 text-left font-medium text-gray-700">Event Name</th>
+          <th class="py-2 px-4 text-left font-medium text-gray-700">Date</th>
+          <th class="py-2 px-4 text-left font-medium text-gray-700">Status</th>
+          <th class="py-2 px-4 text-left font-medium text-gray-700">Actions</th>
         </tr>
-    </thead>
-    <tbody>
-        {% for event in events %}
-        <tr>
-            <td>{{ event.name }}</td>
-            <td>{{ event.venue }}</td>
-            <td>{{ event.status }}</td>
-            <td>
-                <a href="{% url 'submit_proposal' event.id %}" class="btn btn-success btn-sm">Submit Proposal</a>
-                <a href="{% url 'view_event' event.id %}" class="btn btn-primary btn-sm">View</a>
-            </td>
+      </thead>
+      <tbody>
+        {% for event in user_events %}
+        <tr class="hover:bg-gray-50 border-b">
+          <td class="py-2 px-4">{{ event.name }}</td>
+          <td class="py-2 px-4">{{ event.date|date:"F j, Y" }}</td>
+          <td class="py-2 px-4">
+            {% if event.status == "created" %}
+                <span class="bg-yellow-200 text-yellow-800 px-2 py-1 rounded text-sm">Created</span>
+            {% elif event.status == "approved" %}
+                <span class="bg-blue-200 text-blue-800 px-2 py-1 rounded text-sm">Approved</span>
+            {% elif event.status == "announced" %}
+                <span class="bg-green-200 text-green-800 px-2 py-1 rounded text-sm">Announced</span>
+            {% endif %}
+          </td>
+          <td class="py-2 px-4 space-x-2">
+            <a href="{% url 'view_proposals' event.id %}" class="bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-1 rounded text-sm">View Proposals</a>
+            <a href="{% url 'submit_proposal' event.id %}" class="bg-gray-500 hover:bg-gray-600 text-white px-3 py-1 rounded text-sm">Submit Proposal</a>
+            <a href="{% url 'event_registrations' event.id %}" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm">View Registrations</a>
+          </td>
         </tr>
         {% empty %}
         <tr>
-            <td colspan="4" style="text-align:center;">No events found</td>
+          <td colspan="4" class="text-center py-4 text-gray-500">No events available.</td>
         </tr>
         {% endfor %}
-    </tbody>
-</table>
-
-<a href="{% url 'dashboard' %}" class="btn btn-secondary">Back to Dashboard</a>
+      </tbody>
+    </table>
+  </div>
+</div>
 {% endblock %}
