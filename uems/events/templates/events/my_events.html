@@ -1,85 +1,60 @@
 {% extends "base.html" %}
-{% block title %}My Events - UEMS{% endblock %}
+{% block title %}My Events{% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto mt-8 px-4">
+<div class="container mt-5">
+    <h2 class="mb-4 fw-bold">My Events</h2>
 
-  <!-- Header -->
-  <div class="flex justify-between items-center mb-6">
-    <h1 class="text-3xl font-bold text-gray-800">My Events</h1>
+    {% if events %}
+    <div class="card shadow-sm p-3">
+        <div class="table-responsive">
+            <table class="table table-hover table-bordered align-middle text-center">
+                <thead class="table-dark">
+                    <tr>
+                        <th style="width:30%">Event</th>
+                        <th>Status</th>
+                        <th>Registrations</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for event in events %}
+                    <tr>
+                        <!-- Event Info -->
+                        <td class="text-start">
+                            <strong>{{ event.name }}</strong><br>
+                            <small class="text-muted">{{ event.venue }}</small><br>
+                            <small class="text-muted">{{ event.date|date:"d M Y" }}</small><br>
+                            <a href="{% url 'view_event' event.id %}" class="btn btn-sm btn-primary mt-1">View Event</a>
+                        </td>
 
-    <div class="space-x-4">
-      <a href="{% url 'dashboard' %}" class="text-blue-600 hover:underline font-medium">Dashboard</a>
-      <a href="{% url 'logout' %}" class="text-red-600 hover:underline font-medium">Logout</a>
+                        <!-- Status -->
+                        <td>
+                            {% if event.status == "created" %}
+                                <span class="badge bg-secondary text-capitalize">{{ event.status }}</span>
+                            {% elif event.status == "approved" %}
+                                <span class="badge bg-warning text-dark text-capitalize">{{ event.status }}</span>
+                            {% elif event.status == "announced" %}
+                                <span class="badge bg-success text-capitalize">{{ event.status }}</span>
+                            {% elif event.status == "completed" %}
+                                <span class="badge bg-dark text-capitalize">{{ event.status }}</span>
+                            {% endif %}
+                        </td>
+
+                        <!-- Registrations -->
+                        <td>
+                            <span class="badge bg-primary">{{ event.total_registrations }} Students</span><br>
+                            <a href="{% url 'event_registrations' event.id %}" class="btn btn-sm btn-dark mt-1">View Registrations</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
-  </div>
-
-  {% if events %}
-  <div class="bg-white shadow rounded-lg overflow-x-auto">
-    <table class="min-w-full divide-y divide-gray-200">
-
-      <!-- Table Head -->
-      <thead class="bg-gray-100">
-        <tr>
-          <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Event</th>
-          <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Status</th>
-          <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Proposal</th>
-          <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Registrations</th>
-        </tr>
-      </thead>
-
-      <!-- Table Body -->
-      <tbody class="bg-white divide-y divide-gray-200">
-        {% for event in events %}
-        <tr class="hover:bg-gray-50">
-
-          <!-- Event -->
-          <td class="px-6 py-4">
-            <p class="font-semibold text-gray-800">{{ event.name }}</p>
-            <a href="{% url 'view_event' event.id %}" class="text-blue-600 text-sm hover:underline">View</a>
-          </td>
-
-          <!-- Status -->
-          <td class="px-6 py-4">
-            {% if event.status == "created" %}
-              <span class="bg-gray-200 text-gray-800 px-2 py-1 rounded-full text-xs">Created</span>
-            {% elif event.status == "approved" %}
-              <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs">Approved</span>
-            {% elif event.status == "announced" %}
-              <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">Announced</span>
-            {% endif %}
-          </td>
-
-          <!-- Proposal -->
-          <td class="px-6 py-4">
-            {% if event.id in submitted_events %}
-              <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">Submitted</span><br>
-              <a href="{% url 'view_proposals' event.id %}" class="text-indigo-600 text-sm hover:underline">View</a>
-            {% else %}
-              <a href="{% url 'submit_proposal' event.id %}" 
-                 class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm">
-                 Submit
-              </a>
-            {% endif %}
-          </td>
-
-          <!-- Registrations (🔥 NEW BUTTON) -->
-          <td class="px-6 py-4">
-            <a href="{% url 'event_registrations' event.id %}"
-               class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm">
-               View Registrations
-            </a>
-          </td>
-
-        </tr>
-        {% endfor %}
-      </tbody>
-
-    </table>
-  </div>
-  {% else %}
-    <p class="text-gray-500 italic">No events assigned.</p>
-  {% endif %}
-
+    {% else %}
+        <div class="alert alert-info text-center">
+            No events assigned yet.
+        </div>
+    {% endif %}
 </div>
 {% endblock %}

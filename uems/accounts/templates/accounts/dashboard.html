@@ -1,58 +1,51 @@
 {% extends "base.html" %}
-{% block title %}Dashboard - UEMS{% endblock %}
+{% block title %}Dashboard{% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
 
-  <!-- Header -->
-  <div class="flex justify-between items-center mb-6">
-    <h1 class="text-3xl font-bold text-gray-900">Dashboard</h1>
-    <nav class="space-x-4">
-      <a href="{% url 'my_events' %}" class="text-gray-700 hover:text-blue-600 font-medium">My Events</a>
-      <a href="{% url 'logout' %}" class="text-gray-700 hover:text-red-600 font-medium">Logout</a>
-    </nav>
-  </div>
+<h2 class="mb-4">Dashboard</h2>
 
-  <!-- Announced Events Table -->
-  {% if user_events %}
-  <div class="bg-white rounded-lg shadow overflow-x-auto">
-    <table class="min-w-full divide-y divide-gray-200">
-      <thead class="bg-gray-100">
-        <tr>
-          <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700">Event Name</th>
-          <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700">Date</th>
-          <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700">Status</th>
-          <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700">Actions</th>
-        </tr>
-      </thead>
-      <tbody class="bg-white divide-y divide-gray-200">
+{% if user_events %}
+<div class="card p-3">
+    <table class="table table-hover text-center align-middle">
+
+        <thead class="table-dark">
+            <tr>
+                <th>Event</th>
+                <th>Date</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+
+        <tbody>
         {% for event in user_events %}
-          {% if event.status == 'announced' %}
-          <tr class="hover:bg-gray-50">
-            <td class="px-6 py-4 text-blue-600 hover:underline font-medium">
-              <a href="{% url 'view_event' event.id %}">{{ event.name }}</a>
-            </td>
-            <td class="px-6 py-4">{{ event.date|date:"F j, Y" }}</td>
-            <td class="px-6 py-4">
-              <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">Announced</span>
-            </td>
-            <td class="px-6 py-4 flex gap-2">
-              <a href="{% url 'view_proposals' event.id %}" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1 rounded text-sm font-medium">View Proposals</a>
-              <a href="{% url 'event_registrations' event.id %}" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm font-medium">View Registrations</a>
-            </td>
-          </tr>
-          {% endif %}
-        {% empty %}
-        <tr>
-          <td colspan="4" class="text-center py-6 text-gray-500">No announced events yet.</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-  {% else %}
-    <p class="text-gray-500 italic mt-4">No announced events yet.</p>
-  {% endif %}
+            {% if event.status == 'announced' %}
+            <tr>
+                <td>
+                    <strong>{{ event.name }}</strong>
+                </td>
 
+                <td>{{ event.date }}</td>
+
+                <td>
+                    <span class="badge bg-success">Announced</span>
+                </td>
+
+                <td>
+                    <a href="{% url 'view_proposals' event.id %}" class="btn btn-sm btn-primary">Proposals</a>
+                    <a href="{% url 'event_registrations' event.id %}" class="btn btn-sm btn-success">Registrations</a>
+                </td>
+            </tr>
+            {% endif %}
+        {% endfor %}
+        </tbody>
+
+    </table>
 </div>
+
+{% else %}
+<p>No announced events.</p>
+{% endif %}
+
 {% endblock %}

@@ -1,32 +1,43 @@
 {% extends 'base.html' %}
 
-{% block content %}
-<div class="container mx-auto mt-8 max-w-lg">
-  <div class="bg-white shadow rounded-lg p-6">
-    <h2 class="text-2xl font-bold text-gray-800 mb-6">Register for {{ event.name }}</h2>
+{% block title %}Register for {{ event.name }}{% endblock %}
 
-    <form method="POST" class="space-y-4">
+{% block content %}
+<div class="container mt-5" style="max-width: 600px;">
+  <div class="card shadow-sm border-0 p-4">
+    <h2 class="mb-3 fw-bold text-primary">Register for {{ event.name }}</h2>
+    {% if event.venue %}
+    <p class="text-muted mb-4">
+        <strong>Venue:</strong> {{ event.venue }} <br>
+        <strong>Date:</strong> {{ event.date|date:"d M Y" }}
+    </p>
+    {% else %}
+    <p class="text-muted mb-4"><strong>Date:</strong> {{ event.date|date:"d M Y" }}</p>
+    {% endif %}
+
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+
+    <form method="POST" class="row g-3">
       {% csrf_token %}
-      
-      <input type="text" name="student_name" placeholder="Student Name" required
-             class="w-full px-4 py-2 border rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-      
-      <input type="text" name="registration_no" placeholder="Registration No" required
-             class="w-full px-4 py-2 border rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-      
-      <input type="text" name="semester" placeholder="Semester" required
-             class="w-full px-4 py-2 border rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-      
-      <input type="text" name="department" placeholder="Department" required
-             class="w-full px-4 py-2 border rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-      
-      <input type="email" name="email" placeholder="Email" required
-             class="w-full px-4 py-2 border rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-      
-      <input type="text" name="contact_no" placeholder="Contact No" required
-             class="w-full px-4 py-2 border rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-      
-      <button type="submit" class="w-full bg-green-500 hover:bg-green-600 text-white py-2 rounded shadow font-medium">Submit Registration</button>
+      <div class="col-12">{{ form.student_name }}</div>
+      <div class="col-12">{{ form.registration_no }}</div>
+      <div class="col-12">{{ form.semester }}</div>
+      <div class="col-12">{{ form.department }}</div>
+      <div class="col-12">{{ form.email }}</div>
+      <div class="col-12">{{ form.contact_no }}</div>
+      <div class="col-12">
+        <button type="submit" class="btn btn-success w-100">Submit Registration</button>
+      </div>
+      <div class="col-12 text-center mt-3">
+        <a href="{% url 'student_events' %}" class="text-decoration-none text-muted">Cancel</a>
+      </div>
     </form>
   </div>
 </div>

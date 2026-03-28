@@ -1,42 +1,43 @@
 {% extends 'base.html' %}
 
+{% block title %}Available Events{% endblock %}
+
 {% block content %}
-<div class="container mt-4">
+<div class="container mt-5">
+    <h2 class="mb-4 fw-bold text-primary">Available Events</h2>
 
-<h2 class="mb-4">Available Events</h2>
+    {% if events %}
+    <div class="row g-4">
+        {% for event in events %}
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title fw-bold text-primary">{{ event.name }}</h5>
+                    <p class="card-text mb-1"><strong>Date:</strong> {{ event.date|date:"d M Y" }}</p>
+                    {% if event.venue %}
+                    <p class="card-text mb-2"><strong>Venue:</strong> {{ event.venue }}</p>
+                    {% endif %}
+                    <p class="card-text mb-2 text-truncate" style="max-height: 3em;">{{ event.description }}</p>
 
-<table class="table table-bordered table-hover">
-<thead class="table-dark">
-<tr>
-<th>Event</th>
-<th>Venue</th>
-<th>Details</th>
-<th>Organizer</th>
-<th>Action</th>
-</tr>
-</thead>
-
-<tbody>
-{% for event in events %}
-<tr>
-<td>{{ event.name }}</td>
-<td>{{ event.venue }}</td>
-<td>{{ event.description }}</td>
-<td>{{ event.organizer.username }}</td>
-
-<td>
-{% if event.id in registered_events %}
-<span class="badge bg-success">Registered</span>
-{% else %}
-<a href="{% url 'register_event' event.id %}" class="btn btn-success btn-sm">Register</a>
-{% endif %}
-</td>
-
-</tr>
-{% endfor %}
-</tbody>
-
-</table>
-
+                    <div class="mt-auto">
+                        {% if event.id in registered_events %}
+                            <span class="badge bg-success w-100 py-2">Registered</span>
+                        {% else %}
+                            <a href="{% url 'register_event' event.id %}" class="btn btn-primary w-100">Register</a>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-footer text-muted text-center small">
+                    Organized by {{ event.organizer.username }}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-info text-center mt-4">
+        No events available at the moment.
+    </div>
+    {% endif %}
 </div>
 {% endblock %}

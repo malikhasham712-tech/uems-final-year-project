@@ -1,69 +1,61 @@
 {% extends 'base.html' %}
 
+{% block title %}Proposals - {{ event.name }}{% endblock %}
+
 {% block content %}
-<div class="container mt-4">
+<div class="container mt-5">
 
-    <h2 class="mb-4">Proposals for {{ event.name }}</h2>
+    <div class="card shadow-sm p-4">
+        <h3 class="mb-4 fw-bold">Proposals for <span class="text-primary">{{ event.name }}</span></h3>
 
-    {% if proposals %}
-    <table class="table table-bordered table-hover align-middle">
-
-        <thead class="table-dark">
-            <tr>
-                <th>Proposal Name</th>
-                <th>Venue</th>
-                <th>Status</th>
-                <th>Submitted At</th>
-            </tr>
-        </thead>
-
-        <tbody>
-            {% for proposal in proposals %}
-            <tr>
-
-                <!-- Proposal Name -->
-                <td><strong>Proposal {{ forloop.counter }}</strong></td>
-
-                <!-- Venue -->
-                <td>{{ event.venue }}</td>
-
-                <!-- Status -->
-                <td>
-                    {% if proposal.status == "approved" %}
-                        <span class="badge bg-success">Approved</span>
-                    {% elif proposal.status == "pending" %}
-                        <span class="badge bg-warning text-dark">Pending</span>
-                    {% else %}
-                        <span class="badge bg-secondary text-capitalize">
-                            {{ proposal.status }}
-                        </span>
-                    {% endif %}
-                </td>
-
-                <!-- Submitted At -->
-                <td>
-                    {% if proposal.created_at %}
-                        {{ proposal.created_at|date:"d M Y H:i" }}
-                    {% else %}
-                        —
-                    {% endif %}
-                </td>
-
-            </tr>
-            {% endfor %}
-        </tbody>
-
-    </table>
-
-    {% else %}
-        <div class="alert alert-info text-center">
-            No proposals submitted yet.
+        {% if proposals %}
+        <div class="table-responsive">
+            <table class="table table-hover table-bordered align-middle text-center">
+                <thead class="table-dark">
+                    <tr>
+                        <th>#</th>
+                        <th>Proposal Name</th>
+                        <th>Venue</th>
+                        <th>Status</th>
+                        <th>Submitted At</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for proposal in proposals %}
+                    <tr>
+                        <td>{{ proposal.number }}</td>
+                        <td>Proposal {{ forloop.counter }}</td>
+                        <td>{{ event.venue }}</td>
+                        <td>
+                            {% if proposal.status == "approved" %}
+                                <span class="badge bg-success">Approved</span>
+                            {% elif proposal.status == "pending" %}
+                                <span class="badge bg-warning text-dark">Pending</span>
+                            {% else %}
+                                <span class="badge bg-secondary text-capitalize">{{ proposal.status }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if proposal.created_at %}
+                                {{ proposal.created_at|date:"d M Y H:i" }}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
-    {% endif %}
+        {% else %}
+            <div class="alert alert-info text-center">
+                No proposals submitted yet for this event.
+            </div>
+        {% endif %}
 
-    <!-- Back Button -->
-    <div class="mt-3">
-        <a href="{% url 'my_events' %}" class="btn btn-outline-dark">← Back</a>
+        <div class="mt-3">
+            <a href="{% url 'my_events' %}" class="btn btn-outline-dark">← Back to My Events</a>
+        </div>
     </div>
 
 </div>

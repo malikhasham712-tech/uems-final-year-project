@@ -45,10 +45,8 @@ class Event(models.Model):
 class EventProposal(models.Model):
     event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="proposals")
     organizer = models.ForeignKey(User, on_delete=models.CASCADE, related_name="proposals")
-
     proposed_venue = models.CharField(max_length=200)
     details = models.TextField(blank=True)
-
     status = models.CharField(
         max_length=10,
         choices=[
@@ -58,12 +56,18 @@ class EventProposal(models.Model):
         ],
         default='Pending'
     )
-
     submitted_at = models.DateTimeField(auto_now_add=True)
+    number = models.PositiveIntegerField(null=True, blank=True)  # <- our sequential number
+
+    def save(self, *args, **kwargs):
+        if not self.number:
+            # Assign next number per event
+            last_proposal = EventProposal.objects.filter(event=self.event).order_by('-number').first()
+            self.number = 1 if not last_proposal else last_proposal.number + 1
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.event.name} - {self.organizer.username}"
-
 
 class EventRegistration(models.Model):
     event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="registrations")

@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Welcome - UEMS{% endblock %}
+
+{% block content %}
+<div class="container text-center my-5">
+
+    <!-- Hero Section -->
+    <div class="py-5">
+        <h1 class="display-4 fw-bold text-primary">University Event Management System</h1>
+        <p class="lead text-secondary mb-4">
+            Manage, propose, and register for university events with ease.
+        </p>
+        <div class="d-flex justify-content-center gap-3">
+            <a href="{% url 'login' %}" class="btn btn-primary btn-lg">Login</a>
+            <a href="{% url 'register' %}" class="btn btn-outline-primary btn-lg">Register</a>
+        </div>
+    </div>
+
+    <!-- Features Section -->
+    <div class="row text-center mt-5">
+        <div class="col-md-4 mb-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title fw-bold">Organize Events</h5>
+                    <p class="card-text text-secondary">
+                        Submit your event proposals and track approval status.
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title fw-bold">Register Easily</h5>
+                    <p class="card-text text-secondary">
+                        Browse announced events and register in just a few clicks.
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title fw-bold">Track Attendance</h5>
+                    <p class="card-text text-secondary">
+                        View registrations and ensure proper coordination.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
