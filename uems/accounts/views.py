@@ -1,21 +1,24 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
-from django.contrib.auth.models import User
-from django.core.mail import send_mail
-from django.conf import settings
 from django.urls import reverse
 from .forms import RegisterForm
 from .models import Profile
-from events.models import Event  # Import Event model
+from events.models import Event
+from django.core.mail import send_mail
+from django.conf import settings
 import uuid
 
-# Home
+# ----------------------
+# HOME
+# ----------------------
 def home(request):
     return render(request, 'accounts/home.html')
 
 
-# Register
+# ----------------------
+# REGISTER
+# ----------------------
 def register(request):
     if request.method == 'POST':
         form = RegisterForm(request.POST)
@@ -27,10 +30,18 @@ def register(request):
 
             role = form.cleaned_data['role']
             verification_token = str(uuid.uuid4())
-            profile = Profile.objects.create(user=user, role=role, verification_token=verification_token)
 
-            # Send verification email
-            verify_link = request.build_absolute_uri(reverse('verify-email', args=[verification_token]))
+            Profile.objects.create(
+                user=user,
+                role=role,
+                verification_token=verification_token
+            )
+
+            # Email Verification
+            verify_link = request.build_absolute_uri(
+                reverse('verify-email', args=[verification_token])
+            )
+
             send_mail(
                 subject='Verify your UEMS Account',
                 message=f'Click the link to verify your account:\n{verify_link}',
@@ -39,7 +50,7 @@ def register(request):
                 fail_silently=False,
             )
 
-            messages.success(request, 'Account created! Please check your email to verify your account.')
+            messages.success(request, 'Account created! Please verify your email.')
             return redirect('login')
         else:
             messages.error(request, 'Please correct the errors below.')
@@ -49,26 +60,33 @@ def register(request):
     return render(request, 'accounts/register.html', {'form': form})
 
 
-# Verify Email
+# ----------------------
+# VERIFY EMAIL
+# ----------------------
 def verify_email(request, token):
     try:
         profile = Profile.objects.get(verification_token=token)
         profile.email_verified = True
         profile.save()
-        messages.success(request, 'Email verified successfully! You can now login.')
+        messages.success(request, 'Email verified successfully! You can login now.')
     except Profile.DoesNotExist:
         messages.error(request, 'Invalid or expired verification link.')
     return redirect('login')
 
 
-# Login
+# ----------------------
+# LOGIN
+# ----------------------
 def login_view(request):
+    print("LOGIN VIEW HIT")  # Debug line
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
+
         user = authenticate(request, username=username, password=password)
 
         if user:
+            # Check email verification
             try:
                 if not user.profile.email_verified:
                     messages.error(request, 'Please verify your email before login.')
@@ -79,24 +97,30 @@ def login_view(request):
 
             login(request, user)
 
-            # Redirect based on role
-            if user.is_superuser:
-                return redirect('dashboard')
+            # Role-based redirect
+            if user.is_superuser or (hasattr(user, 'profile') and user.profile.role == 'organizer'):
+                return redirect('my_events')  # Organizer/Admin dashboard
             else:
-                return redirect('my_events')  # Organizer → directly to My Events
+                return redirect('student_events')  # Students
+
         else:
             messages.error(request, 'Invalid username or password.')
 
     return render(request, 'accounts/login.html')
 
 
-# Dashboard (Admin only)
+# ----------------------
+# DASHBOARD (Optional)
+# ----------------------
 def dashboard(request):
-    user_events = Event.objects.filter(status='announced')
-    return render(request, 'accounts/dashboard.html', {'user_events': user_events})
+    # Optional, you can remove this if unused
+    events = Event.objects.filter(status='announced')
+    return render(request, 'accounts/dashboard.html', {'events': events})
 
 
-# Logout
+# ----------------------
+# LOGOUT
+# ----------------------
 def logout_view(request):
     logout(request)
     return redirect('login')

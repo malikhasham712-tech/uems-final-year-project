@@ -11,25 +11,25 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 from pathlib import Path
+import os
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+# ----------------------
+# BASE DIRECTORY
+# ----------------------
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
+# ----------------------
+# SECURITY
+# ----------------------
 SECRET_KEY = 'django-insecure-l)qdv$kc40ro9&yjd6=$p&_fm6!9g-i^b^22eii^v(r2ww1au1'
-
-# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-
 ALLOWED_HOSTS = []
 
 
-# Application definition
-
+# ----------------------
+# INSTALLED APPS
+# ----------------------
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -44,6 +44,10 @@ INSTALLED_APPS = [
     'core',
 ]
 
+
+# ----------------------
+# MIDDLEWARE
+# ----------------------
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -54,17 +58,21 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+
+# ----------------------
+# URL & TEMPLATES
+# ----------------------
 ROOT_URLCONF = 'uems.urls'
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'],  # Add this
+        'DIRS': [BASE_DIR / "templates"],  # templates folder in project root
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.debug',
-                'django.template.context_processors.request',
+                'django.template.context_processors.request',  # needed for request.user in templates
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
             ],
@@ -75,9 +83,9 @@ TEMPLATES = [
 WSGI_APPLICATION = 'uems.wsgi.application'
 
 
-# Database
-# https://docs.djangoproject.com/en/6.0/ref/settings/#databases
-
+# ----------------------
+# DATABASE
+# ----------------------
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -86,58 +94,58 @@ DATABASES = {
 }
 
 
-# Password validation
-# https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
-
+# ----------------------
+# PASSWORD VALIDATORS
+# ----------------------
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
 
-# Internationalization
-# https://docs.djangoproject.com/en/6.0/topics/i18n/
-
+# ----------------------
+# INTERNATIONALIZATION
+# ----------------------
 LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'UTC'
-
 USE_I18N = True
-
 USE_TZ = True
 
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/6.0/howto/static-files/
+# ----------------------
+# STATIC FILES
+# ----------------------
+STATIC_URL = '/static/'
 
-STATIC_URL = 'static/'
-
+# Development static files (from your apps or project static folder)
 STATICFILES_DIRS = [
-    BASE_DIR / "static",
+    BASE_DIR / "static",   # your custom CSS, JS, images
 ]
 
+# Destination folder for collectstatic (production-ready)
+STATIC_ROOT = BASE_DIR / "staticfiles"  # <-- this fixes your collectstatic error
+
+# Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+
+# ----------------------
+# EMAIL CONFIG
+# ----------------------
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-
 EMAIL_HOST_USER = 'uemsproject@gmail.com'
 EMAIL_HOST_PASSWORD = 'qpuumniyppqxmnhj'
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 
+# ----------------------
+# LOGIN / LOGOUT
+# ----------------------
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'my_events'
 LOGOUT_REDIRECT_URL = 'login'

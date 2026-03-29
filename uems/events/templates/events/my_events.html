@@ -1,60 +1,93 @@
-{% extends "base.html" %}
+{% extends "dashboard_base.html" %}
 {% block title %}My Events{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <h2 class="mb-4 fw-bold">My Events</h2>
 
-    {% if events %}
-    <div class="card shadow-sm p-3">
-        <div class="table-responsive">
-            <table class="table table-hover table-bordered align-middle text-center">
-                <thead class="table-dark">
-                    <tr>
-                        <th style="width:30%">Event</th>
-                        <th>Status</th>
-                        <th>Registrations</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for event in events %}
-                    <tr>
-                        <!-- Event Info -->
-                        <td class="text-start">
-                            <strong>{{ event.name }}</strong><br>
-                            <small class="text-muted">{{ event.venue }}</small><br>
-                            <small class="text-muted">{{ event.date|date:"d M Y" }}</small><br>
-                            <a href="{% url 'view_event' event.id %}" class="btn btn-sm btn-primary mt-1">View Event</a>
-                        </td>
+<h3 class="fw-bold mb-4 text-primary">My Events Dashboard</h3>
 
-                        <!-- Status -->
-                        <td>
-                            {% if event.status == "created" %}
-                                <span class="badge bg-secondary text-capitalize">{{ event.status }}</span>
-                            {% elif event.status == "approved" %}
-                                <span class="badge bg-warning text-dark text-capitalize">{{ event.status }}</span>
-                            {% elif event.status == "announced" %}
-                                <span class="badge bg-success text-capitalize">{{ event.status }}</span>
-                            {% elif event.status == "completed" %}
-                                <span class="badge bg-dark text-capitalize">{{ event.status }}</span>
+{% if events %}
+<div class="card p-3">
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle text-center">
+
+            <thead class="table-dark">
+                <tr>
+                    <th class="text-start">Event</th>
+                    <th>Status</th>
+                    <th>Registrations</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for event in events %}
+                <tr>
+
+                    <!-- Event Info -->
+                    <td class="text-start">
+                        <strong class="text-primary">{{ event.name }}</strong><br>
+                        <small class="text-muted">📍 {{ event.venue|default:"N/A" }}</small><br>
+                        <small class="text-muted">📅 {{ event.date|date:"d M Y" }}</small>
+                    </td>
+
+                    <!-- Status -->
+                    <td>
+                        {% if event.status == "created" %}
+                            <span class="badge bg-secondary px-3 py-2">Created</span>
+                        {% elif event.status == "approved" %}
+                            <span class="badge bg-warning text-dark px-3 py-2">Approved</span>
+                        {% elif event.status == "announced" %}
+                            <span class="badge bg-success px-3 py-2">Announced</span>
+                        {% elif event.status == "completed" %}
+                            <span class="badge bg-dark px-3 py-2">Completed</span>
+                        {% endif %}
+                    </td>
+
+                    <!-- Registrations -->
+                    <td>
+                        <span class="badge bg-primary px-3 py-2">
+                            {{ event.total_registrations }}
+                        </span>
+                    </td>
+
+                    <!-- Actions -->
+                    <td>
+                        <div class="d-flex flex-column gap-2">
+
+                            <a href="{% url 'view_event' event.id %}" 
+                               class="btn btn-sm btn-outline-primary">
+                               <i class="fa fa-eye"></i> View
+                            </a>
+
+                            {% if request.user.profile.role == 'organizer' or request.user.is_superuser %}
+                                <a href="{% url 'view_proposals' event.id %}" 
+                                   class="btn btn-sm btn-outline-secondary">
+                                   <i class="fa fa-file"></i> Proposals
+                                </a>
+
+                                <a href="{% url 'event_registrations' event.id %}" 
+                                   class="btn btn-sm btn-outline-success">
+                                   <i class="fa fa-users"></i> Registrations
+                                </a>
                             {% endif %}
-                        </td>
 
-                        <!-- Registrations -->
-                        <td>
-                            <span class="badge bg-primary">{{ event.total_registrations }} Students</span><br>
-                            <a href="{% url 'event_registrations' event.id %}" class="btn btn-sm btn-dark mt-1">View Registrations</a>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+                        </div>
+                    </td>
+
+                </tr>
+                {% endfor %}
+            </tbody>
+
+        </table>
     </div>
-    {% else %}
-        <div class="alert alert-info text-center">
-            No events assigned yet.
-        </div>
-    {% endif %}
+
 </div>
+
+{% else %}
+<div class="alert alert-info text-center">
+    No events created yet.
+</div>
+{% endif %}
+
 {% endblock %}

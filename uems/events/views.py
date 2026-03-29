@@ -10,20 +10,17 @@ from .forms import ProposalForm, EventRegistrationForm
 # ----------------------
 @login_required
 def my_events(request):
-    """
-    Organizer/Admin dashboard: list events created by the organizer.
-    Annotate each event with total registrations.
-    """
+
+    if not (request.user.is_superuser or request.user.profile.role == 'organizer'):
+        messages.error(request, "Access denied.")
+        return redirect('student_events')
+
     events = Event.objects.filter(organizer=request.user).annotate(
         total_registrations=Count('registrations')
     )
-    submitted_events = EventProposal.objects.filter(
-        organizer=request.user
-    ).values_list('event_id', flat=True)
 
     return render(request, 'events/my_events.html', {
-        'events': events,
-        'submitted_events': list(submitted_events)
+        'events': events
     })
 
 
@@ -61,13 +58,17 @@ def my_proposals(request):
     return render(request, 'events/my_proposals.html', {'proposals': proposals})
 
 
+from django.core.exceptions import PermissionDenied
+
 @login_required
 def view_proposals(request, event_id):
-    """
-    Organizer/Admin: view all proposals for a specific event.
-    """
+
+    if not (request.user.is_superuser or request.user.profile.role == 'organizer'):
+        raise PermissionDenied()
+
     event = get_object_or_404(Event, id=event_id)
     proposals = EventProposal.objects.filter(event=event).order_by('submitted_at')
+
     return render(request, 'events/view_proposals.html', {
         'event': event,
         'proposals': proposals
@@ -112,24 +113,31 @@ def student_events(request):
         'can_register': True,
     })
 
-
 @login_required
 def register_event(request, event_id):
+    print("REGISTER EVENT VIEW HIT")
     """
-    Registration form for new students only.
+    ONLY new students can open and submit registration form.
+    Old organizers/admins are blocked.
     """
-    # Prevent old users/admins from registering
-    if request.user.is_superuser or (hasattr(request.user, 'profile') and request.user.profile.role in ['organizer', 'admin']):
-        messages.error(request, "You are not allowed to register for this event.")
+
+    # ❌ Block Admin & Organizers (Old Users)
+    if request.user.is_superuser or (
+        hasattr(request.user, 'profile') and 
+        request.user.profile.role in ['organizer', 'admin']
+    ):
+        messages.error(request, "You are not allowed to register for events.")
         return redirect('my_events')
 
-    event = get_object_or_404(Event, id=event_id)
+    # ✅ Get event
+    event = get_object_or_404(Event, id=event_id, status='announced')
 
-    # Prevent duplicate registration
+    # ❌ Prevent duplicate registration
     if EventRegistration.objects.filter(event=event, student=request.user).exists():
         messages.info(request, "You are already registered for this event!")
         return redirect('student_events')
 
+    # ✅ FORM LOGIC
     if request.method == 'POST':
         form = EventRegistrationForm(request.POST)
         if form.is_valid():
@@ -137,7 +145,8 @@ def register_event(request, event_id):
             registration.event = event
             registration.student = request.user
             registration.save()
-            messages.success(request, "You have successfully registered for this event!")
+
+            messages.success(request, "Successfully registered!")
             return redirect('student_events')
     else:
         form = EventRegistrationForm(initial={
@@ -156,17 +165,14 @@ def register_event(request, event_id):
 # ----------------------
 @login_required
 def event_registrations(request, event_id):
-    """
-    Organizer/Admin only: view all registrations for a specific event.
-    Students cannot access this page.
-    """
+
     event = get_object_or_404(Event, id=event_id)
 
     if request.user != event.organizer and not request.user.is_superuser:
-        messages.error(request, "You do not have permission to view this event's registrations.")
-        return redirect('my_events')
+        raise PermissionDenied()
 
     registrations = EventRegistration.objects.filter(event=event)
+
     return render(request, 'events/event_registrations.html', {
         'event': event,
         'registrations': registrations,
