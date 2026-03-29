@@ -2,66 +2,116 @@
 {% block title %}My Events{% endblock %}
 
 {% block content %}
-<h3 class="fw-bold mb-4 text-primary">Events Dashboard</h3>
+<div class="container mt-4">
+    <h3 class="fw-bold mb-4 text-primary">Events Dashboard</h3>
 
-{% if events %}
-<div class="card p-3">
-    <div class="table-responsive">
-        <table class="table table-hover align-middle text-center">
-            <thead class="table-dark">
-                <tr>
-                    <th class="text-start">Event</th>
-                    <th>Status</th>
-                    <th>Registrations</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for event in events %}
-                <tr>
-                    <td class="text-start">
-                        <strong class="text-primary">{{ event.name }}</strong><br>
-                        <small class="text-muted">📍 {{ event.venue|default:"N/A" }}</small><br>
-                        <small class="text-muted">📅 {{ event.date|date:"d M Y" }}</small>
-                    </td>
-                    <td>
-                        {% if event.status == "created" %}
-                            <span class="badge bg-secondary px-3 py-2">Created</span>
-                        {% elif event.status == "approved" %}
-                            <span class="badge bg-warning text-dark px-3 py-2">Approved</span>
-                        {% elif event.status == "announced" %}
-                            <span class="badge bg-success px-3 py-2">Announced</span>
-                        {% elif event.status == "completed" %}
-                            <span class="badge bg-dark px-3 py-2">Completed</span>
-                        {% endif %}
-                    </td>
-                    <td>
-                        <span class="badge bg-primary px-3 py-2">{{ event.total_registrations }}</span>
-                    </td>
-                    <td>
-                        <div class="d-flex flex-column gap-2">
-                                <!-- View Event -->
-                            <a href="{% url 'view_event' event.id %}" class="btn btn-sm btn-outline-primary">
-                                <i class="fa fa-eye"></i> View
-                            </a>
+    <!-- Messages -->
+    {% if messages %}
+      <div class="mt-2">
+        {% for message in messages %}
+          <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
 
-                            {% if request.user.is_superuser or request.user == event.organizer %}
-                                <!-- Organizer or Admin -->
-                            <a href="{% url 'view_proposals' event.id %}" class="btn btn-sm btn-outline-secondary">
-                                <i class="fa fa-file"></i> Proposals
-                            </a>
-
-                            <a href="{% url 'event_registrations' event.id %}" class="btn btn-sm btn-outline-success">
-                                <i class="fa fa-users"></i> Registrations
-                            </a>
+    {% if events %}
+    <div class="card shadow-sm p-3">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle text-center">
+                <thead class="table-dark">
+                    <tr>
+                        <th class="text-start">Event</th>
+                        <th>Status</th>
+                        <th>Registrations</th>
+                        <th>Proposals</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for event in events %}
+                    <tr>
+                        <td class="text-start">
+                            <strong class="text-primary">{{ event.name }}</strong><br>
+                            <small class="text-muted">📍 {{ event.venue|default:"N/A" }}</small><br>
+                            <small class="text-muted">📅 {{ event.date|date:"d M Y" }}</small>
+                        </td>
+                        <td>
+                            {% if event.status == "created" %}
+                                <span class="badge bg-secondary px-3 py-2">Created</span>
+                            {% elif event.status == "approved" %}
+                                <span class="badge bg-warning text-dark px-3 py-2">Approved</span>
+                            {% elif event.status == "announced" %}
+                                <span class="badge bg-success px-3 py-2">Announced</span>
+                            {% elif event.status == "completed" %}
+                                <span class="badge bg-dark px-3 py-2">Completed</span>
                             {% endif %}
-                        </div>
-                </td>
-            </tbody>
-        </table>
+                        </td>
+                        <td>
+                            <span class="badge bg-primary px-3 py-2">{{ event.total_registrations|default:"0" }}</span>
+                        </td>
+                        <td>
+                            <div class="d-flex flex-column gap-2">
+                                {% if request.user.id == event.organizer.id and not request.user.is_superuser %}
+                                <!-- Trigger Modal -->
+                                <button type="button" class="btn btn-sm btn-outline-success w-100" 
+                                        data-bs-toggle="modal" data-bs-target="#submitProposal{{ event.id }}">
+                                    <i class="fa fa-plus"></i> Submit Proposal
+                                </button>
+                                {% endif %}
+
+                                {% if request.user.is_superuser or request.user.id == event.organizer.id %}
+                                <a href="{% url 'view_proposals' event.id %}" class="btn btn-sm btn-outline-secondary w-100">
+                                    <i class="fa fa-file"></i> View Proposals
+                                </a>
+                                {% endif %}
+                            </div>
+
+                            <!-- Modal Form for Submit Proposal -->
+                            {% if request.user.id == event.organizer.id and not request.user.is_superuser %}
+                            <div class="modal fade" id="submitProposal{{ event.id }}" tabindex="-1" aria-labelledby="submitProposalLabel{{ event.id }}" aria-hidden="true">
+                              <div class="modal-dialog modal-lg">
+                                <div class="modal-content">
+                                  <div class="modal-header">
+                                    <h5 class="modal-title" id="submitProposalLabel{{ event.id }}">Submit Proposal - {{ event.name }}</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                  </div>
+                                  <div class="modal-body">
+                                    <form method="POST" action="{% url 'submit_proposal' event.id %}">
+                                        {% csrf_token %}
+                                        <div class="mb-3">{{ form.name|as_crispy_field }}</div>
+                                        <div class="mb-3">{{ form.venue|as_crispy_field }}</div>
+                                        <div class="mb-3">{{ form.description|as_crispy_field }}</div>
+                                        <button type="submit" class="btn btn-success w-100">Submit Proposal</button>
+                                    </form>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="d-flex flex-column gap-2">
+                                <a href="{% url 'view_event' event.id %}" class="btn btn-sm btn-outline-primary w-100">
+                                    <i class="fa fa-eye"></i> View Event
+                                </a>
+                                {% if request.user.is_superuser or request.user.id == event.organizer.id %}
+                                    <a href="{% url 'event_registrations' event.id %}" class="btn btn-sm btn-outline-info w-100">
+                                        <i class="fa fa-users"></i> Registrations
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
+    {% else %}
+    <div class="alert alert-info text-center">No events available.</div>
+    {% endif %}
 </div>
-{% else %}
-<div class="alert alert-info text-center">No events available.</div>
-{% endif %}
 {% endblock %}

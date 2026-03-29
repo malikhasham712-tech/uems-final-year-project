@@ -33,13 +33,13 @@
                 </td>
 
                 <td>
-                    <a href="#" class="btn btn-primary btn-sm">
+                    <a href="{% url 'view_proposals' event.id %}" class="btn btn-primary btn-sm">
                         View Proposal
                     </a>
                 </td>
 
                 <td>
-                    <a href="#" class="btn btn-warning btn-sm">
+                    <a href="{% url 'event_registrations' event.id %}" class="btn btn-warning btn-sm">
                         View Registrations
                     </a>
                 </td>
