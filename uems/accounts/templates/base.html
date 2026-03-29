@@ -21,16 +21,16 @@
         <a class="navbar-brand" href="/">UEMS <small>(University Event Management System)</small></a>
         <div>
             {% if request.user.is_authenticated %}
-                {% if request.user.is_superuser or request.user.profile.role == 'organizer' %}
-                    <a class="nav-link d-inline" href="{% url 'my_events' %}">Dashboard</a>
-                {% else %}
-                    <a class="nav-link d-inline" href="{% url 'student_events' %}">Events</a>
-                {% endif %}
-                <a class="nav-link d-inline text-danger" href="{% url 'logout' %}">Logout</a>
-            {% else %}
-                <a class="nav-link d-inline" href="{% url 'login' %}">Login</a>
-                <a class="nav-link d-inline" href="{% url 'register' %}">Register</a>
-            {% endif %}
+        {% if request.user.is_superuser or request.user.profile.is_organizer %}
+            <a class="nav-link d-inline" href="{% url 'my_events' %}">Dashboard</a>
+        {% else %}
+            <a class="nav-link d-inline" href="{% url 'student_events' %}">Events</a>
+        {% endif %}
+            <a class="nav-link d-inline text-danger" href="{% url 'logout' %}">Logout</a>
+{% else %}
+    <a class="nav-link d-inline" href="{% url 'login' %}">Login</a>
+    <a class="nav-link d-inline" href="{% url 'register' %}">Register</a>
+{% endif %}
         </div>
     </div>
 </nav>

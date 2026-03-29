@@ -8,6 +8,7 @@ from events.models import Event
 from django.core.mail import send_mail
 from django.conf import settings
 import uuid
+from django.contrib.auth.models import User
 
 # ----------------------
 # HOME
@@ -34,10 +35,10 @@ def register(request):
             Profile.objects.create(
                 user=user,
                 role=role,
-                verification_token=verification_token
+                verification_token=verification_token,
+                is_organizer=(role == 'organizer')
             )
 
-            # Email Verification
             verify_link = request.build_absolute_uri(
                 reverse('verify-email', args=[verification_token])
             )
@@ -71,6 +72,7 @@ def verify_email(request, token):
         messages.success(request, 'Email verified successfully! You can login now.')
     except Profile.DoesNotExist:
         messages.error(request, 'Invalid or expired verification link.')
+
     return redirect('login')
 
 
@@ -78,7 +80,6 @@ def verify_email(request, token):
 # LOGIN
 # ----------------------
 def login_view(request):
-    print("LOGIN VIEW HIT")  # Debug line
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
@@ -86,7 +87,6 @@ def login_view(request):
         user = authenticate(request, username=username, password=password)
 
         if user:
-            # Check email verification
             try:
                 if not user.profile.email_verified:
                     messages.error(request, 'Please verify your email before login.')
@@ -97,11 +97,11 @@ def login_view(request):
 
             login(request, user)
 
-            # Role-based redirect
-            if user.is_superuser or (hasattr(user, 'profile') and user.profile.role == 'organizer'):
-                return redirect('my_events')  # Organizer/Admin dashboard
+            # ✅ CHECK IF USER IS ORGANIZER BY EVENT ASSIGNMENT
+            if Event.objects.filter(organizer=user).exists():
+                return redirect('dashboard')  # organizer view
             else:
-                return redirect('student_events')  # Students
+                return redirect('student_events')
 
         else:
             messages.error(request, 'Invalid username or password.')
@@ -110,17 +110,56 @@ def login_view(request):
 
 
 # ----------------------
-# DASHBOARD (Optional)
-# ----------------------
-def dashboard(request):
-    # Optional, you can remove this if unused
-    events = Event.objects.filter(status='announced')
-    return render(request, 'accounts/dashboard.html', {'events': events})
-
-
-# ----------------------
 # LOGOUT
 # ----------------------
 def logout_view(request):
     logout(request)
     return redirect('login')
+
+
+# ----------------------
+# DASHBOARD (IMPORTANT FIX)
+# ----------------------
+def dashboard(request):
+    if not request.user.is_authenticated:
+        return redirect('login')
+
+    events = Event.objects.filter(organizer=request.user)
+
+    if events.exists():
+        # Organizer interface
+        return render(request, 'organizer_dashboard.html', {'events': events})
+    else:
+        # Student interface
+        return render(request, 'student_dashboard.html')
+
+
+# ----------------------
+# HELPER: Assign organizer
+# ----------------------
+def assign_organizer(user_username, event_name):
+    user = User.objects.get(username=user_username)
+    event = Event.objects.get(name=event_name)
+
+    # ✅ FIXED (use single organizer)
+    event.organizer = user
+    event.save()
+
+    # Ensure profile updated
+    user.profile.is_organizer = True
+    user.profile.save()
+
+    print(f"{user.username} assigned as organizer to {event.name}")
+
+
+# ----------------------
+# HELPER: Fix existing users
+# ----------------------
+def fix_existing_organizers():
+    organizer_users = ['Hasham', 'Sir_Ubaid']
+
+    for u_name in organizer_users:
+        user = User.objects.get(username=u_name)
+        user.profile.is_organizer = True
+        user.profile.save()
+        print(f"{user.username} is now an organizer")

@@ -10,19 +10,16 @@ from .forms import ProposalForm, EventRegistrationForm
 # ----------------------
 @login_required
 def my_events(request):
-
-    if not (request.user.is_superuser or request.user.profile.role == 'organizer'):
+    """Dashboard: show events depending on user role"""
+    if request.user.is_superuser:
+        events = Event.objects.annotate(total_registrations=Count('registrations'))
+    elif hasattr(request.user, 'profile') and request.user.profile.role == 'organizer':
+        events = Event.objects.filter(organizer=request.user).annotate(total_registrations=Count('registrations'))
+    else:
         messages.error(request, "Access denied.")
         return redirect('student_events')
 
-    events = Event.objects.filter(organizer=request.user).annotate(
-        total_registrations=Count('registrations')
-    )
-
-    return render(request, 'events/my_events.html', {
-        'events': events
-    })
-
+    return render(request, 'events/my_events.html', {'events': events})
 
 @login_required
 def submit_proposal(request, event_id):
@@ -62,17 +59,17 @@ from django.core.exceptions import PermissionDenied
 
 @login_required
 def view_proposals(request, event_id):
-
     if not (request.user.is_superuser or request.user.profile.role == 'organizer'):
         raise PermissionDenied()
 
     event = get_object_or_404(Event, id=event_id)
-    proposals = EventProposal.objects.filter(event=event).order_by('submitted_at')
+    proposals = EventProposal.objects.filter(event=event).order_by('-submitted_at')
 
     return render(request, 'events/view_proposals.html', {
         'event': event,
         'proposals': proposals
     })
+
 
 
 @login_required
@@ -164,12 +161,29 @@ def register_event(request, event_id):
 # ORGANIZER/ADMIN → VIEW REGISTRATIONS
 # ----------------------
 @login_required
-def event_registrations(request, event_id):
-
+def view_proposals(request, event_id):
     event = get_object_or_404(Event, id=event_id)
 
-    if request.user != event.organizer and not request.user.is_superuser:
-        raise PermissionDenied()
+    # Only admin or organizer of the event
+    if not (request.user.is_superuser or request.user == event.organizer):
+        messages.error(request, "Access denied.")
+        return redirect('my_events')
+
+    proposals = EventProposal.objects.filter(event=event)
+
+    return render(request, 'events/view_proposals.html', {
+        'event': event,
+        'proposals': proposals
+    })
+
+@login_required
+def event_registrations(request, event_id):
+    event = get_object_or_404(Event, id=event_id)
+
+    # Admin sees all; organizer sees only their event
+    if not (request.user.is_superuser or request.user == event.organizer):
+        messages.error(request, "Access denied.")
+        return redirect('my_events')
 
     registrations = EventRegistration.objects.filter(event=event)
 
