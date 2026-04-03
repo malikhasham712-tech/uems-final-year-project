@@ -4,6 +4,19 @@
 {% block content %}
 <div class="container mt-4">
 
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-3">
+      <ol class="breadcrumb bg-light p-2 rounded">
+        <li class="breadcrumb-item">
+            <a href="{% url 'my_events' %}">Dashboard</a>
+        </li>
+        <li class="breadcrumb-item">
+            <a href="{% url 'view_event' event.id %}">{{ event.name }}</a>
+        </li>
+        <li class="breadcrumb-item active">Registrations</li>
+      </ol>
+    </nav>
+
     <h3 class="mb-4 fw-bold text-primary">Registrations for {{ event.name }}</h3>
     <p>Total Registrations: <strong>{{ total }}</strong></p>
 
@@ -42,9 +55,23 @@
     <div class="alert alert-info text-center">No registrations yet.</div>
     {% endif %}
 
+    <!-- Smart Back Button -->
     <div class="mt-3">
-        <a href="{% url 'my_events' %}" class="btn btn-secondary">← Back to Events</a>
+        <button onclick="goBack()" class="btn btn-outline-secondary px-4">
+            ← Back
+        </button>
     </div>
 
 </div>
+
+<script>
+function goBack() {
+    if (document.referrer) {
+        window.history.back();
+    } else {
+        window.location.href = "{% url 'my_events' %}";
+    }
+}
+</script>
+
 {% endblock %}
