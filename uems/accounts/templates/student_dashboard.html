@@ -1,0 +1,65 @@
+{% extends "dashboard_base.html" %}
+{% block title %}Student Dashboard{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+
+    <!-- Available Events Button -->
+    <div class="mb-4">
+        <a href="{% url 'available_events' %}" class="btn btn-primary btn-lg">
+            <i class="fa fa-calendar-check me-2"></i> Available Events
+        </a>
+    </div>
+
+    <!-- My Events Table -->
+    <h3 class="mb-3 text-primary fw-bold">My Events</h3>
+
+    {% if registered_events %}
+    <div class="table-responsive">
+        <table class="table table-hover text-center align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th class="text-start">Event Name</th>
+                    <th>Status</th>
+                    <th>Registered On</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for event in registered_events %}
+                <tr>
+                    <td class="text-start">
+                        <a href="{% url 'view_event' event.id %}" class="text-decoration-none text-dark fw-semibold">
+                            {{ event.name }}
+                        </a>
+                        <br>
+                        <small class="text-muted">📍 {{ event.venue|default:"N/A" }}</small>
+                        <br>
+                        <small class="text-muted">📅 {{ event.date|date:"d M Y" }}</small>
+                    </td>
+                    <td>
+                        {% if event.status == 'announced' %}
+                            <span class="badge bg-success px-3 py-2">Announced</span>
+                        {% elif event.status == 'pending' %}
+                            <span class="badge bg-warning text-dark px-3 py-2">Pending</span>
+                        {% else %}
+                            <span class="badge bg-secondary px-3 py-2">{{ event.status|title }}</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ event.registration_date|date:"d M Y" }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="3" class="text-center text-muted">No events found for you.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+        <div class="alert alert-info text-center mt-4">
+            You have not registered for any events yet.
+        </div>
+    {% endif %}
+
+</div>
+{% endblock %}

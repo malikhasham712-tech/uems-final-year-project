@@ -146,6 +146,6 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 # ----------------------
 # LOGIN / LOGOUT
 # ----------------------
-LOGIN_URL = 'login'
-LOGIN_REDIRECT_URL = 'my_events'
-LOGOUT_REDIRECT_URL = 'login'
+LOGIN_URL = '/accounts/login/'  # actual login path
+LOGIN_REDIRECT_URL = '/events/dashboard/'  # page users can access
+LOGOUT_REDIRECT_URL = '/accounts/login/'

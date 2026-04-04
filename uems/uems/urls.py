@@ -1,18 +1,18 @@
 from django.contrib import admin
 from django.urls import path, include
 from accounts import views as accounts_views
+from events import views as events_views  # <-- import dashboard here
 
 urlpatterns = [
     path('admin/', admin.site.urls),
 
-    # Accounts app URLs
+    # Accounts
     path('', accounts_views.home, name='home'),
-    path('accounts/register/', accounts_views.register, name='register'),
-    path('accounts/login/', accounts_views.login_view, name='login'),
-    path('accounts/logout/', accounts_views.logout_view, name='logout'),
-    path('dashboard/', accounts_views.dashboard, name='dashboard'),
-    path('verify-email/<str:token>/', accounts_views.verify_email, name='verify-email'),
+    path('accounts/', include('accounts.urls')),
 
-    # Events app URLs
-    path('events/', include('events.urls')),  # ✅ this includes all URLs from events app
+    # Events
+    path('events/', include('events.urls')),
+
+    # Dashboard (single source of truth in events.views)
+    path('dashboard/', events_views.dashboard, name='dashboard'),
 ]

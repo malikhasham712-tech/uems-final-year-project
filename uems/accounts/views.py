@@ -4,11 +4,16 @@ from django.contrib import messages
 from django.urls import reverse
 from .forms import RegisterForm
 from .models import Profile
-from events.models import Event
+from events.models import Event, EventRegistration
 from django.core.mail import send_mail
 from django.conf import settings
 import uuid
 from django.contrib.auth.models import User
+
+# ✅ REQUIRED IMPORTS (FIXED)
+from django.contrib.auth.decorators import login_required
+from django.db.models import Count
+
 
 # ----------------------
 # HOME
@@ -96,8 +101,6 @@ def login_view(request):
                 return redirect('login')
 
             login(request, user)
-
-            # ✅ ALWAYS go to dashboard first
             return redirect('dashboard')
 
         else:
@@ -115,18 +118,49 @@ def logout_view(request):
 
 
 # ----------------------
-# DASHBOARD (IMPORTANT FIX)
+# DASHBOARD (MAIN LOGIC)
 # ----------------------
+@login_required
 def dashboard(request):
-    if not request.user.is_authenticated:
-        return redirect('login')
+    user = request.user
 
-    if request.user.profile.is_organizer:
-        events = Event.objects.filter(organizer=request.user)  # ✅ ADD THIS
-        return render(request, 'organizer_dashboard.html', {'events': events})
+    # ----------------------
+    # ORGANIZER DASHBOARD
+    # ----------------------
+    if hasattr(user, 'profile') and user.profile.role == 'organizer':
 
+        user_events = Event.objects.filter(organizer=user).annotate(
+            total_registrations=Count('registrations')
+        )
+
+        total_events = user_events.count()
+        total_registrations = sum(event.total_registrations for event in user_events)
+
+        context = {
+            'role': 'organizer',
+            'user_events': user_events,
+            'total_events': total_events,
+            'total_registrations': total_registrations,
+        }
+
+    # ----------------------
+    # STUDENT DASHBOARD
+    # ----------------------
     else:
-        return render(request, 'student_dashboard.html')
+        student_events = Event.objects.filter(status='announced')
+
+        registered_event_ids = EventRegistration.objects.filter(
+            student=user
+        ).values_list('event_id', flat=True)
+
+        context = {
+            'role': 'student',
+            'student_events': student_events,
+            'registered_event_ids': list(registered_event_ids),
+        }
+
+    return render(request, 'accounts/dashboard.html', context)
+
 
 # ----------------------
 # HELPER: Assign organizer
@@ -135,12 +169,11 @@ def assign_organizer(user_username, event_name):
     user = User.objects.get(username=user_username)
     event = Event.objects.get(name=event_name)
 
-    # ✅ FIXED (use single organizer)
     event.organizer = user
     event.save()
 
-    # Ensure profile updated
     user.profile.is_organizer = True
+    user.profile.role = 'organizer'
     user.profile.save()
 
     print(f"{user.username} assigned as organizer to {event.name}")
@@ -155,5 +188,7 @@ def fix_existing_organizers():
     for u_name in organizer_users:
         user = User.objects.get(username=u_name)
         user.profile.is_organizer = True
+        user.profile.role = 'organizer'
         user.profile.save()
+
         print(f"{user.username} is now an organizer")

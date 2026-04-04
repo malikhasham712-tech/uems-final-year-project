@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.db.models import Count
 from django.contrib import messages
+from django.contrib.auth.models import User
 from .models import Event, EventProposal, EventRegistration
 from .forms import ProposalForm, EventRegistrationForm
 
@@ -10,26 +11,25 @@ from .forms import ProposalForm, EventRegistrationForm
 # ----------------------
 @login_required
 def my_events(request):
-    """Show events depending on user role (Organizer/Admin)"""
+    """Organizer/Admin: List of events."""
     if request.user.is_superuser:
         events = Event.objects.annotate(total_registrations=Count('registrations'))
     elif hasattr(request.user, 'profile') and request.user.profile.role == 'organizer':
         events = Event.objects.filter(organizer=request.user).annotate(total_registrations=Count('registrations'))
     else:
         messages.error(request, "Access denied.")
-        return redirect('student_events')
+        return redirect('dashboard')
 
     return render(request, 'events/my_events.html', {'events': events})
 
 
 @login_required
 def submit_proposal(request, event_id):
-    """Organizer submits proposal for assigned event"""
+    """Submit proposal for an event."""
     event = get_object_or_404(Event, id=event_id)
-
     if not request.user.is_superuser and request.user != event.organizer:
         messages.error(request, "Access denied.")
-        return redirect('my_events')
+        return redirect('dashboard')
 
     if request.method == 'POST':
         form = ProposalForm(request.POST)
@@ -49,11 +49,11 @@ def submit_proposal(request, event_id):
 
 @login_required
 def view_proposals(request, event_id):
+    """View all proposals for an event."""
     event = get_object_or_404(Event, id=event_id)
-
     if not (request.user.is_superuser or request.user == event.organizer):
         messages.error(request, "Access denied.")
-        return redirect('my_events')
+        return redirect('dashboard')
 
     proposals = EventProposal.objects.filter(event=event).order_by('-submitted_at')
 
@@ -79,7 +79,7 @@ def approve_proposal(request, proposal_id):
     proposal = get_object_or_404(EventProposal, id=proposal_id)
     if not request.user.is_superuser:
         messages.error(request, "Access denied.")
-        return redirect('my_events')
+        return redirect('dashboard')
 
     proposal.status = 'approved'
     proposal.save()
@@ -92,7 +92,7 @@ def reject_proposal(request, proposal_id):
     proposal = get_object_or_404(EventProposal, id=proposal_id)
     if not request.user.is_superuser:
         messages.error(request, "Access denied.")
-        return redirect('my_events')
+        return redirect('dashboard')
 
     proposal.status = 'rejected'
     proposal.save()
@@ -102,6 +102,7 @@ def reject_proposal(request, proposal_id):
 
 @login_required
 def view_event(request, event_id):
+    """View event details and its proposals."""
     event = get_object_or_404(Event, id=event_id)
     proposals = EventProposal.objects.filter(event=event)
     return render(request, 'events/view_event.html', {'event': event, 'proposals': proposals})
@@ -109,11 +110,11 @@ def view_event(request, event_id):
 
 @login_required
 def event_registrations(request, event_id):
+    """List all registrations for a specific event."""
     event = get_object_or_404(Event, id=event_id)
-
     if not request.user.is_superuser and request.user != event.organizer:
         messages.error(request, "Access denied.")
-        return redirect('my_events')
+        return redirect('dashboard')
 
     registrations = EventRegistration.objects.filter(event=event)
     return render(request, 'events/event_registrations.html', {
@@ -123,17 +124,12 @@ def event_registrations(request, event_id):
     })
 
 
-@login_required
-def my_proposals(request):
-    proposals = EventProposal.objects.filter(organizer=request.user)
-    return render(request, 'events/my_proposals.html', {'proposals': proposals})
-
-
 # ----------------------
 # STUDENT VIEWS
 # ----------------------
 @login_required
 def student_events(request):
+    """Student view of all events (announced only)."""
     events = Event.objects.filter(status='announced')
     registered_events = EventRegistration.objects.filter(student=request.user).values_list('event_id', flat=True)
     return render(request, 'events/student_events.html', {
@@ -144,16 +140,28 @@ def student_events(request):
 
 
 @login_required
+def available_events(request):
+    events = Event.objects.filter(status='announced')
+    registered_events = EventRegistration.objects.filter(student=request.user).values_list('event_id', flat=True)
+
+    return render(request, 'events/student_events.html', {   # ✅ USE EXISTING TEMPLATE
+        'events': events,
+        'registered_events': list(registered_events),
+        'can_register': True
+    })
+
+
+@login_required
 def register_event(request, event_id):
+    """Register a student for an event."""
     if hasattr(request.user, 'profile') and request.user.profile.role != 'student':
         messages.error(request, "You are not allowed to register for events.")
-        return redirect('my_events')
+        return redirect('dashboard')
 
     event = get_object_or_404(Event, id=event_id, status='announced')
-
     if EventRegistration.objects.filter(event=event, student=request.user).exists():
         messages.info(request, "You are already registered for this event!")
-        return redirect('student_events')
+        return redirect('available_events')
 
     if request.method == 'POST':
         form = EventRegistrationForm(request.POST)
@@ -163,7 +171,7 @@ def register_event(request, event_id):
             registration.student = request.user
             registration.save()
             messages.success(request, "Successfully registered!")
-            return redirect('student_events')
+            return redirect('available_events')
     else:
         form = EventRegistrationForm(initial={
             'student_name': request.user.get_full_name() or request.user.username,
@@ -172,34 +180,33 @@ def register_event(request, event_id):
 
     return render(request, 'events/register_event.html', {'form': form, 'event': event})
 
+
+# ----------------------
+# DASHBOARD (UNIFIED)
+# ----------------------
 @login_required
 def dashboard(request):
-    # Organizer / Admin data
-    if request.user.is_superuser or (hasattr(request.user, 'profile') and request.user.profile.role == 'organizer'):
-        user_events = Event.objects.filter(
-            organizer=request.user
-        ) if not request.user.is_superuser else Event.objects.all()
+    user = request.user
+
+    if hasattr(user, 'profile') and user.profile.role == 'organizer':
+        # Organizer dashboard
+        user_events = Event.objects.filter(organizer=user)
         total_events = user_events.count()
         total_registrations = EventRegistration.objects.filter(event__in=user_events).count()
+
         context = {
             'user_events': user_events,
             'total_events': total_events,
             'total_registrations': total_registrations,
-        }
-
-    # Student data
-    elif hasattr(request.user, 'profile') and request.user.profile.role == 'student':
-        student_events = Event.objects.filter(status='announced')
-        registered_events = EventRegistration.objects.filter(
-            student=request.user
-        ).values_list('event_id', flat=True)
-        context = {
-            'student_events': student_events,
-            'registered_events': list(registered_events),
+            'role': 'organizer'
         }
 
     else:
-        messages.error(request, "Access denied.")
-        return redirect('dashboard')
+        # Student dashboard
+        student_events = Event.objects.filter(status='announced')
+        context = {
+            'student_events': student_events,
+            'role': 'student'
+        }
 
-    return render(request, 'events/dashboard.html', context)
+    return render(request, 'accounts/dashboard.html', context)
