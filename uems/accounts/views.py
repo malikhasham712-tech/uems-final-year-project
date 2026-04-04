@@ -97,11 +97,8 @@ def login_view(request):
 
             login(request, user)
 
-            # ✅ CHECK IF USER IS ORGANIZER BY EVENT ASSIGNMENT
-            if Event.objects.filter(organizer=user).exists():
-                return redirect('dashboard')  # organizer view
-            else:
-                return redirect('student_events')
+            # ✅ ALWAYS go to dashboard first
+            return redirect('dashboard')
 
         else:
             messages.error(request, 'Invalid username or password.')
@@ -124,15 +121,12 @@ def dashboard(request):
     if not request.user.is_authenticated:
         return redirect('login')
 
-    events = Event.objects.filter(organizer=request.user)
-
-    if events.exists():
-        # Organizer interface
+    if request.user.profile.is_organizer:
+        events = Event.objects.filter(organizer=request.user)  # ✅ ADD THIS
         return render(request, 'organizer_dashboard.html', {'events': events})
-    else:
-        # Student interface
-        return render(request, 'student_dashboard.html')
 
+    else:
+        return render(request, 'student_dashboard.html')
 
 # ----------------------
 # HELPER: Assign organizer
