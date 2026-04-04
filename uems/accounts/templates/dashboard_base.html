@@ -5,9 +5,10 @@
     <meta charset="UTF-8">
     <title>{% block title %}Dashboard{% endblock %}</title>
 
+    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
-    <!-- Icons -->
+    <!-- Font Awesome Icons -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
 
     <style>
@@ -16,6 +17,7 @@
             font-family: 'Segoe UI', sans-serif;
         }
 
+        /* Sidebar */
         .sidebar {
             width: 250px;
             height: 100vh;
@@ -26,6 +28,7 @@
 
         .sidebar h4 {
             color: white;
+            font-weight: bold;
         }
 
         .sidebar a {
@@ -46,6 +49,7 @@
             color: white !important;
         }
 
+        /* Content */
         .content {
             margin-left: 260px;
             padding: 30px;
@@ -61,45 +65,99 @@
             padding: 15px 25px;
             border-radius: 10px;
             margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .topbar .btn {
+            margin-left: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+            }
+            .content {
+                margin-left: 0;
+                padding: 15px;
+            }
         }
     </style>
-
 </head>
-
 <body>
 
 <!-- SIDEBAR -->
 <div class="sidebar">
-
     <h4 class="text-center mb-4">UEMS</h4>
 
+    {% comment %} Sidebar Links {% endcomment %}
     {% if request.user.is_superuser or request.user.profile.role == 'organizer' %}
-        <a href="{% url 'my_events' %}" class="active-link">
-            <i class="fa fa-calendar"></i> My Events
+        <a href="{% url 'dashboard' %}" 
+           class="{% if request.path == '/dashboard/' %}active-link{% endif %}">
+           <i class="fa fa-home"></i> Dashboard
         </a>
-    {% else %}
-        <a href="{% url 'student_events' %}" class="active-link">
-            <i class="fa fa-calendar"></i> Events
+    {% elif request.user.profile.role == 'student' %}
+        <a href="{% url 'dashboard' %}" 
+           class="{% if request.path == '/dashboard/' %}active-link{% endif %}">
+           <i class="fa fa-home"></i> Dashboard
+        </a>
+        <a href="{% url 'student_events' %}" 
+           class="{% if request.path == '/events/student_events/' %}active-link{% endif %}">
+           <i class="fa fa-calendar"></i> Events
         </a>
     {% endif %}
 
     <a href="{% url 'logout' %}">
         <i class="fa fa-sign-out-alt"></i> Logout
     </a>
-
 </div>
 
-<!-- CONTENT -->
+<!-- MAIN CONTENT -->
 <div class="content">
 
-    <!-- TOP BAR -->
-    <div class="topbar d-flex justify-content-between align-items-center">
-        <h5 class="mb-0">Welcome, {{ request.user.username }}</h5>
+    <!-- TOPBAR -->
+    <div class="topbar">
+        <h5 class="mb-0">
+            Welcome, {{ request.user.username }} 
+            <small class="text-muted">({{ request.user.profile.role|title }})</small>
+        </h5>
+
+        <div>
+            {% if request.user.is_superuser or request.user.profile.role == 'organizer' %}
+                <a href="{% url 'dashboard' %}" class="btn btn-outline-primary btn-sm me-2">
+                    Dashboard
+                </a>
+            {% elif request.user.profile.role == 'student' %}
+                <a href="{% url 'dashboard' %}" class="btn btn-outline-primary btn-sm me-2">
+                    Dashboard
+                </a>
+                <a href="{% url 'student_events' %}" class="btn btn-outline-secondary btn-sm me-2">
+                    Events
+                </a>
+            {% endif %}
+
+            <button onclick="goBack()" class="btn btn-outline-secondary btn-sm">
+                ← Back
+            </button>
+        </div>
     </div>
 
     {% block content %}{% endblock %}
-
 </div>
+
+<!-- GLOBAL BACK FUNCTION -->
+<script>
+function goBack() {
+    if (document.referrer) {
+        window.history.back();
+    } else {
+        window.location.href = "{% url 'dashboard' %}";
+    }
+}
+</script>
 
 </body>
 </html>

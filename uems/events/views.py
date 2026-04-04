@@ -145,9 +145,7 @@ def student_events(request):
 
 @login_required
 def register_event(request, event_id):
-    if request.user.is_superuser or (
-        hasattr(request.user, 'profile') and request.user.profile.role in ['organizer', 'admin']
-    ):
+    if hasattr(request.user, 'profile') and request.user.profile.role != 'student':
         messages.error(request, "You are not allowed to register for events.")
         return redirect('my_events')
 
@@ -173,3 +171,35 @@ def register_event(request, event_id):
         })
 
     return render(request, 'events/register_event.html', {'form': form, 'event': event})
+
+@login_required
+def dashboard(request):
+    # Organizer / Admin data
+    if request.user.is_superuser or (hasattr(request.user, 'profile') and request.user.profile.role == 'organizer'):
+        user_events = Event.objects.filter(
+            organizer=request.user
+        ) if not request.user.is_superuser else Event.objects.all()
+        total_events = user_events.count()
+        total_registrations = EventRegistration.objects.filter(event__in=user_events).count()
+        context = {
+            'user_events': user_events,
+            'total_events': total_events,
+            'total_registrations': total_registrations,
+        }
+
+    # Student data
+    elif hasattr(request.user, 'profile') and request.user.profile.role == 'student':
+        student_events = Event.objects.filter(status='announced')
+        registered_events = EventRegistration.objects.filter(
+            student=request.user
+        ).values_list('event_id', flat=True)
+        context = {
+            'student_events': student_events,
+            'registered_events': list(registered_events),
+        }
+
+    else:
+        messages.error(request, "Access denied.")
+        return redirect('dashboard')
+
+    return render(request, 'events/dashboard.html', context)

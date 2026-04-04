@@ -1,51 +1,75 @@
-{% extends "base.html" %}
+{% extends "dashboard_base.html" %}
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
 
-<h2 class="mb-4">Dashboard</h2>
+<div class="container mt-4">
 
-{% if user_events %}
-<div class="card p-3">
-    <table class="table table-hover text-center align-middle">
-
-        <thead class="table-dark">
-            <tr>
-                <th>Event</th>
-                <th>Date</th>
-                <th>Status</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-
-        <tbody>
-        {% for event in user_events %}
-            {% if event.status == 'announced' %}
-            <tr>
-                <td>
-                    <strong>{{ event.name }}</strong>
-                </td>
-
-                <td>{{ event.date }}</td>
-
-                <td>
-                    <span class="badge bg-success">Announced</span>
-                </td>
-
-                <td>
-                    <a href="{% url 'view_proposals' event.id %}" class="btn btn-sm btn-primary">Proposals</a>
-                    <a href="{% url 'event_registrations' event.id %}" class="btn btn-sm btn-success">Registrations</a>
-                </td>
-            </tr>
-            {% endif %}
+    <!-- Messages -->
+    {% if messages %}
+      <div class="mt-2">
+        {% for message in messages %}
+          <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
         {% endfor %}
-        </tbody>
+      </div>
+    {% endif %}
 
-    </table>
+    <h3 class="fw-bold mb-4 text-primary">My Events</h3>
+
+    {% if user_events %}
+    <div class="row g-4">
+
+        {% for event in user_events %}
+        <div class="col-md-4">
+            <div class="card p-3 h-100 d-flex flex-column">
+
+                <!-- Event Title -->
+                <h5 class="fw-bold text-primary">{{ event.name }}</h5>
+
+                <!-- Event Date -->
+                <p class="text-muted mb-1">📅 {{ event.date|date:"d M Y" }}</p>
+
+                <!-- Event Venue -->
+                {% if event.venue %}
+                    <p class="mb-2">📍 {{ event.venue }}</p>
+                {% endif %}
+
+                <!-- Event Status -->
+                {% if event.status == 'announced' %}
+                    <span class="badge bg-success mb-3">Announced</span>
+                {% elif event.status == 'pending' %}
+                    <span class="badge bg-warning text-dark mb-3">Pending</span>
+                {% elif event.status == 'rejected' %}
+                    <span class="badge bg-danger mb-3">Rejected</span>
+                {% endif %}
+
+                <!-- Event Description -->
+                <p class="small text-muted mb-3">{{ event.description|truncatewords:20 }}</p>
+
+                <!-- Actions -->
+                <div class="mt-auto d-flex gap-2">
+                    <a href="{% url 'view_proposals' event.id %}" class="btn btn-sm btn-primary w-50">
+                        Proposals
+                    </a>
+                    <a href="{% url 'event_registrations' event.id %}" class="btn btn-sm btn-success w-50">
+                        Registrations
+                    </a>
+                </div>
+
+            </div>
+        </div>
+        {% endfor %}
+
+    </div>
+    {% else %}
+        <div class="alert alert-info text-center mt-4">
+            No events found for you.
+        </div>
+    {% endif %}
+
 </div>
-
-{% else %}
-<p>No announced events.</p>
-{% endif %}
 
 {% endblock %}
