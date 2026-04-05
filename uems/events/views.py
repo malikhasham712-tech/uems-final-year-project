@@ -102,11 +102,31 @@ def reject_proposal(request, proposal_id):
 
 @login_required
 def view_event(request, event_id):
-    """View event details and its proposals."""
+    """
+    Display a single event's details.
+    Supports normal page rendering and AJAX JSON response.
+    """
+    # Fetch the event or return 404 if not found
     event = get_object_or_404(Event, id=event_id)
-    proposals = EventProposal.objects.filter(event=event)
-    return render(request, 'events/view_event.html', {'event': event, 'proposals': proposals})
 
+    # If AJAX request, return JSON data
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        data = {
+            'id': event.id,
+            'name': event.name or "Untitled Event",
+            'organizer': event.organizer.get_full_name() if event.organizer else "N/A",
+            'venue': event.venue or "TBD",
+            'date': event.date.strftime('%d %b %Y') if event.date else "TBD",
+            'status': event.status or "unknown",
+            'description': event.description or "N/A",
+        }
+        return JsonResponse(data)
+
+    # Normal page rendering
+    context = {
+        'event': event
+    }
+    return render(request, 'events/view_event.html', context)
 
 @login_required
 def event_registrations(request, event_id):

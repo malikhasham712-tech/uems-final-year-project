@@ -1,5 +1,5 @@
 from django.urls import path
-from django.db.models import Count  # for counting registrations in dashboard
+from django.db.models import Count  # For counting registrations in dashboard
 from . import views
 
 urlpatterns = [
@@ -8,4 +8,5 @@ urlpatterns = [
     path('login/', views.login_view, name='login'),
     path('verify/<uuid:token>/', views.verify_email, name='verify-email'),
     path('logout/', views.logout_view, name='logout'),
+    
 ]

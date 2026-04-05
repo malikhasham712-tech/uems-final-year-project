@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.urls import reverse
@@ -10,7 +10,7 @@ from django.conf import settings
 import uuid
 from django.contrib.auth.models import User
 
-# ✅ REQUIRED IMPORTS (FIXED)
+# ✅ REQUIRED IMPORTS
 from django.contrib.auth.decorators import login_required
 from django.db.models import Count
 
@@ -118,7 +118,7 @@ def logout_view(request):
 
 
 # ----------------------
-# DASHBOARD (MAIN LOGIC)
+# DASHBOARD
 # ----------------------
 @login_required
 def dashboard(request):
@@ -128,7 +128,6 @@ def dashboard(request):
     # ORGANIZER DASHBOARD
     # ----------------------
     if hasattr(user, 'profile') and user.profile.role == 'organizer':
-
         user_events = Event.objects.filter(organizer=user).annotate(
             total_registrations=Count('registrations')
         )
@@ -147,19 +146,48 @@ def dashboard(request):
     # STUDENT DASHBOARD
     # ----------------------
     else:
-        student_events = Event.objects.filter(status='announced')
-
-        registered_event_ids = EventRegistration.objects.filter(
+        # Registered events for this student
+        registered_events = EventRegistration.objects.filter(
             student=user
-        ).values_list('event_id', flat=True)
+        ).select_related('event')
+
+        # All announced events
+        available_events = Event.objects.filter(status='announced')
 
         context = {
             'role': 'student',
-            'student_events': student_events,
-            'registered_event_ids': list(registered_event_ids),
+            'registered_events': [reg.event for reg in registered_events],
+            'available_events': available_events,
         }
 
     return render(request, 'accounts/dashboard.html', context)
+
+
+# ----------------------
+# VIEW EVENT DETAILS (NEW)
+# ----------------------
+@login_required
+def view_event(request, event_id):
+    """
+    Show details for a single event.
+    Students can see details for registered events only.
+    Organizers can see events they created.
+    """
+    event = get_object_or_404(Event, id=event_id)
+
+    # ----------------------
+    # STUDENT: check registration
+    # ----------------------
+    if hasattr(request.user, 'profile') and request.user.profile.role != 'organizer':
+        if not EventRegistration.objects.filter(student=request.user, event=event).exists():
+            messages.error(request, 'You are not registered for this event.')
+            return redirect('dashboard')
+
+    context = {
+        'event': event,
+        'organizer': event.organizer,
+    }
+    return render(request, 'view_event.html', context)
 
 
 # ----------------------
@@ -183,7 +211,7 @@ def assign_organizer(user_username, event_name):
 # HELPER: Fix existing users
 # ----------------------
 def fix_existing_organizers():
-    organizer_users = ['Hasham', 'Sir_Ubaid']
+    organizer_users = ['Sir_Ubaid']  # Only Sir_Ubaid is organizer now
 
     for u_name in organizer_users:
         user = User.objects.get(username=u_name)

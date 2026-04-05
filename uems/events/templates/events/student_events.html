@@ -3,63 +3,88 @@
 
 {% block content %}
 
-<div class="container mt-4">
+<div class="box">
 
     <!-- Messages -->
     {% if messages %}
-      <div class="mt-2">
+      <div class="mb-3">
         {% for message in messages %}
-          <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+          <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm" role="alert">
             {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
           </div>
         {% endfor %}
       </div>
     {% endif %}
 
-    <h3 class="fw-bold mb-4 text-primary">Available Events</h3>
+    <!-- HEADER -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="fw-bold text-primary mb-0">Available Events</h4>
+    </div>
 
     {% if events %}
+
     <div class="row g-4">
 
         {% for event in events %}
-        <div class="col-md-4">
-            <div class="card p-3 h-100 d-flex flex-column">
+        <div class="col-lg-4 col-md-6">
 
-                <!-- Event Title -->
-                <h5 class="fw-bold text-primary">{{ event.name }}</h5>
+            <!-- EVENT CARD -->
+            <div class="event-card">
 
-                <!-- Event Date -->
-                <p class="text-muted mb-1">📅 {{ event.date|date:"d M Y" }}</p>
+                <!-- TITLE -->
+                <h5 class="text-primary mb-2">
+                    {{ event.name }}
+                </h5>
 
-                <!-- Event Venue -->
+                <!-- DATE -->
+                <p class="text-muted mb-1">
+                    📅 {{ event.date|date:"d M Y" }}
+                </p>
+
+                <!-- VENUE -->
                 {% if event.venue %}
-                    <p class="mb-2">📍 {{ event.venue }}</p>
+                <p class="mb-2">
+                    📍 {{ event.venue }}
+                </p>
                 {% endif %}
 
-                <!-- Event Description -->
-                <p class="small text-muted mb-3">{{ event.description|truncatewords:20 }}</p>
+                <!-- DESCRIPTION -->
+                <p class="text-muted small mb-3">
+                    {{ event.description|truncatewords:18 }}
+                </p>
 
-                <!-- Register / Registered -->
+                <!-- ACTION -->
                 <div class="mt-auto">
+
                     {% if event.id in registered_events %}
-                        <span class="badge bg-success w-100 py-2">Registered</span>
+                        <span class="badge bg-success w-100 py-2 fs-6">
+                            Registered
+                        </span>
+
                     {% elif request.user.profile.role == 'student' %}
-                        <a href="{% url 'register_event' event.id %}" class="btn btn-primary w-100">
+                        <a href="{% url 'register_event' event.id %}" 
+                           class="btn btn-primary w-100 py-2 fw-semibold">
                             Register Now
                         </a>
                     {% endif %}
+
                 </div>
 
             </div>
+
         </div>
         {% endfor %}
 
     </div>
+
     {% else %}
-        <div class="alert alert-info text-center mt-4">
-            No events available at the moment.
+
+        <!-- EMPTY STATE -->
+        <div class="text-center py-5">
+            <h6 class="text-muted">No events available at the moment</h6>
         </div>
+
     {% endif %}
 
 </div>

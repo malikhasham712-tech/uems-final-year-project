@@ -2,7 +2,7 @@
 {% block title %}My Events{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
+<div class="box">
     <h3 class="fw-bold mb-4 text-primary">Events Dashboard</h3>
 
     <!-- Messages -->
@@ -55,7 +55,6 @@
                         <td>
                             <div class="d-flex flex-column gap-2">
                                 {% if request.user.id == event.organizer.id and not request.user.is_superuser %}
-                                <!-- Trigger Modal -->
                                 <button type="button" class="btn btn-sm btn-outline-success w-100" 
                                         data-bs-toggle="modal" data-bs-target="#submitProposal{{ event.id }}">
                                     <i class="fa fa-plus"></i> Submit Proposal

@@ -2,11 +2,11 @@
 {% block title %}Proposals - {{ event.name }}{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
+<div class="table-container">
 
     <!-- Messages -->
     {% if messages %}
-      <div class="mt-2">
+      <div class="mb-3">
         {% for message in messages %}
           <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
             {{ message }}
@@ -16,9 +16,9 @@
       </div>
     {% endif %}
 
-    <h3 class="mb-4 fw-bold text-primary">Proposals for {{ event.name }}</h3>
+    <h4 class="mb-4 text-primary">Proposals for {{ event.name }}</h4>
 
-    <!-- Submit New Proposal (Organizer Only) -->
+    <!-- Submit New Proposal (Non-admin) -->
     {% if not request.user.is_superuser %}
     <div class="card mb-4 shadow-sm p-4">
         <h5 class="mb-3 fw-bold">Submit New Proposal</h5>
@@ -37,59 +37,54 @@
 
     <!-- Proposal List -->
     {% if proposals %}
-    <div class="card shadow-sm p-3">
-        <div class="table-responsive">
-            <table class="table table-bordered table-hover align-middle text-center">
-                <thead class="table-dark">
-                    <tr>
-                        <th>#</th>
-                        <th>Proposal Name</th>
-                        <th>Venue</th>
-                        <th>Status</th>
-                        {% if request.user.is_superuser %}<th>Action</th>{% endif %}
-                        <th>Submitted At</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for proposal in proposals %}
-                    <tr>
-                        <td>{{ forloop.counter }}</td>
-                        <td>{{ proposal.name|default:"Proposal " | add:forloop.counter }}</td>
-                        <td>{{ proposal.venue|default:"N/A" }}</td>
-                        <td>
-                            {% if proposal.status == "approved" %}
-                                <span class="badge bg-success">Approved</span>
-                            {% elif proposal.status == "pending" %}
-                                <span class="badge bg-warning text-dark">Pending</span>
-                            {% else %}
-                                <span class="badge bg-secondary text-capitalize">{{ proposal.status }}</span>
-                            {% endif %}
-                        </td>
-                        {% if request.user.is_superuser %}
-                        <td>
-                            <a href="{% url 'approve_proposal' proposal.id %}" class="btn btn-success btn-sm"
-                               onclick="return confirm('Approve this proposal?');">Approve</a>
-                            <a href="{% url 'reject_proposal' proposal.id %}" class="btn btn-danger btn-sm"
-                               onclick="return confirm('Reject this proposal?');">Reject</a>
-                        </td>
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover align-middle text-center">
+            <thead class="table-dark">
+                <tr>
+                    <th>#</th>
+                    <th>Proposal Name</th>
+                    <th>Venue</th>
+                    <th>Status</th>
+                    {% if request.user.is_superuser %}<th>Action</th>{% endif %}
+                    <th>Submitted At</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for proposal in proposals %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ proposal.name|default:"Proposal " | add:forloop.counter }}</td>
+                    <td>{{ proposal.venue|default:"N/A" }}</td>
+                    <td>
+                        {% if proposal.status == "approved" %}
+                            <span class="badge bg-success">Approved</span>
+                        {% elif proposal.status == "pending" %}
+                            <span class="badge bg-warning text-dark">Pending</span>
+                        {% else %}
+                            <span class="badge bg-secondary text-capitalize">{{ proposal.status }}</span>
                         {% endif %}
-                        <td>{{ proposal.created_at|date:"d M Y H:i" }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+                    </td>
+                    {% if request.user.is_superuser %}
+                    <td>
+                        <a href="{% url 'approve_proposal' proposal.id %}" class="btn btn-success btn-sm" onclick="return confirm('Approve this proposal?');">Approve</a>
+                        <a href="{% url 'reject_proposal' proposal.id %}" class="btn btn-danger btn-sm" onclick="return confirm('Reject this proposal?');">Reject</a>
+                    </td>
+                    {% endif %}
+                    <td>{{ proposal.created_at|date:"d M Y H:i" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
     {% else %}
     <div class="alert alert-info text-center">No proposals submitted yet.</div>
     {% endif %}
 
-    <div class="mt-3">
-        <div class="mt-3">
-            <button onclick="goBack()" class="btn btn-outline-secondary">
-                ← Back
-            </button>
-        </div>
+    <!-- Back Button -->
+    <div class="back-btn mt-3">
+        <button onclick="window.history.back();" class="btn btn-outline-secondary">
+            <i class="fa fa-arrow-left me-1"></i> Back
+        </button>
     </div>
 
 </div>
