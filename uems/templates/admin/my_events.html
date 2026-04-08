@@ -30,7 +30,7 @@
           <td class="py-2 px-4 space-x-2">
             <a href="{% url 'view_proposals' event.id %}" class="bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-1 rounded text-sm">View Proposals</a>
             <a href="{% url 'submit_proposal' event.id %}" class="bg-gray-500 hover:bg-gray-600 text-white px-3 py-1 rounded text-sm">Submit Proposal</a>
-            <a href="{% url 'event_registrations' event.id %}" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm">View Registrations</a>
+            <a href="{% url 'events:event_registrations' event.id %}" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm">View Registrations</a>
           </td>
         </tr>
         {% empty %}

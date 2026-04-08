@@ -1,4 +1,4 @@
-{% extends "dashboard_base.html" %}
+{% extends "accounts/dashboard_base.html" %}
 {% block title %}Organizer Dashboard{% endblock %}
 
 {% block content %}
@@ -22,7 +22,7 @@
                     {% for event in events %}
                     <tr>
                         <td class="text-start">
-                            <a href="{% url 'view_event' event.id %}" class="text-decoration-none fw-semibold text-dark">
+                            <a href="{% url 'events:view_event' event.id %}" class="text-decoration-none fw-semibold text-dark">
                                 {{ event.name }}
                             </a>
                             <br>
@@ -56,7 +56,7 @@
                             {% endif %}
                         </td>
                         <td>
-                            <a href="{% url 'event_registrations' event.id %}" class="btn btn-sm btn-outline-info w-100">
+                            <a href="{% url 'events:event_registrations' event.id %}" class="btn btn-sm btn-outline-info w-100">
                                 <i class="fa fa-users"></i> View
                             </a>
                         </td>

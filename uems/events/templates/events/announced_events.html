@@ -19,13 +19,13 @@
         {% for event in events %}
         <tr class="hover:bg-gray-50">
           <td class="px-6 py-4">
-            <a href="{% url 'view_event' event.id %}" class="text-blue-600 hover:underline font-medium">{{ event.name }}</a>
+            <a href="{% url 'events:view_event' event.id %}" class="text-blue-600 hover:underline font-medium">{{ event.name }}</a>
           </td>
           <td class="px-6 py-4 text-gray-700">{{ event.date|date:"F j, Y" }}</td>
           <td class="px-6 py-4 text-gray-700">{{ event.recommendation|default:"-" }}</td>
           <td class="px-6 py-4">
             {% if event.id not in registered_events %}
-              <a href="{% url 'register_event' event.id %}" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded shadow text-sm font-medium">Register</a>
+              <a href="{% url 'events:register_event' event.id %}" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded shadow text-sm font-medium">Register</a>
             {% else %}
               <span class="text-gray-500 italic text-sm">Registered</span>
             {% endif %}

@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.db.models import Count
 from django.contrib import messages
-from django.contrib.auth.models import User
+from django.http import JsonResponse
 from .models import Event, EventProposal, EventRegistration
 from .forms import ProposalForm, EventRegistrationForm
 
@@ -20,7 +20,7 @@ def my_events(request):
         messages.error(request, "Access denied.")
         return redirect('dashboard')
 
-    return render(request, 'events/my_events.html', {'events': events})
+    return render(request, 'events/my_events.html', {'events': events, 'role': 'organizer'})
 
 
 @login_required
@@ -40,7 +40,7 @@ def submit_proposal(request, event_id):
             proposal.status = 'pending'
             proposal.save()
             messages.success(request, "Proposal submitted successfully!")
-            return redirect('view_proposals', event_id=event.id)
+            return redirect('events:view_proposals', event_id=event.id)
     else:
         form = ProposalForm()
 
@@ -65,7 +65,7 @@ def view_proposals(request, event_id):
         proposal.status = 'pending'
         proposal.save()
         messages.success(request, "Proposal submitted successfully!")
-        return redirect('view_proposals', event_id=event.id)
+        return redirect('events:view_proposals', event_id=event.id)
 
     return render(request, 'events/view_proposals.html', {
         'event': event,
@@ -84,7 +84,7 @@ def approve_proposal(request, proposal_id):
     proposal.status = 'approved'
     proposal.save()
     messages.success(request, f"Proposal '{proposal.name}' approved!")
-    return redirect('view_proposals', event_id=proposal.event.id)
+    return redirect('events:view_proposals', event_id=proposal.event.id)
 
 
 @login_required
@@ -97,19 +97,14 @@ def reject_proposal(request, proposal_id):
     proposal.status = 'rejected'
     proposal.save()
     messages.success(request, f"Proposal '{proposal.name}' rejected!")
-    return redirect('view_proposals', event_id=proposal.event.id)
+    return redirect('events:view_proposals', event_id=proposal.event.id)
 
 
 @login_required
 def view_event(request, event_id):
-    """
-    Display a single event's details.
-    Supports normal page rendering and AJAX JSON response.
-    """
-    # Fetch the event or return 404 if not found
+    """Display a single event's details (supports JSON/AJAX)."""
     event = get_object_or_404(Event, id=event_id)
 
-    # If AJAX request, return JSON data
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
         data = {
             'id': event.id,
@@ -122,11 +117,8 @@ def view_event(request, event_id):
         }
         return JsonResponse(data)
 
-    # Normal page rendering
-    context = {
-        'event': event
-    }
-    return render(request, 'events/view_event.html', context)
+    return render(request, 'events/view_event.html', {'event': event})
+
 
 @login_required
 def event_registrations(request, event_id):
@@ -145,30 +137,19 @@ def event_registrations(request, event_id):
 
 
 # ----------------------
-# STUDENT VIEWS
-# ----------------------
-@login_required
-def student_events(request):
-    """Student view of all events (announced only)."""
-    events = Event.objects.filter(status='announced')
-    registered_events = EventRegistration.objects.filter(student=request.user).values_list('event_id', flat=True)
-    return render(request, 'events/student_events.html', {
-        'events': events,
-        'registered_events': list(registered_events),
-        'can_register': True
-    })
 
 
 @login_required
 def available_events(request):
+    """All events available for registration."""
     events = Event.objects.filter(status='announced')
     registered_events = EventRegistration.objects.filter(student=request.user).values_list('event_id', flat=True)
-
-    return render(request, 'events/student_events.html', {   # ✅ USE EXISTING TEMPLATE
-        'events': events,
+    context = {
+        'available_events': events,
         'registered_events': list(registered_events),
-        'can_register': True
-    })
+        'role': 'student'
+    }
+    return render(request, 'events/available_events.html', context)
 
 
 @login_required
@@ -181,7 +162,7 @@ def register_event(request, event_id):
     event = get_object_or_404(Event, id=event_id, status='announced')
     if EventRegistration.objects.filter(event=event, student=request.user).exists():
         messages.info(request, "You are already registered for this event!")
-        return redirect('available_events')
+        return redirect('events:available_events')
 
     if request.method == 'POST':
         form = EventRegistrationForm(request.POST)
@@ -191,7 +172,7 @@ def register_event(request, event_id):
             registration.student = request.user
             registration.save()
             messages.success(request, "Successfully registered!")
-            return redirect('available_events')
+            return redirect('events:available_events')
     else:
         form = EventRegistrationForm(initial={
             'student_name': request.user.get_full_name() or request.user.username,
@@ -209,20 +190,16 @@ def dashboard(request):
     user = request.user
 
     if hasattr(user, 'profile') and user.profile.role == 'organizer':
-        # Organizer dashboard
         user_events = Event.objects.filter(organizer=user)
         total_events = user_events.count()
         total_registrations = EventRegistration.objects.filter(event__in=user_events).count()
-
         context = {
             'user_events': user_events,
             'total_events': total_events,
             'total_registrations': total_registrations,
             'role': 'organizer'
         }
-
     else:
-        # Student dashboard
         student_events = Event.objects.filter(status='announced')
         context = {
             'student_events': student_events,

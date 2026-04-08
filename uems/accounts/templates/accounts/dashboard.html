@@ -1,4 +1,4 @@
-{% extends "dashboard_base.html" %}
+{% extends "accounts/dashboard_base.html" %}
 
 {% block title %}Dashboard{% endblock %}
 
@@ -36,7 +36,7 @@
 
                         <!-- EVENT NAME -->
                         <td>
-                            <a href="{% url 'view_event' event.id %}" 
+                            <a href="{% url 'events:view_event' event.id %}" 
                                class="fw-semibold text-decoration-none text-dark hover-primary">
                                 {{ event.name }}
                             </a>
@@ -70,7 +70,7 @@
 
                         <!-- REGISTRATIONS -->
                         <td class="text-center">
-                            <a href="{% url 'event_registrations' event.id %}" 
+                            <a href="{% url 'events:event_registrations' event.id %}" 
                                class="btn btn-sm btn-outline-success px-3">
                                 View
                             </a>
@@ -106,7 +106,7 @@
                 Explore available events and register easily
             </p>
 
-            <a href="{% url 'available_events' %}" 
+            <a href="{% url 'events:available_events' %}" 
                class="btn btn-primary btn-lg px-4">
                 View Available Events
             </a>

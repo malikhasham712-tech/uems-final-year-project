@@ -1,4 +1,4 @@
-{% extends "dashboard_base.html" %}
+{% extends "accounts/dashboard_base.html" %}
 {% block title %}Registrations - {{ event.name }}{% endblock %}
 
 {% block content %}
@@ -11,7 +11,7 @@
             <a href="{% url 'dashboard' %}">Dashboard</a>
         </li>
         <li class="breadcrumb-item">
-            <a href="{% url 'view_event' event.id %}">{{ event.name }}</a>
+            <a href="{% url 'events:view_event' event.id %}">{{ event.name }}</a>
         </li>
         <li class="breadcrumb-item active">Registrations</li>
       </ol>

@@ -13,6 +13,5 @@ urlpatterns = [
     # Events (NO prefix)
     path('', include('events.urls')),   # 🔥 FIXED
 
-    # Dashboard
-    path('dashboard/', events_views.dashboard, name='dashboard'),
+    
 ]

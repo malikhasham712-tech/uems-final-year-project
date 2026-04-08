@@ -1,4 +1,4 @@
-{% extends "dashboard_base.html" %}
+{% extends "accounts/dashboard_base.html" %}
 {% block title %}My Events{% endblock %}
 
 {% block content %}
@@ -93,7 +93,7 @@
                         </td>
                         <td>
                             <div class="d-flex flex-column gap-2">
-                                <a href="{% url 'view_event' event.id %}" class="btn btn-sm btn-outline-primary w-100">
+                                <a href="{% url 'events:event_registrations' event.id %}" class="btn btn-sm btn-outline-primary w-100">
                                     <i class="fa fa-eye"></i> View Event
                                 </a>
                                 {% if request.user.is_superuser or request.user.id == event.organizer.id %}

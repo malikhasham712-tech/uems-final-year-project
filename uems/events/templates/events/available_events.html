@@ -1,0 +1,53 @@
+{% extends "accounts/dashboard_base.html" %}
+
+{% block title %}Available Events{% endblock %}
+
+{% block content %}
+
+<div class="box">
+
+    <h4 class="mb-4 text-primary fw-bold">Available Events</h4>
+
+    {% if available_events %}
+
+    <div class="row g-4">
+        {% for event in available_events %}
+            <div class="col-md-6 col-lg-4">
+                <div class="event-card">
+                    <h5 class="fw-semibold">{{ event.name }}</h5>
+                    <p class="mb-1"><strong>Date:</strong> {{ event.date|date:"d M Y" }}</p>
+                    <p class="mb-2">
+                        <strong>Status:</strong>
+                        {% if event.status == 'announced' %}
+                            <span class="badge bg-success px-3 py-1">Announced</span>
+                        {% elif event.status == 'pending' %}
+                            <span class="badge bg-warning text-dark px-3 py-1">Pending</span>
+                        {% else %}
+                            <span class="badge bg-danger px-3 py-1">Rejected</span>
+                        {% endif %}
+                    </p>
+
+                    {% if event.id %}
+                        <a href="{% url 'events:view_event' event.id %}" class="btn btn-primary btn-sm mt-auto w-100">
+                            View Details
+                        </a>
+                    {% else %}
+                        <button class="btn btn-secondary btn-sm mt-auto w-100" disabled>
+                            Not available
+                        </button>
+                    {% endif %}
+
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    {% else %}
+        <div class="text-center py-5">
+            <h6 class="text-muted">No events are currently available</h6>
+        </div>
+    {% endif %}
+
+</div>
+
+{% endblock %}

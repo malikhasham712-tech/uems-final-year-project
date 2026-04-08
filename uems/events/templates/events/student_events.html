@@ -1,4 +1,4 @@
-{% extends "dashboard_base.html" %}
+{% extends "accounts/dashboard_base.html" %}
 {% block title %}Available Events{% endblock %}
 
 {% block content %}
@@ -63,7 +63,7 @@
                         </span>
 
                     {% elif request.user.profile.role == 'student' %}
-                        <a href="{% url 'register_event' event.id %}" 
+                        <a href="{% url 'events:register_event' event.id %}" 
                            class="btn btn-primary w-100 py-2 fw-semibold">
                             Register Now
                         </a>

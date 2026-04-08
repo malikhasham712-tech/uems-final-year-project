@@ -1,4 +1,4 @@
-{% extends "dashboard_base.html" %}
+{% extends "accounts/dashboard_base.html" %}
 {% block title %}Student Dashboard{% endblock %}
 
 {% block content %}
@@ -6,7 +6,7 @@
 
     <!-- Available Events Button -->
     <div class="mb-4">
-        <a href="{% url 'available_events' %}" class="btn btn-primary btn-lg">
+        <a href="{% url 'events:available_events' %}" class="btn btn-primary btn-lg">
             <i class="fa fa-calendar-check me-2"></i> Available Events
         </a>
     </div>
@@ -28,7 +28,7 @@
                 {% for event in registered_events %}
                 <tr>
                     <td class="text-start">
-                        <a href="{% url 'view_event' event.id %}" class="text-decoration-none text-dark fw-semibold">
+                        <a href="{% url 'events:view_event' event.id %}" class="text-decoration-none text-dark fw-semibold">
                             {{ event.name }}
                         </a>
                         <br>

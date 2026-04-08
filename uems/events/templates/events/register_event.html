@@ -1,4 +1,4 @@
-{% extends 'dashboard_base.html' %}
+{% extends "accounts/dashboard_base.html" %}
 
 {% block title %}Register for {{ event.name }}{% endblock %}
 
@@ -36,7 +36,7 @@
         <button type="submit" class="btn btn-success w-100">Submit Registration</button>
       </div>
       <div class="col-12 text-center mt-3">
-        <a href="{% url 'student_events' %}" class="text-decoration-none text-muted">Cancel</a>
+        <a href="{% url 'events:student_events' %}" class="text-decoration-none text-muted">Cancel</a>
       </div>
     </form>
   </div>
