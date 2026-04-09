@@ -155,12 +155,11 @@ def event_registrations(request, event_id):
 # ----------------------
 # STUDENT EVENTS VIEWS
 # ----------------------
-
 @login_required
 def available_events(request):
     """Show all announced events for students."""
     events = Event.objects.filter(status='announced')
-    return render(request, 'accounts/available_events.html', {'events': events})
+    return render(request, 'events/available_events.html', {'events': events})
 
 
 @login_required
