@@ -6,37 +6,48 @@
 <div class="container mt-5" style="max-width: 600px;">
   <div class="card shadow-sm border-0 p-4">
     <h2 class="mb-3 fw-bold text-primary">Register for {{ event.name }}</h2>
+
     {% if event.venue %}
     <p class="text-muted mb-4">
         <strong>Venue:</strong> {{ event.venue }} <br>
         <strong>Date:</strong> {{ event.date|date:"d M Y" }}
     </p>
     {% else %}
-    <p class="text-muted mb-4"><strong>Date:</strong> {{ event.date|date:"d M Y" }}</p>
+    <p class="text-muted mb-4">
+        <strong>Date:</strong> {{ event.date|date:"d M Y" }}
+    </p>
     {% endif %}
 
     {% if messages %}
       {% for message in messages %}
         <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
           {{ message }}
-          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
       {% endfor %}
     {% endif %}
 
     <form method="POST" class="row g-3">
       {% csrf_token %}
+
       <div class="col-12">{{ form.student_name }}</div>
       <div class="col-12">{{ form.registration_no }}</div>
       <div class="col-12">{{ form.semester }}</div>
       <div class="col-12">{{ form.department }}</div>
       <div class="col-12">{{ form.email }}</div>
       <div class="col-12">{{ form.contact_no }}</div>
+
       <div class="col-12">
-        <button type="submit" class="btn btn-success w-100">Submit Registration</button>
+        <button type="submit" class="btn btn-success w-100">
+            Submit Registration
+        </button>
       </div>
+
       <div class="col-12 text-center mt-3">
-        <a href="{% url 'events:student_events' %}" class="text-decoration-none text-muted">Cancel</a>
+        <!-- ✅ FIXED -->
+        <a href="{% url 'events:available_events' %}" class="text-decoration-none text-muted">
+            Cancel
+        </a>
       </div>
     </form>
   </div>

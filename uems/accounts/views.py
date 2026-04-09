@@ -84,30 +84,39 @@ def verify_email(request, token):
 # ----------------------
 # LOGIN
 # ----------------------
+
 def login_view(request):
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
 
+        # Authenticate user
         user = authenticate(request, username=username, password=password)
 
-        if user:
+        if user is not None:
+
+            # Check if profile exists
             try:
-                if not user.profile.email_verified:
-                    messages.error(request, 'Please verify your email before login.')
-                    return redirect('login')
+                profile = user.profile
             except Profile.DoesNotExist:
                 messages.error(request, 'Profile missing. Contact admin.')
                 return redirect('login')
 
+            # Check email verification
+            if not profile.email_verified:
+                messages.error(request, 'Please verify your email before login.')
+                return redirect('login')
+
+            # Login user
             login(request, user)
-            return redirect('dashboard')
+
+            # Redirect to dashboard (FIXED)
+            return redirect('events:dashboard')
 
         else:
             messages.error(request, 'Invalid username or password.')
 
     return render(request, 'accounts/login.html')
-
 
 # ----------------------
 # LOGOUT
@@ -181,7 +190,7 @@ def view_event(request, event_id):
     if hasattr(request.user, 'profile') and request.user.profile.role != 'organizer':
         if not EventRegistration.objects.filter(student=request.user, event=event).exists():
             messages.error(request, 'You are not registered for this event.')
-            return redirect('dashboard')
+            return redirect('events:dashboard')
 
     context = {
         'event': event,

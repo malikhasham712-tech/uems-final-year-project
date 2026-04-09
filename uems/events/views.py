@@ -18,7 +18,7 @@ def my_events(request):
         events = Event.objects.filter(organizer=request.user).annotate(total_registrations=Count('registrations'))
     else:
         messages.error(request, "Access denied.")
-        return redirect('dashboard')
+        return redirect('events:dashboard')
 
     return render(request, 'events/my_events.html', {'events': events, 'role': 'organizer'})
 
@@ -29,7 +29,7 @@ def submit_proposal(request, event_id):
     event = get_object_or_404(Event, id=event_id)
     if not request.user.is_superuser and request.user != event.organizer:
         messages.error(request, "Access denied.")
-        return redirect('dashboard')
+        return redirect('events:dashboard')
 
     if request.method == 'POST':
         form = ProposalForm(request.POST)
@@ -53,7 +53,7 @@ def view_proposals(request, event_id):
     event = get_object_or_404(Event, id=event_id)
     if not (request.user.is_superuser or request.user == event.organizer):
         messages.error(request, "Access denied.")
-        return redirect('dashboard')
+        return redirect('events:dashboard')
 
     proposals = EventProposal.objects.filter(event=event).order_by('-submitted_at')
 
@@ -79,7 +79,7 @@ def approve_proposal(request, proposal_id):
     proposal = get_object_or_404(EventProposal, id=proposal_id)
     if not request.user.is_superuser:
         messages.error(request, "Access denied.")
-        return redirect('dashboard')
+        return redirect('events:dashboard')
 
     proposal.status = 'approved'
     proposal.save()
@@ -92,7 +92,7 @@ def reject_proposal(request, proposal_id):
     proposal = get_object_or_404(EventProposal, id=proposal_id)
     if not request.user.is_superuser:
         messages.error(request, "Access denied.")
-        return redirect('dashboard')
+        return redirect('events:dashboard')
 
     proposal.status = 'rejected'
     proposal.save()
@@ -126,7 +126,7 @@ def event_registrations(request, event_id):
     event = get_object_or_404(Event, id=event_id)
     if not request.user.is_superuser and request.user != event.organizer:
         messages.error(request, "Access denied.")
-        return redirect('dashboard')
+        return redirect('events:dashboard')
 
     registrations = EventRegistration.objects.filter(event=event)
     return render(request, 'events/event_registrations.html', {
@@ -157,7 +157,7 @@ def register_event(request, event_id):
     """Register a student for an event."""
     if hasattr(request.user, 'profile') and request.user.profile.role != 'student':
         messages.error(request, "You are not allowed to register for events.")
-        return redirect('dashboard')
+        return redirect('events:dashboard')
 
     event = get_object_or_404(Event, id=event_id, status='announced')
     if EventRegistration.objects.filter(event=event, student=request.user).exists():
