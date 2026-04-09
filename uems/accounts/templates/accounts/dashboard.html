@@ -3,118 +3,164 @@
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
-
 <div class="box">
 
     {% if role == 'organizer' %}
-
-        <!-- HEADER -->
+        <!-- ORGANIZER DASHBOARD -->
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h4 class="text-primary fw-bold mb-0">Assigned Events</h4>
         </div>
 
         {% if user_events %}
+            <div class="table-responsive">
+                <table class="table align-middle table-hover">
+                    <thead>
+                        <tr>
+                            <th>Event</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th class="text-center">Proposals</th>
+                            <th class="text-center">Registrations</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for event in user_events %}
+                            <tr>
+                                <!-- EVENT NAME -->
+                                <td>
+                                    <a href="{% url 'events:view_event' event.id %}" 
+                                       class="fw-semibold text-decoration-none text-dark hover-primary">
+                                        {{ event.name }}
+                                    </a>
+                                </td>
 
-        <!-- TABLE -->
-        <div class="table-responsive">
-            <table class="table align-middle table-hover">
+                                <!-- DATE -->
+                                <td>
+                                    <span class="text-muted">{{ event.date|date:"d M Y" }}</span>
+                                </td>
 
-                <thead>
-                    <tr>
-                        <th>Event</th>
-                        <th>Date</th>
-                        <th>Status</th>
-                        <th class="text-center">Proposals</th>
-                        <th class="text-center">Registrations</th>
-                    </tr>
-                </thead>
+                                <!-- STATUS -->
+                                <td>
+                                    {% if event.status == 'announced' %}
+                                        <span class="badge bg-success px-3 py-2">Announced</span>
+                                    {% elif event.status == 'pending' %}
+                                        <span class="badge bg-warning text-dark px-3 py-2">Pending</span>
+                                    {% else %}
+                                        <span class="badge bg-danger px-3 py-2">Rejected</span>
+                                    {% endif %}
+                                </td>
 
-                <tbody>
+                                <!-- PROPOSALS -->
+                                <td class="text-center">
+                                    <a href="{% url 'events:view_proposals' event.id %}" 
+                                       class="btn btn-sm btn-outline-primary px-3">
+                                        View
+                                    </a>
+                                </td>
 
-                    {% for event in user_events %}
-                    <tr>
-
-                        <!-- EVENT NAME -->
-                        <td>
-                            <a href="{% url 'events:view_event' event.id %}" 
-                               class="fw-semibold text-decoration-none text-dark hover-primary">
-                                {{ event.name }}
-                            </a>
-                        </td>
-
-                        <!-- DATE -->
-                        <td>
-                            <span class="text-muted">
-                                {{ event.date|date:"d M Y" }}
-                            </span>
-                        </td>
-
-                        <!-- STATUS -->
-                        <td>
-                            {% if event.status == 'announced' %}
-                                <span class="badge bg-success px-3 py-2">Announced</span>
-                            {% elif event.status == 'pending' %}
-                                <span class="badge bg-warning text-dark px-3 py-2">Pending</span>
-                            {% else %}
-                                <span class="badge bg-danger px-3 py-2">Rejected</span>
-                            {% endif %}
-                        </td>
-
-                        <!-- PROPOSALS -->
-                        <td class="text-center">
-                            <a href="{% url 'view_proposals' event.id %}" 
-                               class="btn btn-sm btn-outline-primary px-3">
-                                View
-                            </a>
-                        </td>
-
-                        <!-- REGISTRATIONS -->
-                        <td class="text-center">
-                            <a href="{% url 'events:event_registrations' event.id %}" 
-                               class="btn btn-sm btn-outline-success px-3">
-                                View
-                            </a>
-                        </td>
-
-                    </tr>
-                    {% endfor %}
-
-                </tbody>
-
-            </table>
-        </div>
-
+                                <!-- REGISTRATIONS -->
+                                <td class="text-center">
+                                    <a href="{% url 'events:event_registrations' event.id %}" 
+                                       class="btn btn-sm btn-outline-success px-3">
+                                        View
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         {% else %}
-
-            <!-- EMPTY STATE -->
             <div class="text-center py-5">
                 <h6 class="text-muted">No events assigned yet</h6>
             </div>
-
         {% endif %}
 
     {% else %}
-
         <!-- STUDENT DASHBOARD -->
         <div class="text-center py-5">
-
-            <h4 class="fw-bold text-primary mb-3">
-                Welcome to Dashboard
-            </h4>
-
-            <p class="text-muted mb-4">
-                Explore available events and register easily
-            </p>
-
-            <a href="{% url 'events:available_events' %}" 
-               class="btn btn-primary btn-lg px-4">
-                View Available Events
-            </a>
-
+            <h4 class="fw-bold text-primary mb-3">Welcome to Dashboard</h4>
+            <p class="text-muted mb-4">Explore available events and register easily</p>
+            <a href="{% url 'events:available_events' %}" class="btn btn-primary btn-lg px-4">View Available Events</a>
         </div>
+
+        <!-- SHOW STUDENT'S REGISTERED EVENTS -->
+        {% if my_events %}
+            <div class="mt-5">
+                <h5 class="text-primary mb-3">My Registered Events</h5>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th>Event</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for event in my_events %}
+                                <tr>
+                                    <td>
+                                        <a href="{% url 'events:view_event' event.id %}" class="text-decoration-none text-dark">
+                                            {{ event.name }}
+                                        </a>
+                                    </td>
+                                    <td>{{ event.date|date:"d M Y" }}</td>
+                                    <td>
+                                        {% if event.status == 'announced' %}
+                                            <span class="badge bg-success px-3 py-2">Announced</span>
+                                        {% elif event.status == 'pending' %}
+                                            <span class="badge bg-warning text-dark px-3 py-2">Pending</span>
+                                        {% else %}
+                                            <span class="badge bg-danger px-3 py-2">Rejected</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- SHOW ANNOUNCED EVENTS IF NOT REGISTERED -->
+        {% if announced_events %}
+            <div class="mt-5">
+                <h5 class="text-primary mb-3">Available Announced Events</h5>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th>Event</th>
+                                <th>Date</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for event in announced_events %}
+                                {% if event not in my_events %}
+                                    <tr>
+                                        <td>
+                                            <a href="{% url 'events:view_event' event.id %}" class="text-decoration-none text-dark">
+                                                {{ event.name }}
+                                            </a>
+                                        </td>
+                                        <td>{{ event.date|date:"d M Y" }}</td>
+                                        <td>
+                                            <a href="{% url 'events:register_event' event.id %}" class="btn btn-sm btn-primary px-3">
+                                                Register
+                                            </a>
+                                        </td>
+                                    </tr>
+                                {% endif %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        {% endif %}
 
     {% endif %}
 
 </div>
-
 {% endblock %}

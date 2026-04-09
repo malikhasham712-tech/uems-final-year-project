@@ -9,18 +9,34 @@ from .forms import ProposalForm, EventRegistrationForm
 # ----------------------
 # ORGANIZER / ADMIN VIEWS
 # ----------------------
+
 @login_required
 def my_events(request):
-    """Organizer/Admin: List of events."""
-    if request.user.is_superuser:
-        events = Event.objects.annotate(total_registrations=Count('registrations'))
-    elif hasattr(request.user, 'profile') and request.user.profile.role == 'organizer':
-        events = Event.objects.filter(organizer=request.user).annotate(total_registrations=Count('registrations'))
-    else:
-        messages.error(request, "Access denied.")
-        return redirect('events:dashboard')
+    """Handle BOTH Organizer & Student correctly"""
 
-    return render(request, 'events/my_events.html', {'events': events, 'role': 'organizer'})
+    # STUDENT
+    if hasattr(request.user, 'profile') and request.user.profile.role == 'student':
+        registrations = EventRegistration.objects.filter(student=request.user).select_related('event')
+        events = [reg.event for reg in registrations]
+
+        return render(request, 'events/my_events.html', {
+            'events': events,
+            'role': 'student'
+        })
+
+    # ORGANIZER / ADMIN
+    elif request.user.is_superuser or (hasattr(request.user, 'profile') and request.user.profile.role == 'organizer'):
+        events = Event.objects.filter(organizer=request.user).annotate(
+            total_registrations=Count('registrations')
+        )
+
+        return render(request, 'events/my_events.html', {
+            'events': events,
+            'role': 'organizer'
+        })
+
+    messages.error(request, "Access denied.")
+    return redirect('events:dashboard')
 
 
 @login_required
@@ -56,8 +72,8 @@ def view_proposals(request, event_id):
         return redirect('events:dashboard')
 
     proposals = EventProposal.objects.filter(event=event).order_by('-submitted_at')
-
     form = ProposalForm() if request.method != 'POST' else ProposalForm(request.POST)
+
     if request.method == 'POST' and form.is_valid() and request.user == event.organizer:
         proposal = form.save(commit=False)
         proposal.event = event
@@ -137,19 +153,14 @@ def event_registrations(request, event_id):
 
 
 # ----------------------
-
+# STUDENT EVENTS VIEWS
+# ----------------------
 
 @login_required
 def available_events(request):
-    """All events available for registration."""
+    """Show all announced events for students."""
     events = Event.objects.filter(status='announced')
-    registered_events = EventRegistration.objects.filter(student=request.user).values_list('event_id', flat=True)
-    context = {
-        'available_events': events,
-        'registered_events': list(registered_events),
-        'role': 'student'
-    }
-    return render(request, 'events/available_events.html', context)
+    return render(request, 'accounts/available_events.html', {'events': events})
 
 
 @login_required
@@ -160,6 +171,7 @@ def register_event(request, event_id):
         return redirect('events:dashboard')
 
     event = get_object_or_404(Event, id=event_id, status='announced')
+
     if EventRegistration.objects.filter(event=event, student=request.user).exists():
         messages.info(request, "You are already registered for this event!")
         return redirect('events:available_events')
@@ -185,11 +197,14 @@ def register_event(request, event_id):
 # ----------------------
 # DASHBOARD (UNIFIED)
 # ----------------------
+
 @login_required
 def dashboard(request):
+    """Unified dashboard for both students and organizers."""
     user = request.user
 
     if hasattr(user, 'profile') and user.profile.role == 'organizer':
+        # ORGANIZER DASHBOARD
         user_events = Event.objects.filter(organizer=user)
         total_events = user_events.count()
         total_registrations = EventRegistration.objects.filter(event__in=user_events).count()
@@ -200,9 +215,13 @@ def dashboard(request):
             'role': 'organizer'
         }
     else:
-        student_events = Event.objects.filter(status='announced')
+        # STUDENT DASHBOARD
+        registrations = EventRegistration.objects.filter(student=user).select_related('event')
+        my_events = [reg.event for reg in registrations]
+        announced_events = Event.objects.filter(status='announced')
         context = {
-            'student_events': student_events,
+            'my_events': my_events,
+            'announced_events': announced_events,
             'role': 'student'
         }
 

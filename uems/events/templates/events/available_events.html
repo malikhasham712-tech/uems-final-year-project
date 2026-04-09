@@ -3,51 +3,50 @@
 {% block title %}Available Events{% endblock %}
 
 {% block content %}
-
 <div class="box">
 
-    <h4 class="mb-4 text-primary fw-bold">Available Events</h4>
-
-    {% if available_events %}
-
-    <div class="row g-4">
-        {% for event in available_events %}
-            <div class="col-md-6 col-lg-4">
-                <div class="event-card">
-                    <h5 class="fw-semibold">{{ event.name }}</h5>
-                    <p class="mb-1"><strong>Date:</strong> {{ event.date|date:"d M Y" }}</p>
-                    <p class="mb-2">
-                        <strong>Status:</strong>
-                        {% if event.status == 'announced' %}
-                            <span class="badge bg-success px-3 py-1">Announced</span>
-                        {% elif event.status == 'pending' %}
-                            <span class="badge bg-warning text-dark px-3 py-1">Pending</span>
-                        {% else %}
-                            <span class="badge bg-danger px-3 py-1">Rejected</span>
-                        {% endif %}
-                    </p>
-
-                    {% if event.id %}
-                        <a href="{% url 'events:view_event' event.id %}" class="btn btn-primary btn-sm mt-auto w-100">
-                            View Details
-                        </a>
-                    {% else %}
-                        <button class="btn btn-secondary btn-sm mt-auto w-100" disabled>
-                            Not available
-                        </button>
-                    {% endif %}
-
-                </div>
-            </div>
-        {% endfor %}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="text-primary fw-bold mb-0">Available Events</h4>
     </div>
 
+    {% if events %}
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>Event Name</th>
+                    <th>Date</th>
+                    <th>Organizer</th>
+                    <th class="text-center">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for event in events %}
+                <tr>
+                    <td>{{ event.name }}</td>
+                    <td>{{ event.date|date:"d M Y" }}</td>
+                    <td>{{ event.organizer.get_full_name }}</td>
+                    <td class="text-center">
+                        {% if user in event.registered_students.all %}
+                            <span class="badge bg-success">Registered</span>
+                        {% else %}
+                            <a href="{% url 'events:register_event' event.id %}" class="btn btn-primary btn-sm">Register</a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="text-center">No announced events at the moment.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
     {% else %}
-        <div class="text-center py-5">
-            <h6 class="text-muted">No events are currently available</h6>
-        </div>
+    <div class="text-center py-5">
+        <h6 class="text-muted">No announced events at the moment.</h6>
+    </div>
     {% endif %}
 
 </div>
-
 {% endblock %}

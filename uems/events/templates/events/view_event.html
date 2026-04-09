@@ -1,60 +1,55 @@
 {% extends "accounts/dashboard_base.html" %}
-{% block title %}{{ event.name }}{% endblock %}
+
+{% block title %}Event Details{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <!-- Event Header -->
+
+<div class="box">
+
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3 class="text-primary">{{ event.name }}</h3>
-        <button onclick="window.history.back();" class="btn btn-outline-secondary">
-            <i class="fa fa-arrow-left me-1"></i> Back
-        </button>
+        <h4 class="text-primary fw-bold mb-0">{{ event.name }}</h4>
+        <a href="{% url 'events:available_events' %}" class="btn btn-outline-secondary">Back</a>
     </div>
 
-    <!-- Event Details Table -->
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <table class="table table-borderless mb-0">
-                <tbody>
-                    <tr>
-                        <th scope="row">Description</th>
-                        <td>{{ event.description|default:"N/A" }}</td>
-                    </tr>
-                    <tr>
-                        <th scope="row">Venue</th>
-                        <td>{{ event.venue|default:"TBD" }}</td>
-                    </tr>
-                    <tr>
-                        <th scope="row">Start Date</th>
-                        <td>{{ event.date|date:"d M Y" }}</td>
-                    </tr>
-                    <tr>
-                        <th scope="row">Status</th>
-                        <td>
-                            {% if event.status == 'announced' %}
-                                <span class="badge bg-success">Announced</span>
-                            {% elif event.status == 'pending' %}
-                                <span class="badge bg-warning text-dark">Pending</span>
-                            {% elif event.status == 'rejected' %}
-                                <span class="badge bg-danger">Rejected</span>
-                            {% else %}
-                                <span class="badge bg-secondary text-capitalize">{{ event.status }}</span>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    <tr>
-                        <th scope="row">Organizer</th>
-                        <td>
-                            {% if event.organizer %}
-                                {{ event.organizer.get_full_name|default:event.organizer.username }}
-                            {% else %}
-                                N/A
-                            {% endif %}
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+    <div class="row g-4">
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <h5 class="fw-semibold">Event Information</h5>
+                    <p><strong>Date:</strong> {{ event.date|date:"d M Y" }}</p>
+                    {% if event.venue %}
+                    <p><strong>Venue:</strong> {{ event.venue }}</p>
+                    {% endif %}
+                    <p>{{ event.description }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-body text-center">
+                    {% if user_role == 'student' %}
+                        {% if is_registered %}
+                            <span class="badge bg-success px-3 py-2 mb-3">Registered</span>
+                        {% else %}
+                            <a href="{% url 'events:register_event' event.id %}" class="btn btn-success w-100 mb-3">
+                                Register
+                            </a>
+                        {% endif %}
+                    {% endif %}
+
+                    {% if user_role == 'organizer' %}
+                        <a href="{% url 'events:view_event_registrations' event.id %}" class="btn btn-primary w-100 mb-3">
+                            View Registrations
+                        </a>
+                    {% endif %}
+
+                    <p class="text-muted small mt-3">Status: {{ event.status|title }}</p>
+                </div>
+            </div>
         </div>
     </div>
+
 </div>
+
 {% endblock %}
