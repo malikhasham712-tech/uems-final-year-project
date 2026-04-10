@@ -9,13 +9,14 @@ from .forms import ProposalForm, EventRegistrationForm
 
 
 # ----------------------
-# DASHBOARD (OPTION B CLEAN)
+# DASHBOARD
 # ----------------------
 @login_required
 def dashboard(request):
 
     user = request.user
 
+    # Organizer / Admin Dashboard
     if user.is_superuser or (hasattr(user, "profile") and user.profile.role == "organizer"):
 
         events = Event.objects.filter(organizer=user).annotate(
@@ -27,6 +28,7 @@ def dashboard(request):
             "events": events
         })
 
+    # Student Dashboard
     else:
 
         events = Event.objects.filter(status="announced")
@@ -45,14 +47,18 @@ def my_events(request):
 
     user = request.user
 
+    # Student → only registered events
     if hasattr(user, "profile") and user.profile.role == "student":
 
         regs = EventRegistration.objects.filter(student=user)
+        events = [r.event for r in regs]
+
         return render(request, "events/my_events.html", {
-            "events": [r.event for r in regs],
+            "events": events,
             "role": "student"
         })
 
+    # Organizer/Admin → assigned events
     else:
 
         events = Event.objects.filter(organizer=user).annotate(
@@ -66,12 +72,16 @@ def my_events(request):
 
 
 # ----------------------
-# AVAILABLE EVENTS
+# AVAILABLE EVENTS (STUDENT ONLY)
 # ----------------------
 @login_required
 def available_events(request):
+
+    events = Event.objects.filter(status="announced")
+
     return render(request, "events/available_events.html", {
-        "events": Event.objects.filter(status="announced")
+        "events": events,
+        "role": "student"
     })
 
 
@@ -98,12 +108,15 @@ def register_event(request, event_id):
             obj.event = event
             obj.student = request.user
             obj.save()
-            messages.success(request, "Registered!")
-            return redirect("events:available_events")
+            messages.success(request, "Registered successfully!")
+
+            # ✅ Important: redirect to MY EVENTS
+            return redirect("events:my_events")
 
     return render(request, "events/register_event.html", {
         "form": EventRegistrationForm(),
-        "event": event
+        "event": event,
+        "role": "student"
     })
 
 
@@ -115,15 +128,9 @@ def view_event(request, event_id):
 
     event = get_object_or_404(Event, id=event_id)
 
-    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-        return JsonResponse({
-            "id": event.id,
-            "name": event.name,
-            "venue": event.venue,
-            "status": event.status,
-        })
-
-    return render(request, "events/view_event.html", {"event": event})
+    return render(request, "events/view_event.html", {
+        "event": event
+    })
 
 
 # ----------------------
@@ -158,8 +165,9 @@ def submit_proposal(request, event_id):
             obj = form.save(commit=False)
             obj.event = event
             obj.organizer = request.user
-            obj.status = "pending"
+            obj.status = "Pending"
             obj.save()
+
             return redirect("events:view_proposals", event_id=event.id)
 
     return render(request, "events/submit_proposal.html", {
@@ -178,7 +186,7 @@ def approve_proposal(request, proposal_id):
         return redirect("events:my_events")
 
     proposal = get_object_or_404(EventProposal, id=proposal_id)
-    proposal.status = "approved"
+    proposal.status = "Approved"
     proposal.save()
 
     return redirect("events:view_proposals", event_id=proposal.event.id)
@@ -191,7 +199,7 @@ def reject_proposal(request, proposal_id):
         return redirect("events:my_events")
 
     proposal = get_object_or_404(EventProposal, id=proposal_id)
-    proposal.status = "rejected"
+    proposal.status = "Rejected"
     proposal.save()
 
     return redirect("events:view_proposals", event_id=proposal.event.id)

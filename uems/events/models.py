@@ -35,8 +35,15 @@ class Event(models.Model):
     venue = models.CharField(max_length=200)
     date = models.DateField(null=True, blank=True)
 
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='created')
-    created_at = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(
+        max_length=10,
+        choices=[
+            ('Pending', 'Pending'),
+            ('Approved', 'Approved'),
+            ('Rejected', 'Rejected')
+        ],
+        default='Pending'
+    )
 
     def __str__(self):
         return self.name
