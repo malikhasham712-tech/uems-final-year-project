@@ -5,8 +5,8 @@ app_name = 'events'
 
 urlpatterns = [
 
-    # DASHBOARD (IMPORTANT FIX)
-    
+    # ✅ DASHBOARD FIX (IMPORTANT)
+    path('dashboard/', views.my_events, name='dashboard'),
 
     # EVENTS
     path('my-events/', views.my_events, name='my_events'),
