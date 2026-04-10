@@ -61,10 +61,25 @@
                             </td>
 
                             <td class="text-center">
-                                <a href="{% url 'events:view_proposals' event.id %}" 
-                                   class="btn btn-sm btn-outline-primary px-3">
-                                    View
-                                </a>
+
+                                {% with proposal=event.proposal_set.first %}
+                                    {% if proposal %}
+                                        <span class="badge bg-success">Submitted</span>
+
+                                        <br>
+
+                                        <a href="{% url 'events:view_proposals' event.id %}" 
+                                            class="btn btn-sm btn-outline-primary mt-1">
+                                             View
+                                        </a>
+                                    {% else %}
+                                        <a href="{% url 'events:submit_proposal' event.id %}" 
+                                            class="btn btn-sm btn-primary">
+                                             Submit
+                                        </a>
+                                    {% endif %}
+                                {% endwith %}
+
                             </td>
 
                             <td class="text-center">

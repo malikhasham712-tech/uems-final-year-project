@@ -6,40 +6,39 @@
 
 <div class="box">
 
+    <!-- BACK BUTTON -->
+    <div class="mb-3">
+        <button onclick="history.back()" class="btn btn-outline-secondary btn-sm">
+            ← Back
+        </button>
+    </div>
+
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h4 class="text-primary fw-bold mb-0">Registrations for {{ event.name }}</h4>
-        <a href="{% url 'events:view_event' event.id %}" class="btn btn-outline-secondary">Back</a>
     </div>
 
     {% if registrations %}
     <div class="table-responsive">
         <table class="table table-hover align-middle">
+
             <thead>
                 <tr>
                     <th>Student Name</th>
                     <th>Email</th>
                     <th>Date Registered</th>
-                    <th>Status</th>
                 </tr>
             </thead>
+
             <tbody>
                 {% for reg in registrations %}
                 <tr>
-                    <td>{{ reg.student.get_full_name }}</td>
+                    <td>{{ reg.student.get_full_name|default:reg.student.username }}</td>
                     <td>{{ reg.student.email }}</td>
                     <td>{{ reg.created_at|date:"d M Y H:i" }}</td>
-                    <td>
-                        {% if reg.status == 'approved' %}
-                            <span class="badge bg-success px-3 py-2">Approved</span>
-                        {% elif reg.status == 'pending' %}
-                            <span class="badge bg-warning text-dark px-3 py-2">Pending</span>
-                        {% else %}
-                            <span class="badge bg-danger px-3 py-2">Rejected</span>
-                        {% endif %}
-                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
+
         </table>
     </div>
 

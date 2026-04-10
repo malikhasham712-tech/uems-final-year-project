@@ -12,15 +12,21 @@
     </div>
 
     <div class="row g-4">
+
         <div class="col-md-8">
             <div class="card shadow-sm border-0">
                 <div class="card-body">
+
                     <h5 class="fw-semibold">Event Information</h5>
+
                     <p><strong>Date:</strong> {{ event.date|date:"d M Y" }}</p>
+
                     {% if event.venue %}
-                    <p><strong>Venue:</strong> {{ event.venue }}</p>
+                        <p><strong>Venue:</strong> {{ event.venue }}</p>
                     {% endif %}
+
                     <p>{{ event.description }}</p>
+
                 </div>
             </div>
         </div>
@@ -28,26 +34,21 @@
         <div class="col-md-4">
             <div class="card shadow-sm border-0">
                 <div class="card-body text-center">
-                    {% if user_role == 'student' %}
-                        {% if is_registered %}
-                            <span class="badge bg-success px-3 py-2 mb-3">Registered</span>
-                        {% else %}
-                            <a href="{% url 'events:register_event' event.id %}" class="btn btn-success w-100 mb-3">
-                                Register
-                            </a>
-                        {% endif %}
-                    {% endif %}
 
-                    {% if user_role == 'organizer' %}
-                        <a href="{% url 'events:view_event_registrations' event.id %}" class="btn btn-primary w-100 mb-3">
-                            View Registrations
-                        </a>
-                    {% endif %}
+                    <a href="{% url 'events:register_event' event.id %}" class="btn btn-success w-100 mb-3">
+                        Register
+                    </a>
+
+                    <a href="{% url 'events:event_registrations' event.id %}" class="btn btn-primary w-100 mb-3">
+                        View Registrations
+                    </a>
 
                     <p class="text-muted small mt-3">Status: {{ event.status|title }}</p>
+
                 </div>
             </div>
         </div>
+
     </div>
 
 </div>

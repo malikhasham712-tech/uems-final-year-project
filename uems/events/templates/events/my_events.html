@@ -6,62 +6,38 @@
 
 <div class="box">
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="text-primary fw-bold mb-0">My Registered Events</h4>
-    </div>
+    <h4 class="text-primary fw-bold mb-4">My Events</h4>
 
-    {% if registered_events %}
-    
-    <div class="table-responsive">
-        <table class="table table-hover align-middle">
+    {% if events %}
+
+        <table class="table table-hover">
 
             <thead>
                 <tr>
                     <th>Event</th>
                     <th>Date</th>
                     <th>Status</th>
-                    <th class="text-center">Actions</th>
                 </tr>
             </thead>
 
             <tbody>
-                {% for registration in registered_events %}
+            {% for event in events %}
                 <tr>
                     <td>
-                        <a href="{% url 'events:view_event' registration.event.id %}" class="text-decoration-none fw-semibold text-dark hover-primary">
-                            {{ registration.event.name }}
+                        <a href="{% url 'events:view_event' event.id %}">
+                            {{ event.name }}
                         </a>
                     </td>
-
-                    <td>{{ registration.event.date|date:"d M Y" }}</td>
-
-                    <td>
-                        {% if registration.event.status == 'announced' %}
-                            <span class="badge bg-success px-3 py-2">Announced</span>
-                        {% elif registration.event.status == 'pending' %}
-                            <span class="badge bg-warning text-dark px-3 py-2">Pending</span>
-                        {% else %}
-                            <span class="badge bg-danger px-3 py-2">Rejected</span>
-                        {% endif %}
-                    </td>
-
-                    <td class="text-center">
-                        <a href="{% url 'events:view_event' registration.event.id %}" class="btn btn-sm btn-outline-primary px-3">
-                            View
-                        </a>
-                    </td>
+                    <td>{{ event.date|date:"d M Y" }}</td>
+                    <td>{{ event.status }}</td>
                 </tr>
-                {% endfor %}
+            {% endfor %}
             </tbody>
 
         </table>
-    </div>
 
     {% else %}
-    <div class="text-center py-5">
-        <h6 class="text-muted">You have not registered for any events yet</h6>
-        <a href="{% url 'events:available_events' %}" class="btn btn-primary mt-3">View Available Events</a>
-    </div>
+        <p>No events found.</p>
     {% endif %}
 
 </div>

@@ -6,11 +6,20 @@
 
 <div class="box">
 
+    <!-- BACK BUTTON -->
+    <div class="mb-3">
+        <button onclick="history.back()" class="btn btn-outline-secondary btn-sm">
+            ← Back
+        </button>
+    </div>
+
+    <!-- HEADER -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h4 class="text-primary fw-bold mb-0">Event Proposals</h4>
     </div>
 
     {% if proposals %}
+
     <div class="table-responsive">
         <table class="table table-hover align-middle">
 
@@ -20,16 +29,28 @@
                     <th>Submitted By</th>
                     <th>Date Submitted</th>
                     <th>Status</th>
-                    <th class="text-center">Actions</th>
+                    <th class="text-center">Action</th>
                 </tr>
             </thead>
 
             <tbody>
                 {% for proposal in proposals %}
                 <tr>
+
+                    <!-- TITLE -->
                     <td>{{ proposal.title }}</td>
-                    <td>{{ proposal.submitted_by.get_full_name }}</td>
-                    <td>{{ proposal.submitted_at|date:"d M Y" }}</td>
+
+                    <!-- ORGANIZER -->
+                    <td>
+                        {{ proposal.organizer.get_full_name|default:proposal.organizer.username }}
+                    </td>
+
+                    <!-- DATE -->
+                    <td>
+                        {{ proposal.submitted_at|date:"d M Y" }}
+                    </td>
+
+                    <!-- STATUS -->
                     <td>
                         {% if proposal.status == 'approved' %}
                             <span class="badge bg-success px-3 py-2">Approved</span>
@@ -39,11 +60,12 @@
                             <span class="badge bg-danger px-3 py-2">Rejected</span>
                         {% endif %}
                     </td>
+
+                    <!-- ACTION -->
                     <td class="text-center">
-                        <a href="{% url 'events:view_proposal_detail' proposal.id %}" class="btn btn-sm btn-outline-primary px-3">
-                            View
-                        </a>
+                        <span class="text-muted small">No Detail</span>
                     </td>
+
                 </tr>
                 {% endfor %}
             </tbody>
@@ -52,9 +74,11 @@
     </div>
 
     {% else %}
+
     <div class="text-center py-5">
         <h6 class="text-muted">No event proposals submitted yet</h6>
     </div>
+
     {% endif %}
 
 </div>
