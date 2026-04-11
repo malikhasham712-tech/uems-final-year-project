@@ -32,26 +32,6 @@
             </div>
         </div>
 
-        <!-- RIGHT SIDE -->
-        <div class="col-md-4">
-            <div class="card shadow-sm border-0">
-                <div class="card-body text-center">
-
-                    <a href="{% url 'events:register_event' event.id %}" class="btn btn-success w-100 mb-3">
-                        Register
-                    </a>
-
-                    <a href="{% url 'events:event_registrations' event.id %}" class="btn btn-primary w-100 mb-3">
-                        View Registrations
-                    </a>
-
-                    <p class="text-muted small mt-3">
-                        Status: {{ event.status|title }}
-                    </p>
-
-                </div>
-            </div>
-        </div>
 
     </div>
 

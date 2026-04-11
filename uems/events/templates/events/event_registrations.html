@@ -6,45 +6,48 @@
 
 <div class="box">
 
-    <div class="mb-3">
-        <button onclick="history.back()" class="btn btn-outline-secondary btn-sm">
-            ← Back
-        </button>
-    </div>
-
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="text-primary fw-bold mb-0">Registrations for {{ event.name }}</h4>
-    </div>
+    <h4 class="text-primary mb-3">
+        Registrations for {{ event.name }}
+    </h4>
 
     {% if registrations %}
-    <div class="table-responsive">
-        <table class="table table-hover admin-table">
 
-            <thead>
-                <tr>
-                    <th>Student Name</th>
-                    <th>Email</th>
-                    <th>Date Registered</th>
-                </tr>
-            </thead>
+    <table class="table table-hover admin-table">
 
-            <tbody>
-                {% for reg in registrations %}
-                <tr>
-                    <td>{{ reg.student.get_full_name|default:reg.student.username }}</td>
-                    <td>{{ reg.student.email }}</td>
-                    <td>{{ reg.created_at|date:"d M Y H:i" }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
+        <thead class="table-dark">
+            <tr>
+                <th>Name</th>
+                <th>Reg No</th>
+                <th>Department</th>
+                <th>Email</th>
+                <th>Contact</th>
+                <th>Date</th>
+            </tr>
+        </thead>
 
-        </table>
-    </div>
+        <tbody>
+
+        {% for r in registrations %}
+        <tr>
+            <td>{{ r.student_name }}</td>
+            <td>{{ r.registration_no }}</td>
+            <td>{{ r.department }}</td>
+            <td>{{ r.email }}</td>
+            <td>{{ r.contact_no }}</td>
+            <td>{{ r.created_at|date:"d M Y H:i" }}</td>
+        </tr>
+        {% endfor %}
+
+        </tbody>
+
+    </table>
 
     {% else %}
-    <div class="text-center py-5">
-        <h6 class="text-muted">No registrations found for this event.</h6>
+
+    <div class="text-muted text-center py-4">
+        No registrations yet.
     </div>
+
     {% endif %}
 
 </div>

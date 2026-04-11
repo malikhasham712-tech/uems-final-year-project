@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 
 
 # ----------------------
-# CATEGORY MODEL
+# CATEGORY
 # ----------------------
 class Category(models.Model):
     name = models.CharField(max_length=100, unique=True)
@@ -16,7 +16,7 @@ class Category(models.Model):
 
 
 # ----------------------
-# EVENT MODEL
+# EVENT
 # ----------------------
 class Event(models.Model):
 
@@ -43,7 +43,7 @@ class Event(models.Model):
     date = models.DateField(null=True, blank=True)
 
     status = models.CharField(
-        max_length=20,   # ✅ FIXED (important)
+        max_length=20,
         choices=STATUS_CHOICES,
         default='Pending'
     )
@@ -53,7 +53,7 @@ class Event(models.Model):
 
 
 # ----------------------
-# EVENT PROPOSAL
+# PROPOSAL
 # ----------------------
 class EventProposal(models.Model):
 
@@ -63,57 +63,29 @@ class EventProposal(models.Model):
         ('Rejected', 'Rejected')
     ]
 
-    event = models.ForeignKey(
-        Event,
-        on_delete=models.CASCADE,
-        related_name="proposals"
-    )
-
-    organizer = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name="proposals"
-    )
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="proposals")
+    organizer = models.ForeignKey(User, on_delete=models.CASCADE, related_name="proposals")
 
     proposed_venue = models.CharField(max_length=200)
     details = models.TextField(blank=True)
 
-    status = models.CharField(
-        max_length=10,
-        choices=STATUS_CHOICES,
-        default='Pending'
-    )
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='Pending')
 
     submitted_at = models.DateTimeField(auto_now_add=True)
-    number = models.PositiveIntegerField(null=True, blank=True)
-
-    def save(self, *args, **kwargs):
-        if not self.number:
-            last = EventProposal.objects.filter(
-                event=self.event
-            ).order_by('-number').first()
-
-            self.number = 1 if not last else last.number + 1
-
-        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.event.name} - {self.organizer.username}"
 
 
 # ----------------------
-# EVENT REGISTRATION
+# REGISTRATION (FIXED - IMPORTANT)
 # ----------------------
 class EventRegistration(models.Model):
 
-    event = models.ForeignKey(
-        Event,
-        on_delete=models.CASCADE,
-        related_name="registrations"
-    )
-
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="registrations")
     student = models.ForeignKey(User, on_delete=models.CASCADE)
 
+    # snapshot fields (IMPORTANT for stability)
     student_name = models.CharField(max_length=100)
     registration_no = models.CharField(max_length=50)
     semester = models.CharField(max_length=20)
@@ -121,7 +93,7 @@ class EventRegistration(models.Model):
     email = models.EmailField()
     contact_no = models.CharField(max_length=15)
 
-    registered_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         unique_together = ('event', 'student')
