@@ -51,7 +51,7 @@
                             <span class="badge bg-primary">Approved</span>
 
                         {% elif event.status == "Announced" %}
-                            <span class="badge bg-success">Announced</span>
+                            <span class="badge bg-primary">Announced</span>
 
                         {% elif event.status == "Completed" %}
                             <span class="badge bg-dark">Completed</span>
@@ -79,7 +79,7 @@
                             </a>
 
                             <a href="{% url 'events:event_registrations' event.id %}"
-                               class="btn btn-sm btn-success">
+                               class="btn btn-sm btn-primary">
                                 Registrations
                             </a>
 

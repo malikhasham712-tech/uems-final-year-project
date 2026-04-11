@@ -38,8 +38,8 @@ html[data-theme="light"],
     --message-debug-icon: url(../img/icon-debug.svg);
     --message-info-bg: #ccefff;
     --message-info-icon: url(../img/icon-info.svg);
-    --message-success-bg: #dfd;
-    --message-success-icon: url(../img/icon-yes.svg);
+    --message-primary-bg: rgb(46, 10, 88);
+    --message-primary-icon: url(../img/icon-yes.svg);
     --message-warning-bg: #ffc;
     --message-warning-icon: url(../img/icon-alert.svg);
     --message-error-bg: #ffefef;

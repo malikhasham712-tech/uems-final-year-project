@@ -20,6 +20,8 @@
                     <th>Event</th>
                     <th>Date</th>
                     <th>Status</th>
+                    <th>Announcements</th>
+                    <th>Feedback</th>
                 </tr>
             </thead>
 
@@ -27,17 +29,38 @@
             {% for event in events %}
                 {% if event.id %}
                 <tr>
+
+                    <!-- EVENT NAME -->
                     <td class="fw-semibold">
                         <a href="{% url 'events:view_event' event.id %}" class="text-decoration-none text-dark">
                             {{ event.name }}
                         </a>
                     </td>
+
+                    <!-- DATE -->
                     <td>{{ event.date|date:"d M Y" }}</td>
+
+                    <!-- STATUS -->
                     <td>
                         <span class="badge bg-secondary">
                             {{ event.status|title }}
                         </span>
                     </td>
+
+                    <!-- ANNOUNCEMENTS -->
+                    <td>
+                        <a href="{% url 'events:event_announcements' event.id %}" class="btn btn-sm btn-primary">
+                            View
+                        </a>
+                    </td>
+
+                    <!-- FEEDBACK -->
+                    <td>
+                        <a href="{% url 'events:event_feedback' event.id %}" class="btn btn-sm btn-success">
+                            View
+                        </a>
+                    </td>
+
                 </tr>
                 {% endif %}
             {% endfor %}

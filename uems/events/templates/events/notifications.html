@@ -1,0 +1,20 @@
+{% extends "accounts/dashboard_base.html" %}
+
+{% block content %}
+
+<div class="box">
+    <h4>All Notifications</h4>
+    <hr>
+
+    {% for n in notifications %}
+        <div class="mb-3 p-3 border rounded">
+            <strong>{{ n.announcement.event.name }}</strong><br>
+            {{ n.announcement.message }}<br>
+            <small class="text-muted">{{ n.created_at }}</small>
+        </div>
+    {% empty %}
+        <p>No notifications available.</p>
+    {% endfor %}
+</div>
+
+{% endblock %}

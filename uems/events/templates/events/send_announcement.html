@@ -1,0 +1,19 @@
+<h3>Send Announcement</h3>
+
+<form method="POST">
+    {% csrf_token %}
+
+    <select name="event_id" required>
+        {% for event in events %}
+            <option value="{{ event.id }}">{{ event.name }}</option>
+        {% endfor %}
+    </select>
+
+    <br><br>
+
+    <textarea name="message" placeholder="Write message..." required></textarea>
+
+    <br><br>
+
+    <button type="submit">Send</button>
+</form>

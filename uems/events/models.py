@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils import timezone
 
 
 # ----------------------
@@ -48,7 +49,6 @@ class Event(models.Model):
         default='Pending'
     )
 
-    # ✅ Event creation timestamp
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -112,13 +112,17 @@ class EventRegistration(models.Model):
 
     student = models.ForeignKey(User, on_delete=models.CASCADE)
 
-    # Snapshot fields (important for record stability)
     student_name = models.CharField(max_length=100)
     registration_no = models.CharField(max_length=50)
     semester = models.CharField(max_length=20)
     department = models.CharField(max_length=100)
     email = models.EmailField()
     contact_no = models.CharField(max_length=15)
+
+    status = models.CharField(
+        max_length=20,
+        default="registered"
+    )
 
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -128,3 +132,72 @@ class EventRegistration(models.Model):
 
     def __str__(self):
         return f"{self.student_name} - {self.event.name}"
+
+
+# ----------------------
+# ANNOUNCEMENT (FIXED HERE 🔥)
+# ----------------------
+class Announcement(models.Model):
+
+    event = models.ForeignKey(
+        Event,
+        on_delete=models.CASCADE,
+        related_name='announcements'
+    )
+
+    message = models.TextField()
+
+    # 🔥 FIX: allow null to avoid migration error
+    created_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="created_announcements"
+    )
+
+    created_at = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return f"Announcement - {self.event.name}"
+
+
+# ----------------------
+# NOTIFICATION
+# ----------------------
+class Notification(models.Model):
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='notifications'
+    )
+
+    announcement = models.ForeignKey(
+        Announcement,
+        on_delete=models.CASCADE
+    )
+
+    is_read = models.BooleanField(default=False)
+
+    created_at = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return f"{self.user.username} Notification"
+
+
+# ----------------------
+# FEEDBACK
+# ----------------------
+class Feedback(models.Model):
+
+    student = models.ForeignKey(User, on_delete=models.CASCADE)
+    event = models.ForeignKey(Event, on_delete=models.CASCADE)
+
+    message = models.TextField()
+    rating = models.IntegerField(null=True, blank=True)
+
+    created_at = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return f"{self.student.username} - {self.event.name}"

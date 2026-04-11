@@ -3,7 +3,15 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Count
 from django.contrib import messages
 
-from .models import Event, EventProposal, EventRegistration
+from .models import (
+    Event,
+    EventProposal,
+    EventRegistration,
+    Announcement,
+    Notification,
+    Feedback
+)
+
 from .forms import ProposalForm, EventRegistrationForm
 
 
@@ -23,35 +31,26 @@ def get_role(user):
 # ----------------------
 @login_required
 def dashboard(request):
-
     role = get_role(request.user)
 
     if role == "organizer":
-
-        events = Event.objects.filter(
-            organizer=request.user
-        ).prefetch_related("proposals", "registrations")
-
+        events = Event.objects.filter(organizer=request.user).prefetch_related("proposals", "registrations")
         return render(request, "accounts/dashboard.html", {
             "role": "organizer",
             "events": events
         })
 
     if role == "student":
-
-        return render(request, "accounts/dashboard.html", {
-            "role": "student"
-        })
+        return redirect("events:available_events")
 
     return redirect("/admin/")
 
 
 # ----------------------
-# AVAILABLE EVENTS (STUDENT)
+# AVAILABLE EVENTS
 # ----------------------
 @login_required
 def available_events(request):
-
     events = Event.objects.filter(status__iexact="announced")
 
     return render(request, "events/available_events.html", {
@@ -61,11 +60,10 @@ def available_events(request):
 
 
 # ----------------------
-# REGISTER EVENT (STUDENT)
+# REGISTER EVENT
 # ----------------------
 @login_required
 def register_event(request, event_id):
-
     role = get_role(request.user)
 
     if role != "student":
@@ -101,11 +99,9 @@ def register_event(request, event_id):
 # ----------------------
 @login_required
 def my_events(request):
-
     role = get_role(request.user)
 
     if role == "student":
-
         regs = EventRegistration.objects.filter(student=request.user)
         events = [r.event for r in regs]
 
@@ -115,7 +111,6 @@ def my_events(request):
         })
 
     if role == "organizer":
-
         events = Event.objects.filter(organizer=request.user).annotate(
             total_registrations=Count("registrations")
         )
@@ -133,9 +128,7 @@ def my_events(request):
 # ----------------------
 @login_required
 def view_event(request, event_id):
-
     event = get_object_or_404(Event, id=event_id)
-
     role = "organizer" if request.user == event.organizer else "student"
 
     return render(request, "events/view_event.html", {
@@ -145,11 +138,10 @@ def view_event(request, event_id):
 
 
 # ----------------------
-# VIEW PROPOSALS
+# PROPOSALS
 # ----------------------
 @login_required
 def view_proposals(request, event_id):
-
     event = get_object_or_404(Event, id=event_id)
 
     if not (request.user.is_superuser or request.user == event.organizer):
@@ -163,12 +155,8 @@ def view_proposals(request, event_id):
     })
 
 
-# ----------------------
-# SUBMIT PROPOSAL
-# ----------------------
 @login_required
 def submit_proposal(request, event_id):
-
     event = get_object_or_404(Event, id=event_id)
 
     if not (request.user.is_superuser or request.user == event.organizer):
@@ -192,12 +180,8 @@ def submit_proposal(request, event_id):
     })
 
 
-# ----------------------
-# APPROVE PROPOSAL
-# ----------------------
 @login_required
 def approve_proposal(request, proposal_id):
-
     if not request.user.is_superuser:
         return redirect("events:my_events")
 
@@ -212,12 +196,8 @@ def approve_proposal(request, proposal_id):
     return redirect("events:view_proposals", event_id=event.id)
 
 
-# ----------------------
-# REJECT PROPOSAL
-# ----------------------
 @login_required
 def reject_proposal(request, proposal_id):
-
     if not request.user.is_superuser:
         return redirect("events:my_events")
 
@@ -233,7 +213,6 @@ def reject_proposal(request, proposal_id):
 # ----------------------
 @login_required
 def event_registrations(request, event_id):
-
     event = get_object_or_404(Event, id=event_id)
 
     if not (request.user.is_superuser or request.user == event.organizer):
@@ -247,3 +226,112 @@ def event_registrations(request, event_id):
         "total": regs.count(),
         "role": "organizer"
     })
+
+
+# ----------------------
+# ANNOUNCEMENTS
+# ----------------------
+@login_required
+def send_announcement(request):
+    if not request.user.is_superuser:
+        return redirect("events:dashboard")
+
+    events = Event.objects.filter(status="Announced")
+
+    if request.method == "POST":
+        event_id = request.POST.get("event_id")
+        message_text = request.POST.get("message")
+
+        event = get_object_or_404(Event, id=event_id)
+
+        announcement = Announcement.objects.create(
+            event=event,
+            message=message_text,
+            created_by=request.user
+        )
+
+        user_ids = list(event.registrations.values_list("student", flat=True))
+
+        if event.organizer:
+            user_ids.append(event.organizer.id)
+
+        for uid in set(user_ids):
+            Notification.objects.create(user_id=uid, announcement=announcement)
+
+        messages.success(request, "Announcement sent successfully!")
+        return redirect("events:send_announcement")
+
+    return render(request, "events/send_announcement.html", {
+        "events": events
+    })
+
+
+# FIXED: announcements page
+@login_required
+def event_announcements(request, event_id):
+    event = get_object_or_404(Event, id=event_id)
+
+    if not (request.user.is_superuser or request.user == event.organizer):
+        return redirect("events:my_events")
+
+    announcements = Announcement.objects.filter(event=event)
+
+    return render(request, "events/event_announcements.html", {
+        "event": event,
+        "announcements": announcements
+    })
+
+
+# ----------------------
+# NOTIFICATIONS
+# ----------------------
+@login_required
+def notifications(request):
+    notifs = request.user.notifications.all().order_by("-created_at")
+    notifs.update(is_read=True)
+
+    return render(request, "events/notifications.html", {
+        "notifications": notifs
+    })
+
+
+# ----------------------
+# FEEDBACK
+# ----------------------
+@login_required
+def submit_feedback(request, event_id):
+    event = get_object_or_404(Event, id=event_id)
+
+    registration = EventRegistration.objects.filter(
+        event=event,
+        student=request.user
+    ).first()
+
+    if not registration:
+        messages.error(request, "Not allowed")
+        return redirect("events:my_events")
+
+    if registration.status != "attended" and event.status != "Completed":
+        messages.error(request, "You can only give feedback after attending event.")
+        return redirect("events:my_events")
+
+    if request.method == "POST":
+        Feedback.objects.create(
+            student=request.user,
+            event=event,
+            message=request.POST.get("message"),
+            rating=request.POST.get("rating") or None
+        )
+
+        messages.success(request, "Feedback submitted!")
+        return redirect("events:my_events")
+
+    return render(request, "events/feedback.html", {
+        "event": event
+    })
+
+
+# ALIASES (safe)
+@login_required
+def event_feedback(request, event_id):
+    return submit_feedback(request, event_id)
