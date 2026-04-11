@@ -9,9 +9,18 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
-        body { margin: 0; font-family: 'Segoe UI'; background: #f4f6fb; }
-        .layout { display: flex; min-height: 100vh; }
+        body {
+            margin: 0;
+            font-family: 'Segoe UI';
+            background: #f4f6fb;
+        }
 
+        .layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* SIDEBAR */
         .sidebar {
             width: 240px;
             background: linear-gradient(180deg, #0d6efd, #0b5ed7);
@@ -21,7 +30,10 @@
             flex-direction: column;
         }
 
-        .sidebar h4 { margin-bottom: 30px; }
+        .sidebar h5 {
+            margin-bottom: 25px;
+            font-weight: 600;
+        }
 
         .nav-link {
             color: white;
@@ -31,17 +43,24 @@
             display: flex;
             align-items: center;
             gap: 10px;
+            text-decoration: none;
         }
 
-        .nav-link:hover, .nav-link.active {
+        .nav-link:hover,
+        .nav-link.active {
             background: rgba(255,255,255,0.2);
         }
 
-        .main { flex: 1; display: flex; flex-direction: column; }
+        /* MAIN */
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
 
-        /* TOPBAR PROFESSIONAL */
+        /* TOPBAR */
         .topbar {
-            height: 70px;
+            height: 75px;
             background: white;
             border-bottom: 1px solid #eee;
             display: flex;
@@ -52,43 +71,68 @@
 
         .topbar-left {
             display: flex;
-            align-items: center;
-            gap: 15px;
+            flex-direction: column;
+        }
+
+        .welcome {
+            font-size: 16px;
+            font-weight: 700;
+            color: #0d6efd;
+        }
+
+        .subtext {
+            font-size: 13px;
+            color: gray;
         }
 
         .topbar-right {
             display: flex;
-            align-items: center;
-            gap: 20px;
+            gap: 10px;
         }
 
-        .content { padding: 30px; }
+        /* CONTENT */
+        .content {
+            padding: 30px;
+        }
 
         .box {
             background: white;
             padding: 25px;
             border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        table th, table td {
+            vertical-align: middle !important;
         }
     </style>
 </head>
 
 <body>
+
 <div class="layout">
 
     <!-- SIDEBAR -->
     <div class="sidebar">
-        <h4>Student</h4>
 
-        <!-- ✅ ONLY MY EVENTS -->
-        <a href="{% url 'events:my_events' %}" class="nav-link active">
-            <i class="fa fa-calendar"></i> My Events
-        </a>
+        <h5>{{ role|title }}</h5>
+
+        {% if role == 'organizer' %}
+            <a href="{% url 'events:dashboard' %}" class="nav-link active">
+                <i class="fa fa-home"></i> Dashboard
+            </a>
+        {% else %}
+            <a href="{% url 'events:my_events' %}" class="nav-link active">
+                <i class="fa fa-calendar"></i> My Events
+            </a>
+        {% endif %}
 
         <div class="mt-auto">
             <a href="{% url 'logout' %}" class="nav-link text-danger">
                 <i class="fa fa-sign-out-alt"></i> Logout
             </a>
         </div>
+
     </div>
 
     <!-- MAIN -->
@@ -97,32 +141,23 @@
         <!-- TOPBAR -->
         <div class="topbar">
 
-            <!-- LEFT (BACK BUTTON) -->
             <div class="topbar-left">
-                <button onclick="history.back()" class="btn btn-light border">
-                    <i class="fa fa-arrow-left"></i>
-                </button>
+                <div class="welcome">
+                    Welcome, {{ request.user.first_name|default:request.user.username }}
+                </div>
 
-                <span class="fw-semibold">
-                    {{ request.user.first_name|default:request.user.username }}
-                </span>
+                <div class="subtext">
+                    {% if role == 'organizer' %}
+                        Organizer • Event Management System
+                    {% else %}
+                        Student • Event Portal
+                    {% endif %}
+                </div>
             </div>
 
-            <!-- RIGHT (PROFESSIONAL NAV) -->
             <div class="topbar-right">
-
-                <a href="{% url 'events:available_events' %}" class="btn btn-outline-primary btn-sm">
-                    Browse Events
-                </a>
-
-                <a href="{% url 'events:dashboard' %}" class="btn btn-primary btn-sm">
-                    Dashboard
-                </a>
-
-                <a href="{% url 'logout' %}" class="btn btn-outline-danger btn-sm">
-                    Logout
-                </a>
-
+                <a href="{% url 'events:dashboard' %}" class="btn btn-primary btn-sm">Dashboard</a>
+                <a href="{% url 'logout' %}" class="btn btn-outline-danger btn-sm">Logout</a>
             </div>
 
         </div>

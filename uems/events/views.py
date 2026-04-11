@@ -16,29 +16,25 @@ def dashboard(request):
 
     user = request.user
 
-    # Organizer / Admin Dashboard
+    # ORGANIZER DASHBOARD
     if user.is_superuser or (hasattr(user, "profile") and user.profile.role == "organizer"):
 
-        events = Event.objects.filter(organizer=user).annotate(
-            total_registrations=Count('registrations')
-        )
+        events = Event.objects.filter(organizer=user).prefetch_related('proposals')
 
-        return render(request, "events/dashboard.html", {
+        context = {
             "role": "organizer",
             "events": events
-        })
+        }
 
-    # Student Dashboard
+        return render(request, "accounts/dashboard.html", context)
+
+    # STUDENT DASHBOARD
     else:
-
-        events = Event.objects.filter(status="announced")
-
-        return render(request, "events/dashboard.html", {
+        context = {
             "role": "student",
-            "events": events
-        })
+        }
 
-
+        return render(request, "accounts/dashboard.html", context)
 # ----------------------
 # MY EVENTS
 # ----------------------
