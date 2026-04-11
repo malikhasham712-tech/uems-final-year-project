@@ -18,11 +18,11 @@
 
     <div class="table-responsive">
 
-        <table class="table table-hover table-bordered align-middle text-center">
+        <table class="table table-hover admin-table">
 
             <thead class="table-dark">
                 <tr>
-                    <th>Name</th>
+                    <th>Event</th>
                     <th>Venue</th>
                     <th>Date</th>
                     <th>Status</th>
@@ -36,7 +36,7 @@
             {% for event in events %}
             <tr>
 
-                <!-- NAME -->
+                <!-- EVENT -->
                 <td class="text-start fw-semibold">
                     <a href="{% url 'events:view_event' event.id %}" class="text-decoration-none text-dark">
                         {{ event.name }}
@@ -44,56 +44,68 @@
                 </td>
 
                 <!-- VENUE -->
-                <td>{{ event.venue|default:"TBD" }}</td>
+                <td class="text-muted">
+                    {{ event.venue|default:"TBD" }}
+                </td>
 
                 <!-- DATE -->
                 <td>
-                    {{ event.date|date:"d M Y"|default:"-" }}
+                    {% if event.date %}
+                        {{ event.date|date:"d M Y" }}
+                    {% else %}
+                        -
+                    {% endif %}
                 </td>
 
                 <!-- STATUS -->
                 <td>
-                    {% if event.status == "announced" %}
+                    {% if event.status|lower == "announced" %}
                         <span class="badge bg-success">Announced</span>
-                    {% elif event.status == "pending" %}
-                        <span class="badge bg-warning text-dark">Pending</span>
-                    {% elif event.status == "approved" %}
+
+                    {% elif event.status|lower == "approved" %}
                         <span class="badge bg-primary">Approved</span>
+
+                    {% elif event.status|lower == "pending" %}
+                        <span class="badge bg-warning text-dark">Pending</span>
+
+                    {% elif event.status|lower == "completed" %}
+                        <span class="badge bg-dark">Completed</span>
+
                     {% else %}
-                        <span class="badge bg-secondary">{{ event.status|title }}</span>
+                        <span class="badge bg-secondary">{{ event.status }}</span>
                     {% endif %}
                 </td>
 
                 <!-- PROPOSAL -->
                 <td>
-
                     {% with proposal=event.proposals.first %}
+                        <div class="proposal-stack">
 
-                        {% if proposal and proposal.status == "Pending" %}
-                            <span class="badge bg-secondary px-3 py-2">Submitted</span>
+                            {% if proposal and proposal.status|lower == "pending" %}
+                                <button class="btn btn-secondary btn-sm w-100" disabled>
+                                    Submitted
+                                </button>
 
-                        {% elif proposal and proposal.status == "Approved" %}
-                            <span class="badge bg-success px-3 py-2">Approved</span>
+                            {% elif proposal and proposal.status|lower == "approved" %}
+                                <span class="badge bg-success w-100 py-2">Approved</span>
 
-                        {% elif proposal and proposal.status == "Rejected" %}
-                            <a href="{% url 'events:submit_proposal' event.id %}" class="btn btn-warning btn-sm w-100">
-                                Resubmit
+                            {% elif proposal and proposal.status|lower == "rejected" %}
+                                <a href="{% url 'events:submit_proposal' event.id %}" class="btn btn-warning btn-sm w-100">
+                                    Resubmit
+                                </a>
+
+                            {% else %}
+                                <a href="{% url 'events:submit_proposal' event.id %}" class="btn btn-primary btn-sm w-100">
+                                    Submit
+                                </a>
+                            {% endif %}
+
+                            <a href="{% url 'events:view_proposals' event.id %}" class="btn btn-outline-info btn-sm w-100">
+                                View
                             </a>
 
-                        {% else %}
-                            <a href="{% url 'events:submit_proposal' event.id %}" class="btn btn-primary btn-sm w-100">
-                                Submit
-                            </a>
-                        {% endif %}
-
+                        </div>
                     {% endwith %}
-
-                    <div class="mt-1">
-                        <a href="{% url 'events:view_proposals' event.id %}" class="btn btn-outline-info btn-sm w-100">
-                            View
-                        </a>
-                    </div>
-
                 </td>
 
                 <!-- REGISTRATIONS -->
@@ -123,17 +135,12 @@
 {% else %}
 
     <div class="text-center py-5">
-
         <h4 class="fw-bold text-primary mb-2">Welcome Student</h4>
-
-        <p class="text-muted mb-4">
-            Explore available events and register easily
-        </p>
+        <p class="text-muted mb-4">Explore available events and register easily</p>
 
         <a href="{% url 'events:available_events' %}" class="btn btn-primary">
             Browse Events
         </a>
-
     </div>
 
 {% endif %}

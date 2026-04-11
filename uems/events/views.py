@@ -2,7 +2,6 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.db.models import Count
 from django.contrib import messages
-from django.http import JsonResponse
 
 from .models import Event, EventProposal, EventRegistration
 from .forms import ProposalForm, EventRegistrationForm
@@ -16,25 +15,20 @@ def dashboard(request):
 
     user = request.user
 
-    # ORGANIZER DASHBOARD
     if user.is_superuser or (hasattr(user, "profile") and user.profile.role == "organizer"):
 
         events = Event.objects.filter(organizer=user).prefetch_related('proposals')
 
-        context = {
+        return render(request, "accounts/dashboard.html", {
             "role": "organizer",
             "events": events
-        }
+        })
 
-        return render(request, "accounts/dashboard.html", context)
+    return render(request, "accounts/dashboard.html", {
+        "role": "student"
+    })
 
-    # STUDENT DASHBOARD
-    else:
-        context = {
-            "role": "student",
-        }
 
-        return render(request, "accounts/dashboard.html", context)
 # ----------------------
 # MY EVENTS
 # ----------------------
@@ -43,9 +37,7 @@ def my_events(request):
 
     user = request.user
 
-    # Student → only registered events
     if hasattr(user, "profile") and user.profile.role == "student":
-
         regs = EventRegistration.objects.filter(student=user)
         events = [r.event for r in regs]
 
@@ -54,26 +46,23 @@ def my_events(request):
             "role": "student"
         })
 
-    # Organizer/Admin → assigned events
-    else:
+    events = Event.objects.filter(organizer=user).annotate(
+        total_registrations=Count('registrations')
+    )
 
-        events = Event.objects.filter(organizer=user).annotate(
-            total_registrations=Count('registrations')
-        )
-
-        return render(request, "events/my_events.html", {
-            "events": events,
-            "role": "organizer"
-        })
+    return render(request, "events/my_events.html", {
+        "events": events,
+        "role": "organizer"
+    })
 
 
 # ----------------------
-# AVAILABLE EVENTS (STUDENT ONLY)
+# AVAILABLE EVENTS (FIXED)
 # ----------------------
 @login_required
 def available_events(request):
 
-    events = Event.objects.filter(status="announced")
+    events = Event.objects.filter(status__iexact="announced")
 
     return render(request, "events/available_events.html", {
         "events": events,
@@ -82,7 +71,7 @@ def available_events(request):
 
 
 # ----------------------
-# REGISTER EVENT
+# REGISTER EVENT (FIXED)
 # ----------------------
 @login_required
 def register_event(request, event_id):
@@ -91,7 +80,7 @@ def register_event(request, event_id):
         messages.error(request, "Only students allowed.")
         return redirect("events:my_events")
 
-    event = get_object_or_404(Event, id=event_id, status="announced")
+    event = get_object_or_404(Event, id=event_id, status__iexact="announced")
 
     if EventRegistration.objects.filter(event=event, student=request.user).exists():
         messages.info(request, "Already registered.")
@@ -104,9 +93,8 @@ def register_event(request, event_id):
             obj.event = event
             obj.student = request.user
             obj.save()
-            messages.success(request, "Registered successfully!")
 
-            # ✅ Important: redirect to MY EVENTS
+            messages.success(request, "Registered successfully!")
             return redirect("events:my_events")
 
     return render(request, "events/register_event.html", {
@@ -130,7 +118,7 @@ def view_event(request, event_id):
 
 
 # ----------------------
-# PROPOSALS
+# VIEW PROPOSALS
 # ----------------------
 @login_required
 def view_proposals(request, event_id):
@@ -147,6 +135,9 @@ def view_proposals(request, event_id):
     })
 
 
+# ----------------------
+# SUBMIT PROPOSAL
+# ----------------------
 @login_required
 def submit_proposal(request, event_id):
 
@@ -173,7 +164,7 @@ def submit_proposal(request, event_id):
 
 
 # ----------------------
-# APPROVE / REJECT
+# APPROVE PROPOSAL (IMPORTANT FIX)
 # ----------------------
 @login_required
 def approve_proposal(request, proposal_id):
@@ -185,9 +176,17 @@ def approve_proposal(request, proposal_id):
     proposal.status = "Approved"
     proposal.save()
 
-    return redirect("events:view_proposals", event_id=proposal.event.id)
+    # 🔥 AUTO MOVE EVENT TO ANNOUNCED (CRITICAL FIX)
+    event = proposal.event
+    event.status = "Announced"
+    event.save()
+
+    return redirect("events:view_proposals", event_id=event.id)
 
 
+# ----------------------
+# REJECT PROPOSAL
+# ----------------------
 @login_required
 def reject_proposal(request, proposal_id):
 
