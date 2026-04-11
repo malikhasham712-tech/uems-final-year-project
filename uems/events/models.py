@@ -48,6 +48,12 @@ class Event(models.Model):
         default='Pending'
     )
 
+    # ✅ Event creation timestamp
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
     def __str__(self):
         return self.name
 
@@ -63,29 +69,50 @@ class EventProposal(models.Model):
         ('Rejected', 'Rejected')
     ]
 
-    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="proposals")
-    organizer = models.ForeignKey(User, on_delete=models.CASCADE, related_name="proposals")
+    event = models.ForeignKey(
+        Event,
+        on_delete=models.CASCADE,
+        related_name="proposals"
+    )
+
+    organizer = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="proposals"
+    )
 
     proposed_venue = models.CharField(max_length=200)
     details = models.TextField(blank=True)
 
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='Pending')
+    status = models.CharField(
+        max_length=10,
+        choices=STATUS_CHOICES,
+        default='Pending'
+    )
 
     submitted_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-submitted_at']
 
     def __str__(self):
         return f"{self.event.name} - {self.organizer.username}"
 
 
 # ----------------------
-# REGISTRATION (FIXED - IMPORTANT)
+# REGISTRATION
 # ----------------------
 class EventRegistration(models.Model):
 
-    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="registrations")
+    event = models.ForeignKey(
+        Event,
+        on_delete=models.CASCADE,
+        related_name="registrations"
+    )
+
     student = models.ForeignKey(User, on_delete=models.CASCADE)
 
-    # snapshot fields (IMPORTANT for stability)
+    # Snapshot fields (important for record stability)
     student_name = models.CharField(max_length=100)
     registration_no = models.CharField(max_length=50)
     semester = models.CharField(max_length=20)
@@ -97,6 +124,7 @@ class EventRegistration(models.Model):
 
     class Meta:
         unique_together = ('event', 'student')
+        ordering = ['-created_at']
 
     def __str__(self):
         return f"{self.student_name} - {self.event.name}"
