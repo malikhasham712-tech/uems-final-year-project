@@ -34,7 +34,10 @@ def dashboard(request):
     role = get_role(request.user)
 
     if role == "organizer":
-        events = Event.objects.filter(organizer=request.user).prefetch_related("proposals", "registrations")
+        events = Event.objects.filter(
+            organizer=request.user
+        ).prefetch_related("proposals", "registrations")
+
         return render(request, "accounts/dashboard.html", {
             "role": "organizer",
             "events": events
@@ -84,6 +87,12 @@ def register_event(request, event_id):
             obj.student = request.user
             obj.save()
 
+            # 🔔 OPTIONAL: student registration notification
+            Notification.objects.create(
+                user=request.user,
+                announcement=None
+            )
+
             messages.success(request, "Registered successfully!")
             return redirect("events:my_events")
 
@@ -111,9 +120,9 @@ def my_events(request):
         })
 
     if role == "organizer":
-        events = Event.objects.filter(organizer=request.user).annotate(
-            total_registrations=Count("registrations")
-        )
+        events = Event.objects.filter(
+            organizer=request.user
+        ).annotate(total_registrations=Count("registrations"))
 
         return render(request, "events/my_events.html", {
             "events": events,
@@ -165,15 +174,11 @@ def submit_proposal(request, event_id):
     if request.method == "POST":
         form = ProposalForm(request.POST)
         if form.is_valid():
-
             obj = form.save(commit=False)
             obj.event = event
             obj.organizer = request.user
             obj.status = "Pending"
-
-            # SAVE NEW FIELD
             obj.requirements = request.POST.get("requirements")
-
             obj.save()
 
             return redirect("events:view_proposals", event_id=event.id)
@@ -185,6 +190,9 @@ def submit_proposal(request, event_id):
     })
 
 
+# ----------------------
+# APPROVE / REJECT + NOTIFICATIONS (IMPORTANT FIX)
+# ----------------------
 @login_required
 def approve_proposal(request, proposal_id):
     if not request.user.is_superuser:
@@ -197,6 +205,22 @@ def approve_proposal(request, proposal_id):
     event = proposal.event
     event.status = "Announced"
     event.save()
+
+    # 🔔 NOTIFICATION → ORGANIZER
+    if event.organizer:
+        Notification.objects.create(
+            user=event.organizer,
+            announcement=None
+        )
+
+    # 🔔 NOTIFICATION → STUDENTS
+    students = EventRegistration.objects.filter(event=event).values_list("student", flat=True)
+
+    for uid in set(students):
+        Notification.objects.create(
+            user_id=uid,
+            announcement=None
+        )
 
     return redirect("events:view_proposals", event_id=event.id)
 
@@ -255,13 +279,17 @@ def send_announcement(request):
             created_by=request.user
         )
 
+        # 🔔 ORGANIZER + STUDENTS NOTIFICATION
         user_ids = list(event.registrations.values_list("student", flat=True))
 
         if event.organizer:
             user_ids.append(event.organizer.id)
 
         for uid in set(user_ids):
-            Notification.objects.create(user_id=uid, announcement=announcement)
+            Notification.objects.create(
+                user_id=uid,
+                announcement=announcement
+            )
 
         messages.success(request, "Announcement sent successfully!")
         return redirect("events:send_announcement")
@@ -271,7 +299,9 @@ def send_announcement(request):
     })
 
 
-# FIXED: announcements page
+# ----------------------
+# EVENT ANNOUNCEMENTS
+# ----------------------
 @login_required
 def event_announcements(request, event_id):
     event = get_object_or_404(Event, id=event_id)
@@ -288,12 +318,12 @@ def event_announcements(request, event_id):
 
 
 # ----------------------
-# NOTIFICATIONS
+# NOTIFICATIONS PAGE
 # ----------------------
 @login_required
 def notifications(request):
     notifs = request.user.notifications.all().order_by("-created_at")
-    notifs.update(is_read=True)
+    notifs.filter(is_read=False).update(is_read=True)
 
     return render(request, "events/notifications.html", {
         "notifications": notifs
@@ -336,7 +366,7 @@ def submit_feedback(request, event_id):
     })
 
 
-# ALIASES (safe)
+# ALIASES
 @login_required
 def event_feedback(request, event_id):
     return submit_feedback(request, event_id)
@@ -344,7 +374,6 @@ def event_feedback(request, event_id):
 
 @login_required
 def cancel_registration(request, event_id):
-
     reg = EventRegistration.objects.filter(
         event_id=event_id,
         student=request.user

@@ -40,9 +40,7 @@ class Event(models.Model):
         related_name="organized_events"
     )
 
-    # ✅ KEEP (admin may leave empty)
     venue = models.CharField(max_length=255, blank=True, null=True)
-
     date = models.DateField(null=True, blank=True)
 
     status = models.CharField(
@@ -61,7 +59,7 @@ class Event(models.Model):
 
 
 # ----------------------
-# PROPOSAL (UPDATED 🔥)
+# PROPOSAL
 # ----------------------
 class EventProposal(models.Model):
 
@@ -83,13 +81,8 @@ class EventProposal(models.Model):
         related_name="proposals"
     )
 
-    # ✅ Organizer decides venue
     proposed_venue = models.CharField(max_length=200)
-
-    # ✅ WHAT WILL HAPPEN IN EVENT
     details = models.TextField(blank=True)
-
-    # 🔥 NEW FIELD (PROFESSIONAL ADDITION)
     requirements = models.TextField(blank=True, null=True)
 
     status = models.CharField(
@@ -170,7 +163,7 @@ class Announcement(models.Model):
 
 
 # ----------------------
-# NOTIFICATION
+# NOTIFICATION (FIXED + PROFESSIONAL)
 # ----------------------
 class Notification(models.Model):
 
@@ -180,10 +173,16 @@ class Notification(models.Model):
         related_name='notifications'
     )
 
-    announcement = models.ForeignKey(
-        Announcement,
-        on_delete=models.CASCADE
+    # OPTIONAL link to event (VERY IMPORTANT for scaling)
+    event = models.ForeignKey(
+        Event,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True
     )
+
+    # message field (YOU NEEDED THIS FOR DEFAULT NOTIFICATIONS)
+    message = models.TextField()
 
     is_read = models.BooleanField(default=False)
 

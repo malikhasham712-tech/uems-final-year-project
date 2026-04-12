@@ -75,6 +75,9 @@ TEMPLATES = [
                 'django.template.context_processors.request',  # needed for request.user in templates
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                # 🔥 ADD THIS LINE
+                'events.context_processors.notifications_context',
+
             ],
         },
     },
