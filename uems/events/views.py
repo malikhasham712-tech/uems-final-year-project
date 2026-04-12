@@ -165,10 +165,15 @@ def submit_proposal(request, event_id):
     if request.method == "POST":
         form = ProposalForm(request.POST)
         if form.is_valid():
+
             obj = form.save(commit=False)
             obj.event = event
             obj.organizer = request.user
             obj.status = "Pending"
+
+            # SAVE NEW FIELD
+            obj.requirements = request.POST.get("requirements")
+
             obj.save()
 
             return redirect("events:view_proposals", event_id=event.id)
@@ -335,3 +340,18 @@ def submit_feedback(request, event_id):
 @login_required
 def event_feedback(request, event_id):
     return submit_feedback(request, event_id)
+
+
+@login_required
+def cancel_registration(request, event_id):
+
+    reg = EventRegistration.objects.filter(
+        event_id=event_id,
+        student=request.user
+    ).first()
+
+    if reg:
+        reg.delete()
+        messages.success(request, "Registration cancelled.")
+
+    return redirect("events:my_events")

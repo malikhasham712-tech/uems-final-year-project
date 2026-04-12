@@ -8,7 +8,13 @@ from .models import EventProposal, EventRegistration
 class ProposalForm(forms.ModelForm):
     class Meta:
         model = EventProposal
-        fields = ['proposed_venue', 'details']
+        fields = ['proposed_venue', 'details', 'requirements']
+
+        widgets = {
+            'proposed_venue': forms.TextInput(attrs={'class': 'form-control'}),
+            'details': forms.Textarea(attrs={'class': 'form-control'}),
+            'requirements': forms.Textarea(attrs={'class': 'form-control'}),
+        }
 
 
 # ----------------------

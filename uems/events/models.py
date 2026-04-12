@@ -40,7 +40,9 @@ class Event(models.Model):
         related_name="organized_events"
     )
 
-    venue = models.CharField(max_length=200)
+    # ✅ KEEP (admin may leave empty)
+    venue = models.CharField(max_length=255, blank=True, null=True)
+
     date = models.DateField(null=True, blank=True)
 
     status = models.CharField(
@@ -59,7 +61,7 @@ class Event(models.Model):
 
 
 # ----------------------
-# PROPOSAL
+# PROPOSAL (UPDATED 🔥)
 # ----------------------
 class EventProposal(models.Model):
 
@@ -81,8 +83,14 @@ class EventProposal(models.Model):
         related_name="proposals"
     )
 
+    # ✅ Organizer decides venue
     proposed_venue = models.CharField(max_length=200)
+
+    # ✅ WHAT WILL HAPPEN IN EVENT
     details = models.TextField(blank=True)
+
+    # 🔥 NEW FIELD (PROFESSIONAL ADDITION)
+    requirements = models.TextField(blank=True, null=True)
 
     status = models.CharField(
         max_length=10,
@@ -135,7 +143,7 @@ class EventRegistration(models.Model):
 
 
 # ----------------------
-# ANNOUNCEMENT (FIXED HERE 🔥)
+# ANNOUNCEMENT
 # ----------------------
 class Announcement(models.Model):
 
@@ -147,7 +155,6 @@ class Announcement(models.Model):
 
     message = models.TextField()
 
-    # 🔥 FIX: allow null to avoid migration error
     created_by = models.ForeignKey(
         User,
         on_delete=models.SET_NULL,
