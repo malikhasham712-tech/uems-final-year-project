@@ -5,7 +5,7 @@
 {% block content %}
 
 <div class="text-end mb-3">
-    <a href="javascript:history.back()" class="btn btn-outline-secondary">
+    <a href="{% url 'events:available_events' %}" class="btn btn-outline-secondary">
         ← Back
     </a>
 </div>
@@ -14,7 +14,6 @@
 
   <div class="card border-0 shadow-lg rounded-4 p-4">
 
-    <!-- HEADER -->
     <div class="text-center mb-4">
         <h2 class="fw-bold text-primary mb-1">
             {{ event.name }}
@@ -24,7 +23,6 @@
         </p>
     </div>
 
-    <!-- EVENT INFO -->
     <div class="bg-light p-3 rounded-3 mb-4">
         {% if event.venue %}
             <div><strong>📍 Venue:</strong> {{ event.venue }}</div>
@@ -32,7 +30,6 @@
         <div><strong>📅 Date:</strong> {{ event.date|date:"d M Y" }}</div>
     </div>
 
-    <!-- MESSAGES -->
     {% if messages %}
         {% for message in messages %}
             <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
@@ -42,11 +39,9 @@
         {% endfor %}
     {% endif %}
 
-    <!-- FORM -->
     <form method="POST" class="row g-3">
         {% csrf_token %}
 
-        <!-- FULL NAME -->
         <div class="col-12">
             <div class="form-floating">
                 {{ form.student_name }}
@@ -54,7 +49,6 @@
             </div>
         </div>
 
-        <!-- REG NO -->
         <div class="col-12">
             <div class="form-floating">
                 {{ form.registration_no }}
@@ -62,7 +56,6 @@
             </div>
         </div>
 
-        <!-- SEMESTER -->
         <div class="col-md-6">
             <div class="form-floating">
                 {{ form.semester }}
@@ -70,7 +63,6 @@
             </div>
         </div>
 
-        <!-- DEPARTMENT -->
         <div class="col-md-6">
             <div class="form-floating">
                 {{ form.department }}
@@ -78,7 +70,6 @@
             </div>
         </div>
 
-        <!-- EMAIL -->
         <div class="col-12">
             <div class="form-floating">
                 {{ form.email }}
@@ -86,7 +77,6 @@
             </div>
         </div>
 
-        <!-- CONTACT -->
         <div class="col-12">
             <div class="form-floating">
                 {{ form.contact_no }}
@@ -94,14 +84,12 @@
             </div>
         </div>
 
-        <!-- BUTTON -->
         <div class="col-12 mt-2">
             <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold rounded-3">
                 Submit Registration
             </button>
         </div>
 
-        <!-- CANCEL -->
         <div class="col-12 text-center">
             <a href="{% url 'events:available_events' %}" class="text-muted text-decoration-none">
                 Cancel

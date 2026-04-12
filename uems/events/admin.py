@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.urls import reverse
 from django.utils.html import format_html
+from django.contrib.auth.models import User
 
 from .models import (
     Category,
@@ -12,7 +13,6 @@ from .models import (
     Feedback
 )
 
-
 # ----------------------
 # CATEGORY
 # ----------------------
@@ -23,7 +23,7 @@ class CategoryAdmin(admin.ModelAdmin):
 
 
 # ----------------------
-# EVENT (CORE LOGIC HERE 🔥)
+# EVENT
 # ----------------------
 @admin.register(Event)
 class EventAdmin(admin.ModelAdmin):
@@ -40,49 +40,24 @@ class EventAdmin(admin.ModelAdmin):
     )
 
     list_filter = ('status', 'category')
-    search_fields = ('name', 'venue')
-    list_editable = ('status', 'venue', 'date', 'organizer')
+    search_fields = ('name',)
+
+    exclude = ('venue', 'description')
 
     def save_model(self, request, obj, form, change):
-
-        old_obj = None
-        if obj.pk:
-            old_obj = Event.objects.get(pk=obj.pk)
+        is_new = obj.pk is None
 
         super().save_model(request, obj, form, change)
 
-        # =========================
-        # 🔥 ORGANIZER ASSIGNED
-        # =========================
-        if old_obj and old_obj.organizer != obj.organizer and obj.organizer:
+        # ----------------------
+        # ORGANIZER ASSIGN NOTIFICATION ONLY
+        # ----------------------
+        if is_new and obj.organizer:
             Notification.objects.create(
                 user=obj.organizer,
                 event=obj,
-                message=f"🎉 You are now Organizer of '{obj.name}'"
+                message=f"🎉 You are assigned as Organizer of '{obj.name}'"
             )
-
-        # =========================
-        # 🔥 EVENT ANNOUNCED
-        # =========================
-        if old_obj and old_obj.status != "Announced" and obj.status == "Announced":
-
-            # Students
-            student_ids = obj.registrations.values_list("student", flat=True).distinct()
-
-            for sid in student_ids:
-                Notification.objects.create(
-                    user_id=sid,
-                    event=obj,
-                    message=f"📢 New Event Announced: {obj.name} is now open for registration."
-                )
-
-            # Organizer
-            if obj.organizer:
-                Notification.objects.create(
-                    user=obj.organizer,
-                    event=obj,
-                    message=f"📌 Your event '{obj.name}' has been officially Announced."
-                )
 
     def view_proposals(self, obj):
         url = reverse("admin:events_eventproposal_changelist") + f"?event__id__exact={obj.id}"
@@ -102,9 +77,79 @@ class EventAdmin(admin.ModelAdmin):
 # ----------------------
 @admin.register(EventProposal)
 class EventProposalAdmin(admin.ModelAdmin):
-    list_display = ('event', 'organizer', 'proposed_venue', 'status', 'submitted_at')
+
+    list_display = (
+        'event',
+        'organizer',
+        'proposed_venue',
+        'status',
+        'submitted_at',
+    )
+
     list_filter = ('status',)
     search_fields = ('event__name', 'organizer__username')
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def get_readonly_fields(self, request, obj=None):
+        if obj:
+            return [f.name for f in obj._meta.fields if f.name != "status"]
+        return []
+
+    actions = ['approve_proposals', 'reject_proposals']
+
+    # ----------------------
+    # APPROVE
+    # ----------------------
+    @admin.action(description="Approve selected proposals")
+    def approve_proposals(self, request, queryset):
+
+        for proposal in queryset:
+
+            proposal.status = "Approved"
+            proposal.save()
+
+            event = proposal.event
+            event.status = "Announced"
+            event.save()
+
+            # Organizer notification
+            if event.organizer:
+                Notification.objects.create(
+                    user=event.organizer,
+                    event=event,
+                    message=f"🎉 Proposal Approved → Event '{event.name}' Announced"
+                )
+
+            # ALL USERS NOTIFICATION (ONLY HERE)
+            users = User.objects.filter(is_active=True)
+
+            for user in users:
+                Notification.objects.create(
+                    user=user,
+                    event=event,
+                    message=f"📢 Event Announced: {event.name}"
+                )
+
+    # ----------------------
+    # REJECT
+    # ----------------------
+    @admin.action(description="Reject selected proposals")
+    def reject_proposals(self, request, queryset):
+
+        for proposal in queryset:
+            proposal.status = "Rejected"
+            proposal.save()
+
+            Notification.objects.create(
+                user=proposal.organizer,
+                event=proposal.event,
+                message=f"❌ Proposal Rejected for '{proposal.event.name}'"
+            )
 
 
 # ----------------------
@@ -120,7 +165,7 @@ class EventRegistrationAdmin(admin.ModelAdmin):
 
 
 # ----------------------
-# ANNOUNCEMENT (HIDDEN)
+# ANNOUNCEMENT
 # ----------------------
 @admin.register(Announcement)
 class AnnouncementAdmin(admin.ModelAdmin):
@@ -131,7 +176,7 @@ class AnnouncementAdmin(admin.ModelAdmin):
 
 
 # ----------------------
-# NOTIFICATION (HIDDEN)
+# NOTIFICATION
 # ----------------------
 @admin.register(Notification)
 class NotificationAdmin(admin.ModelAdmin):
@@ -142,7 +187,7 @@ class NotificationAdmin(admin.ModelAdmin):
 
 
 # ----------------------
-# FEEDBACK (HIDDEN)
+# FEEDBACK
 # ----------------------
 @admin.register(Feedback)
 class FeedbackAdmin(admin.ModelAdmin):

@@ -6,7 +6,6 @@
 
 <div class="box">
 
-    <!-- HEADER -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h4 class="text-primary fw-bold mb-0">My Events</h4>
     </div>
@@ -21,12 +20,7 @@
                     <th>Date</th>
                     <th>Status</th>
                     <th>Announcements</th>
-
-                    {% if role == "student" %}
-                        <th>Actions</th>
-                    {% else %}
-                        <th>Feedback</th>
-                    {% endif %}
+                    <th>Actions</th>
                 </tr>
             </thead>
 
@@ -65,44 +59,30 @@
                         </a>
                     </td>
 
-                    <!-- ========================= -->
-                    <!-- STUDENT ACTIONS -->
-                    <!-- ========================= -->
-                    {% if role == "student" %}
+                    <!-- ACTIONS -->
                     <td>
 
                         <div class="d-flex gap-2 justify-content-center flex-wrap">
 
-                            <!-- Cancel Registration -->
-                            <a href="{% url 'events:cancel_registration' event.id %}"
-                               class="btn btn-sm btn-outline-secondary">
-                                Cancel
-                            </a>
+                            <!-- CANCEL (SAFE) -->
+                            {% if event.status != "Completed" %}
+                                <a href="{% url 'events:cancel_registration' event.id %}"
+                                   class="btn btn-sm btn-outline-danger">
+                                    Cancel
+                                </a>
+                            {% endif %}
 
-                            <!-- Feedback (ONLY if completed) -->
+                            <!-- FEEDBACK -->
                             {% if event.status == "Completed" %}
-                            <a href="{% url 'events:submit_feedback' event.id %}"
-                               class="btn btn-sm btn-primary">
-                                Feedback
-                            </a>
+                                <a href="{% url 'events:event_feedback' event.id %}"
+                                   class="btn btn-sm btn-primary">
+                                    Feedback
+                                </a>
                             {% endif %}
 
                         </div>
 
                     </td>
-                    {% endif %}
-
-                    <!-- ========================= -->
-                    <!-- ORGANIZER -->
-                    <!-- ========================= -->
-                    {% if role == "organizer" %}
-                    <td>
-                        <a href="{% url 'events:event_feedback' event.id %}"
-                           class="btn btn-sm btn-primary">
-                            View
-                        </a>
-                    </td>
-                    {% endif %}
 
                 </tr>
             {% endfor %}

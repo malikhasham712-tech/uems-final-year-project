@@ -8,13 +8,42 @@
 
     {% for n in notifications %}
         <div class="mb-3 p-3 border rounded">
-            <strong>{{ n.announcement.event.name }}</strong><br>
-            {{ n.announcement.message }}<br>
-            <small class="text-muted">{{ n.created_at }}</small>
+
+            <!-- EVENT NAME -->
+            {% if n.event %}
+                <strong>
+                    <a href="{% url 'events:view_event' n.event.id %}" style="text-decoration:none;">
+                        {{ n.event.name }}
+                    </a>
+                </strong>
+            {% else %}
+                <strong>System Notification</strong>
+            {% endif %}
+
+            <br>
+
+            <!-- MESSAGE -->
+            {% if n.event %}
+                <a href="{% url 'events:view_event' n.event.id %}" style="text-decoration:none;">
+                    {{ n.message }}
+                </a>
+            {% else %}
+                {{ n.message }}
+            {% endif %}
+
+            <br>
+
+            <!-- TIME -->
+            <small class="text-muted">
+                {{ n.created_at }}
+            </small>
+
         </div>
+
     {% empty %}
         <p>No notifications available.</p>
     {% endfor %}
+
 </div>
 
 {% endblock %}
