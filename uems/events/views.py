@@ -99,23 +99,28 @@ def register_event(request, event_id):
 
 
 # ----------------------
-# MY EVENTS
+# MY EVENTS (FIXED)
 # ----------------------
 @login_required
 def my_events(request):
     role = get_role(request.user)
 
+    # STUDENT
     if role == "student":
-        regs = EventRegistration.objects.filter(student=request.user)
-        events = [r.event for r in regs]
+        events = Event.objects.filter(
+            registrations__student=request.user
+        ).distinct()
 
         return render(request, "events/my_events.html", {
             "events": events,
             "role": "student"
         })
 
+    # ORGANIZER
     if role == "organizer":
-        events = Event.objects.filter(organizer=request.user).annotate(
+        events = Event.objects.filter(
+            organizer=request.user
+        ).annotate(
             total_registrations=Count("registrations")
         )
 
@@ -133,10 +138,16 @@ def my_events(request):
 @login_required
 def view_event(request, event_id):
     event = get_object_or_404(Event, id=event_id)
+
+    proposal = EventProposal.objects.filter(
+        event=event
+    ).order_by("-id").first()
+
     role = "organizer" if request.user == event.organizer else "student"
 
     return render(request, "events/view_event.html", {
         "event": event,
+        "proposal": proposal,
         "role": role
     })
 
@@ -186,7 +197,7 @@ def submit_proposal(request, event_id):
 
 
 # ----------------------
-# REGISTRATIONS
+# EVENT REGISTRATIONS
 # ----------------------
 @login_required
 def event_registrations(request, event_id):
@@ -213,7 +224,7 @@ def send_announcement(request):
     if not request.user.is_superuser:
         return redirect("events:dashboard")
 
-    events = Event.objects.filter(status="Announced")
+    events = Event.objects.filter(status__iexact="announced")
 
     if request.method == "POST":
         event_id = request.POST.get("event_id")

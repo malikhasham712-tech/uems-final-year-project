@@ -173,7 +173,8 @@
 
                         {% for n in notifications|slice:":5" %}
                             <li>
-                                <a class="dropdown-item small" href="#">
+                                <a class="dropdown-item small"
+                                    href="{% if n.event %}{% url 'events:view_event' n.event.id %}{% else %}#{% endif %}">
                                     <strong>Notification</strong><br>
                                     {{ n.message|default:"New update"|truncatechars:40 }}
                                 </a>

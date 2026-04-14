@@ -6,7 +6,6 @@
 
 <div class="box">
 
-    <!-- HEADER -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h4 class="text-primary fw-bold mb-0">Available Events</h4>
     </div>
@@ -18,7 +17,6 @@
             <thead>
                 <tr>
                     <th>Name</th>
-                    <th>Date</th>
                     <th>Organizer</th>
                     <th class="text-end">Action</th>
                 </tr>
@@ -28,7 +26,6 @@
             {% for event in events %}
                 <tr>
                     <td class="fw-semibold">{{ event.name }}</td>
-                    <td>{{ event.date|date:"d M Y" }}</td>
                     <td>{{ event.organizer.username }}</td>
                     <td class="text-end">
 

@@ -13,6 +13,7 @@ from .models import (
     Feedback
 )
 
+
 # ----------------------
 # CATEGORY
 # ----------------------
@@ -45,19 +46,40 @@ class EventAdmin(admin.ModelAdmin):
     exclude = ('venue', 'description')
 
     def save_model(self, request, obj, form, change):
+        old_status = None
         is_new = obj.pk is None
+
+        if not is_new:
+            old_status = Event.objects.get(pk=obj.pk).status
 
         super().save_model(request, obj, form, change)
 
-        # ----------------------
-        # ORGANIZER ASSIGN NOTIFICATION ONLY
-        # ----------------------
+        # Organizer assigned
         if is_new and obj.organizer:
             Notification.objects.create(
                 user=obj.organizer,
                 event=obj,
                 message=f"🎉 You are assigned as Organizer of '{obj.name}'"
             )
+
+        # Event Announced
+        if old_status != "Announced" and obj.status == "Announced":
+
+            users = User.objects.filter(is_active=True).only("id")
+
+            for user in users:
+                Notification.objects.create(
+                    user=user,
+                    event=obj,
+                    message=f"📢 Event Announced: {obj.name}"
+                )
+
+            if obj.organizer:
+                Notification.objects.create(
+                    user=obj.organizer,
+                    event=obj,
+                    message=f"📌 Your event '{obj.name}' is now Announced"
+                )
 
     def view_proposals(self, obj):
         url = reverse("admin:events_eventproposal_changelist") + f"?event__id__exact={obj.id}"
@@ -102,42 +124,24 @@ class EventProposalAdmin(admin.ModelAdmin):
 
     actions = ['approve_proposals', 'reject_proposals']
 
-    # ----------------------
-    # APPROVE
-    # ----------------------
     @admin.action(description="Approve selected proposals")
     def approve_proposals(self, request, queryset):
 
         for proposal in queryset:
-
-            proposal.status = "Approved"
+            proposal.status = "Accepted"
             proposal.save()
 
             event = proposal.event
-            event.status = "Announced"
+            event.status = "Accepted"
             event.save()
 
-            # Organizer notification
             if event.organizer:
                 Notification.objects.create(
                     user=event.organizer,
                     event=event,
-                    message=f"🎉 Proposal Approved → Event '{event.name}' Announced"
+                    message=f"🎉 Your proposal for '{event.name}' is Accepted"
                 )
 
-            # ALL USERS NOTIFICATION (ONLY HERE)
-            users = User.objects.filter(is_active=True)
-
-            for user in users:
-                Notification.objects.create(
-                    user=user,
-                    event=event,
-                    message=f"📢 Event Announced: {event.name}"
-                )
-
-    # ----------------------
-    # REJECT
-    # ----------------------
     @admin.action(description="Reject selected proposals")
     def reject_proposals(self, request, queryset):
 

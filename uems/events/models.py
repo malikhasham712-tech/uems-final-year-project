@@ -22,8 +22,8 @@ class Category(models.Model):
 class Event(models.Model):
 
     STATUS_CHOICES = [
-        ('Pending', 'Pending'),
-        ('Approved', 'Approved'),
+        ('Created', 'Created'),
+        ('Accepted', 'Accepted'),
         ('Announced', 'Announced'),
         ('Completed', 'Completed'),
     ]
@@ -46,7 +46,7 @@ class Event(models.Model):
     status = models.CharField(
         max_length=20,
         choices=STATUS_CHOICES,
-        default='Pending'
+        default='Created'
     )
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -65,7 +65,7 @@ class EventProposal(models.Model):
 
     STATUS_CHOICES = [
         ('Pending', 'Pending'),
-        ('Approved', 'Approved'),
+        ('Accepted', 'Accepted'),
         ('Rejected', 'Rejected')
     ]
 
@@ -163,7 +163,7 @@ class Announcement(models.Model):
 
 
 # ----------------------
-# NOTIFICATION (FIXED + PROFESSIONAL)
+# NOTIFICATION
 # ----------------------
 class Notification(models.Model):
 
@@ -173,7 +173,6 @@ class Notification(models.Model):
         related_name='notifications'
     )
 
-    # OPTIONAL link to event (VERY IMPORTANT for scaling)
     event = models.ForeignKey(
         Event,
         on_delete=models.CASCADE,
@@ -181,7 +180,6 @@ class Notification(models.Model):
         blank=True
     )
 
-    # message field (YOU NEEDED THIS FOR DEFAULT NOTIFICATIONS)
     message = models.TextField()
 
     is_read = models.BooleanField(default=False)
