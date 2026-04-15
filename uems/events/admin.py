@@ -81,17 +81,40 @@ class EventAdmin(admin.ModelAdmin):
                     message=f"📌 Your event '{obj.name}' is now Announced"
                 )
 
+    # ✅ DIRECT PROPOSAL PAGE
     def view_proposals(self, obj):
-        url = reverse("admin:events_eventproposal_changelist") + f"?event__id__exact={obj.id}"
-        return format_html('<a class="button" href="{}">Proposals</a>', url)
+        proposal = EventProposal.objects.filter(event=obj).first()
 
+        if proposal:
+            url = reverse("admin:events_eventproposal_change", args=[proposal.id])
+            return format_html(
+                '<a href="{}" style="background:#0d6efd;color:white;padding:4px 10px;border-radius:6px;text-decoration:none;">View</a>',
+                url
+            )
+
+        return format_html('<span style="color:gray;">No Proposal</span>')
+
+    view_proposals.short_description = "Proposals"
+
+    # ✅ REGISTRATIONS
     def view_registrations(self, obj):
         url = reverse("admin:events_eventregistration_changelist") + f"?event__id__exact={obj.id}"
-        return format_html('<a class="button" href="{}">Registrations</a>', url)
+        return format_html(
+            '<a href="{}" style="background:#198754;color:white;padding:4px 10px;border-radius:6px;text-decoration:none;">View</a>',
+            url
+        )
 
+    view_registrations.short_description = "Registrations"
+
+    # ✅ ANNOUNCEMENTS
     def view_announcements(self, obj):
         url = reverse("admin:events_announcement_changelist") + f"?event__id__exact={obj.id}"
-        return format_html('<a class="button" href="{}">Announcements</a>', url)
+        return format_html(
+            '<a href="{}" style="background:#6c757d;color:white;padding:4px 10px;border-radius:6px;text-decoration:none;">View</a>',
+            url
+        )
+
+    view_announcements.short_description = "Announcements"
 
 
 # ----------------------
@@ -117,6 +140,9 @@ class EventProposalAdmin(admin.ModelAdmin):
     def has_delete_permission(self, request, obj=None):
         return False
 
+    def get_model_perms(self, request):
+        return {}
+
     def get_readonly_fields(self, request, obj=None):
         if obj:
             return [f.name for f in obj._meta.fields if f.name != "status"]
@@ -126,7 +152,6 @@ class EventProposalAdmin(admin.ModelAdmin):
 
     @admin.action(description="Approve selected proposals")
     def approve_proposals(self, request, queryset):
-
         for proposal in queryset:
             proposal.status = "Accepted"
             proposal.save()
@@ -144,7 +169,6 @@ class EventProposalAdmin(admin.ModelAdmin):
 
     @admin.action(description="Reject selected proposals")
     def reject_proposals(self, request, queryset):
-
         for proposal in queryset:
             proposal.status = "Rejected"
             proposal.save()
@@ -166,6 +190,9 @@ class EventRegistrationAdmin(admin.ModelAdmin):
         'semester', 'department', 'email', 'contact_no', 'created_at'
     )
     search_fields = ('student_name', 'registration_no', 'event__name')
+
+    def get_model_perms(self, request):
+        return {}
 
 
 # ----------------------
