@@ -117,16 +117,12 @@
     <!-- SIDEBAR -->
     <div class="sidebar">
 
-        <h5>{{ role|title }}</h5>
+        <h5>{{ role|default:"User"|title }}</h5>
 
         {% if role == 'organizer' %}
-            <a href="{% url 'events:dashboard' %}" class="nav-link active">
-                Dashboard
-            </a>
+            <a href="{% url 'events:dashboard' %}" class="nav-link active">Dashboard</a>
         {% elif role == 'student' %}
-            <a href="{% url 'events:my_events' %}" class="nav-link active">
-                My Events
-            </a>
+            <a href="{% url 'events:my_events' %}" class="nav-link active">My Events</a>
         {% endif %}
 
         <div class="mt-auto">
@@ -154,13 +150,13 @@
 
             <div class="d-flex align-items-center gap-2">
 
-                <!-- 🔔 NOTIFICATIONS (FIXED) -->
+                <!-- NOTIFICATIONS -->
                 <div class="dropdown">
 
                     <button class="btn btn-light position-relative dropdown-toggle" data-bs-toggle="dropdown">
                         <i class="fa fa-bell"></i>
 
-                        {% if unread_notifications > 0 %}
+                        {% if unread_notifications %}
                             <span class="badge bg-danger notif-badge">
                                 {{ unread_notifications }}
                             </span>
@@ -171,11 +167,10 @@
 
                         <li class="dropdown-header">Notifications</li>
 
-                        {% for n in notifications|slice:":5" %}
+                        {% for n in notifications %}
                             <li>
                                 <a class="dropdown-item small"
-                                    href="{% if n.event %}{% url 'events:view_event' n.event.id %}{% else %}#{% endif %}">
-                                    <strong>Notification</strong><br>
+                                   href="{% if n.event %}{% url 'events:view_event' n.event.id %}{% else %}#{% endif %}">
                                     {{ n.message|default:"New update"|truncatechars:40 }}
                                 </a>
                             </li>

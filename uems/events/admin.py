@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.urls import reverse
-from django.utils.html import format_html
 from django.contrib.auth.models import User
+from django.utils.safestring import mark_safe
 
 from .models import (
     Category,
@@ -65,7 +65,7 @@ class EventAdmin(admin.ModelAdmin):
         # Event Announced
         if old_status != "Announced" and obj.status == "Announced":
 
-            users = User.objects.filter(is_active=True).only("id")
+            users = User.objects.filter(is_active=True)
 
             for user in users:
                 Notification.objects.create(
@@ -81,38 +81,29 @@ class EventAdmin(admin.ModelAdmin):
                     message=f"📌 Your event '{obj.name}' is now Announced"
                 )
 
-    # ✅ DIRECT PROPOSAL PAGE
+    # PROPOSALS BUTTON
     def view_proposals(self, obj):
         proposal = EventProposal.objects.filter(event=obj).first()
 
         if proposal:
             url = reverse("admin:events_eventproposal_change", args=[proposal.id])
-            return format_html(
-                '<a href="{}" style="background:#0d6efd;color:white;padding:4px 10px;border-radius:6px;text-decoration:none;">View</a>',
-                url
-            )
+            return mark_safe(f'<a href="{url}" class="button">View</a>')
 
-        return format_html('<span style="color:gray;">No Proposal</span>')
+        return mark_safe('<span style="color:gray;">No Proposal</span>')
 
     view_proposals.short_description = "Proposals"
 
-    # ✅ REGISTRATIONS
+    # REGISTRATIONS BUTTON
     def view_registrations(self, obj):
         url = reverse("admin:events_eventregistration_changelist") + f"?event__id__exact={obj.id}"
-        return format_html(
-            '<a href="{}" style="background:#198754;color:white;padding:4px 10px;border-radius:6px;text-decoration:none;">View</a>',
-            url
-        )
+        return mark_safe(f'<a href="{url}" class="button">View</a>')
 
     view_registrations.short_description = "Registrations"
 
-    # ✅ ANNOUNCEMENTS
+    # ANNOUNCEMENTS BUTTON
     def view_announcements(self, obj):
         url = reverse("admin:events_announcement_changelist") + f"?event__id__exact={obj.id}"
-        return format_html(
-            '<a href="{}" style="background:#6c757d;color:white;padding:4px 10px;border-radius:6px;text-decoration:none;">View</a>',
-            url
-        )
+        return mark_safe(f'<a href="{url}" class="button">View</a>')
 
     view_announcements.short_description = "Announcements"
 
@@ -152,6 +143,7 @@ class EventProposalAdmin(admin.ModelAdmin):
 
     @admin.action(description="Approve selected proposals")
     def approve_proposals(self, request, queryset):
+
         for proposal in queryset:
             proposal.status = "Accepted"
             proposal.save()
@@ -169,6 +161,7 @@ class EventProposalAdmin(admin.ModelAdmin):
 
     @admin.action(description="Reject selected proposals")
     def reject_proposals(self, request, queryset):
+
         for proposal in queryset:
             proposal.status = "Rejected"
             proposal.save()
@@ -196,11 +189,55 @@ class EventRegistrationAdmin(admin.ModelAdmin):
 
 
 # ----------------------
-# ANNOUNCEMENT
+# ANNOUNCEMENT (FINAL FIXED)
 # ----------------------
 @admin.register(Announcement)
 class AnnouncementAdmin(admin.ModelAdmin):
+
     list_display = ('event', 'created_by', 'created_at')
+
+    fields = ('event', 'message')
+    readonly_fields = ('event',)
+
+    def get_changeform_initial_data(self, request):
+        initial = super().get_changeform_initial_data(request)
+
+        event_id = request.GET.get('event__id__exact')
+
+        if event_id:
+            initial['event'] = event_id
+
+        return initial
+
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+
+        if request.GET.get('event__id__exact'):
+            form.base_fields['event'].disabled = True
+
+        return form
+
+    def save_model(self, request, obj, form, change):
+        obj.created_by = request.user
+        super().save_model(request, obj, form, change)
+
+        event = obj.event
+
+        # Registered users
+        user_ids = list(
+            event.registrations.values_list("student", flat=True)
+        )
+
+        # Organizer
+        if event.organizer:
+            user_ids.append(event.organizer.id)
+
+        for uid in set(user_ids):
+            Notification.objects.create(
+                user_id=uid,
+                event=event,
+                message=f"📢 {event.name}: {obj.message}"
+            )
 
     def get_model_perms(self, request):
         return {}

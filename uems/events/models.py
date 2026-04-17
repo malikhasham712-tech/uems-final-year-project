@@ -1,6 +1,5 @@
 from django.db import models
 from django.contrib.auth.models import User
-from django.utils import timezone
 
 
 # ----------------------
@@ -156,7 +155,11 @@ class Announcement(models.Model):
         related_name="created_announcements"
     )
 
-    created_at = models.DateTimeField(default=timezone.now)
+    # ✅ FIXED (auto time)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
 
     def __str__(self):
         return f"Announcement - {self.event.name}"
@@ -184,7 +187,11 @@ class Notification(models.Model):
 
     is_read = models.BooleanField(default=False)
 
-    created_at = models.DateTimeField(default=timezone.now)
+    # ✅ FIXED (auto time)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
 
     def __str__(self):
         return f"{self.user.username} Notification"
@@ -201,7 +208,11 @@ class Feedback(models.Model):
     message = models.TextField()
     rating = models.IntegerField(null=True, blank=True)
 
-    created_at = models.DateTimeField(default=timezone.now)
+    # ✅ FIXED (auto time)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
 
     def __str__(self):
         return f"{self.student.username} - {self.event.name}"
