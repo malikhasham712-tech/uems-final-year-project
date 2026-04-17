@@ -37,7 +37,8 @@ class EventAdmin(admin.ModelAdmin):
         'organizer',
         'view_proposals',
         'view_registrations',
-        'view_announcements'
+        'view_announcements',
+        'view_feedback'
     )
 
     list_filter = ('status', 'category')
@@ -54,7 +55,7 @@ class EventAdmin(admin.ModelAdmin):
 
         super().save_model(request, obj, form, change)
 
-        # Organizer assigned
+        # Organizer notification
         if is_new and obj.organizer:
             Notification.objects.create(
                 user=obj.organizer,
@@ -62,7 +63,7 @@ class EventAdmin(admin.ModelAdmin):
                 message=f"🎉 You are assigned as Organizer of '{obj.name}'"
             )
 
-        # Event Announced
+        # Event announced
         if old_status != "Announced" and obj.status == "Announced":
 
             users = User.objects.filter(is_active=True)
@@ -81,31 +82,41 @@ class EventAdmin(admin.ModelAdmin):
                     message=f"📌 Your event '{obj.name}' is now Announced"
                 )
 
-    # PROPOSALS BUTTON
+    # ----------------------
+    # BUTTONS
+    # ----------------------
+
     def view_proposals(self, obj):
         proposal = EventProposal.objects.filter(event=obj).first()
 
         if proposal:
             url = reverse("admin:events_eventproposal_change", args=[proposal.id])
-            return mark_safe(f'<a href="{url}" class="button">View</a>')
+            return mark_safe(f'<a class="button" href="{url}">View</a>')
 
-        return mark_safe('<span style="color:gray;">No Proposal</span>')
+        return "No Proposal"
 
     view_proposals.short_description = "Proposals"
 
-    # REGISTRATIONS BUTTON
+
     def view_registrations(self, obj):
         url = reverse("admin:events_eventregistration_changelist") + f"?event__id__exact={obj.id}"
-        return mark_safe(f'<a href="{url}" class="button">View</a>')
+        return mark_safe(f'<a class="button" href="{url}">View</a>')
 
     view_registrations.short_description = "Registrations"
 
-    # ANNOUNCEMENTS BUTTON
+
     def view_announcements(self, obj):
         url = reverse("admin:events_announcement_changelist") + f"?event__id__exact={obj.id}"
-        return mark_safe(f'<a href="{url}" class="button">View</a>')
+        return mark_safe(f'<a class="button" href="{url}">View</a>')
 
     view_announcements.short_description = "Announcements"
+
+
+    def view_feedback(self, obj):
+        url = reverse("admin:events_feedback_changelist") + f"?event__id__exact={obj.id}"
+        return mark_safe(f'<a class="button btn btn-success" href="{url}">View</a>')
+
+    view_feedback.short_description = "Feedback"
 
 
 # ----------------------
@@ -182,6 +193,7 @@ class EventRegistrationAdmin(admin.ModelAdmin):
         'student', 'event', 'student_name', 'registration_no',
         'semester', 'department', 'email', 'contact_no', 'created_at'
     )
+
     search_fields = ('student_name', 'registration_no', 'event__name')
 
     def get_model_perms(self, request):
@@ -189,7 +201,7 @@ class EventRegistrationAdmin(admin.ModelAdmin):
 
 
 # ----------------------
-# ANNOUNCEMENT (FINAL FIXED)
+# ANNOUNCEMENT (FIXED AUTO EVENT SELECT)
 # ----------------------
 @admin.register(Announcement)
 class AnnouncementAdmin(admin.ModelAdmin):
@@ -203,7 +215,6 @@ class AnnouncementAdmin(admin.ModelAdmin):
         initial = super().get_changeform_initial_data(request)
 
         event_id = request.GET.get('event__id__exact')
-
         if event_id:
             initial['event'] = event_id
 
@@ -223,12 +234,8 @@ class AnnouncementAdmin(admin.ModelAdmin):
 
         event = obj.event
 
-        # Registered users
-        user_ids = list(
-            event.registrations.values_list("student", flat=True)
-        )
+        user_ids = list(event.registrations.values_list("student", flat=True))
 
-        # Organizer
         if event.organizer:
             user_ids.append(event.organizer.id)
 
@@ -255,7 +262,7 @@ class NotificationAdmin(admin.ModelAdmin):
 
 
 # ----------------------
-# FEEDBACK
+# FEEDBACK (HIDDEN FROM SIDEBAR)
 # ----------------------
 @admin.register(Feedback)
 class FeedbackAdmin(admin.ModelAdmin):

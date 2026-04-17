@@ -155,7 +155,6 @@ class Announcement(models.Model):
         related_name="created_announcements"
     )
 
-    # ✅ FIXED (auto time)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -184,10 +183,8 @@ class Notification(models.Model):
     )
 
     message = models.TextField()
-
     is_read = models.BooleanField(default=False)
 
-    # ✅ FIXED (auto time)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -202,17 +199,26 @@ class Notification(models.Model):
 # ----------------------
 class Feedback(models.Model):
 
-    student = models.ForeignKey(User, on_delete=models.CASCADE)
-    event = models.ForeignKey(Event, on_delete=models.CASCADE)
+    student = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="feedbacks"
+    )
+
+    event = models.ForeignKey(
+        Event,
+        on_delete=models.CASCADE,
+        related_name="feedbacks"
+    )
 
     message = models.TextField()
     rating = models.IntegerField(null=True, blank=True)
 
-    # ✅ FIXED (auto time)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ['-created_at']
+        unique_together = ('student', 'event')   # ✅ IMPORTANT FIX
 
     def __str__(self):
         return f"{self.student.username} - {self.event.name}"

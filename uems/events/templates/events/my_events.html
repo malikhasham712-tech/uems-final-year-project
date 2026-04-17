@@ -20,6 +20,7 @@
                     <th>Date</th>
                     <th>Status</th>
                     <th>Announcements</th>
+                    <th>Feedback</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -59,24 +60,43 @@
                         </a>
                     </td>
 
+                    <!-- FEEDBACK COLUMN (NEW) -->
+                    <td>
+
+                        {% if event.status == "Completed" %}
+
+                            <div class="d-flex gap-2 justify-content-center flex-wrap">
+
+                                <!-- Submit Feedback -->
+                                <a href="{% url 'events:event_feedback' event.id %}"
+                                   class="btn btn-sm btn-success">
+                                    Submit
+                                </a>
+
+                                <!-- View Feedback (same page or future enhancement) -->
+                                <a href="{% url 'events:event_feedback' event.id %}"
+                                   class="btn btn-sm btn-outline-primary">
+                                    View
+                                </a>
+
+                            </div>
+
+                        {% else %}
+                            <span class="text-muted small">Not available</span>
+                        {% endif %}
+
+                    </td>
+
                     <!-- ACTIONS -->
                     <td>
 
                         <div class="d-flex gap-2 justify-content-center flex-wrap">
 
-                            <!-- CANCEL (SAFE) -->
+                            <!-- CANCEL -->
                             {% if event.status != "Completed" %}
                                 <a href="{% url 'events:cancel_registration' event.id %}"
                                    class="btn btn-sm btn-outline-danger">
                                     Cancel
-                                </a>
-                            {% endif %}
-
-                            <!-- FEEDBACK -->
-                            {% if event.status == "Completed" %}
-                                <a href="{% url 'events:event_feedback' event.id %}"
-                                   class="btn btn-sm btn-primary">
-                                    Feedback
                                 </a>
                             {% endif %}
 
