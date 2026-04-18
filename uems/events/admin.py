@@ -49,16 +49,20 @@ class EventAdmin(admin.ModelAdmin):
 
     def save_model(self, request, obj, form, change):
 
+        # ✅ Normalize status
+        obj.status = (obj.status or "").lower()
+
         old_status = None
         is_new = obj.pk is None
 
         if not is_new:
             old_status = Event.objects.get(pk=obj.pk).status
+            old_status = (old_status or "").lower()
 
         super().save_model(request, obj, form, change)
 
         # ----------------------
-        # ORGANIZER ASSIGNED
+        # 1. ORGANIZER ASSIGNED
         # ----------------------
         if is_new and obj.organizer:
             send_notification(
@@ -69,13 +73,13 @@ class EventAdmin(admin.ModelAdmin):
             )
 
         # ----------------------
-        # EVENT ANNOUNCED
+        # 2. EVENT ANNOUNCED
         # ----------------------
-        if old_status != "Announced" and obj.status == "Announced":
+        if old_status != "announced" and obj.status == "announced":
 
-            users = User.objects.filter(is_active=True)
+            students = User.objects.filter(is_staff=False, is_active=True)
 
-            for user in users:
+            for user in students:
                 send_notification(
                     user=user,
                     event=obj,
@@ -83,29 +87,36 @@ class EventAdmin(admin.ModelAdmin):
                     message=f"📢 Event Announced: {obj.name}"
                 )
 
+            if obj.organizer:
+                send_notification(
+                    user=obj.organizer,
+                    event=obj,
+                    ntype="event_announced",
+                    message=f"📢 Event Announced: {obj.name}"
+                )
+
         # ----------------------
-        # EVENT COMPLETED
+        # 3. EVENT COMPLETED
         # ----------------------
-        if old_status != "Completed" and obj.status == "Completed":
+        if old_status != "completed" and obj.status == "completed":
 
             user_ids = list(obj.registrations.values_list("student", flat=True))
 
             if obj.organizer:
                 user_ids.append(obj.organizer.id)
 
-            for uid in set(user_ids):
-                user = User.objects.filter(id=uid).first()
+            users = User.objects.filter(id__in=set(user_ids))
 
-                if user:
-                    send_notification(
-                        user=user,
-                        event=obj,
-                        ntype="event_completed",
-                        message=f"🎉 Event Completed: {obj.name}"
-                    )
+            for user in users:
+                send_notification(
+                    user=user,
+                    event=obj,
+                    ntype="event_completed",
+                    message=f"🎉 Event Completed: {obj.name}"
+                )
 
     # ----------------------
-    # ADMIN LINKS
+    # BUTTONS
     # ----------------------
     def view_proposals(self, obj):
         proposal = EventProposal.objects.filter(event=obj).first()
@@ -130,23 +141,26 @@ class EventAdmin(admin.ModelAdmin):
 
 
 # ----------------------
-# PROPOSAL
+# EVENT PROPOSAL
 # ----------------------
-@admin.register(EventProposal)
 class EventProposalAdmin(admin.ModelAdmin):
 
     list_display = ('event', 'organizer', 'proposed_venue', 'status', 'submitted_at')
 
+    def get_model_perms(self, request):
+        return {}
+
     actions = ['approve_proposals', 'reject_proposals']
 
-    def approve_proposals(self, request, queryset):
+    # ✅ KEEP DEFAULT = pending (DO NOT TOUCH ON CREATE)
 
+    def approve_proposals(self, request, queryset):
         for proposal in queryset:
-            proposal.status = "Accepted"
+            proposal.status = "accepted"   # ✅ lowercase
             proposal.save()
 
             event = proposal.event
-            event.status = "Accepted"
+            event.status = "accepted"
             event.save()
 
             if event.organizer:
@@ -158,9 +172,8 @@ class EventProposalAdmin(admin.ModelAdmin):
                 )
 
     def reject_proposals(self, request, queryset):
-
         for proposal in queryset:
-            proposal.status = "Rejected"
+            proposal.status = "rejected"   # ✅ lowercase
             proposal.save()
 
             if proposal.event.organizer:
@@ -170,6 +183,9 @@ class EventProposalAdmin(admin.ModelAdmin):
                     ntype="general",
                     message=f"❌ Proposal Rejected for '{proposal.event.name}'"
                 )
+
+
+admin.site.register(EventProposal, EventProposalAdmin)
 
 
 # ----------------------
@@ -204,16 +220,15 @@ class AnnouncementAdmin(admin.ModelAdmin):
         if event.organizer:
             user_ids.append(event.organizer.id)
 
-        for uid in set(user_ids):
-            user = User.objects.filter(id=uid).first()
+        users = User.objects.filter(id__in=set(user_ids))
 
-            if user:
-                send_notification(
-                    user=user,
-                    event=event,
-                    ntype="announcement",
-                    message=f"📢 New Announcement: {event.name}"
-                )
+        for user in users:
+            send_notification(
+                user=user,
+                event=event,
+                ntype="announcement",
+                message=f"📢 New Announcement: {event.name}"
+            )
 
     def get_model_perms(self, request):
         return {}

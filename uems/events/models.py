@@ -53,6 +53,12 @@ class Event(models.Model):
     class Meta:
         ordering = ['-created_at']
 
+    # ✅ FORCE LOWERCASE STATUS
+    def save(self, *args, **kwargs):
+        if self.status:
+            self.status = self.status.lower()
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return self.name
 
@@ -94,6 +100,12 @@ class EventProposal(models.Model):
 
     class Meta:
         ordering = ['-submitted_at']
+
+    # ✅ IMPORTANT FIX: NORMALIZE STATUS
+    def save(self, *args, **kwargs):
+        if self.status:
+            self.status = self.status.lower()
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.event.name} - {self.organizer.username}"
@@ -165,7 +177,7 @@ class Announcement(models.Model):
 
 
 # ----------------------
-# NOTIFICATION (CLEAN ARCHITECTURE READY)
+# NOTIFICATION
 # ----------------------
 class Notification(models.Model):
 

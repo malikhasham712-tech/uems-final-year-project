@@ -6,54 +6,23 @@
 
 <div class="box">
 
-    <h4 class="mb-3 text-primary">Notification Details</h4>
-
     <div class="card p-4 shadow-sm">
 
         <!-- MESSAGE -->
-        <div class="mb-3">
-            <strong>Message:</strong>
-            <p class="mt-2 fs-6">{{ notif.message }}</p>
+        <div class="mb-4">
+            <p class="mb-1 fw-semibold text-muted">Message</p>
+            <p class="fs-6 mb-0">
+                {{ notif.message }}
+            </p>
         </div>
 
-        <!-- IF EVENT EXISTS -->
-        {% if notif.event %}
-
-            <hr>
-
-            <div class="mb-3">
-                <strong>Related Event:</strong>
-                <p class="mt-2">{{ notif.event.name }}</p>
-            </div>
-
-            <div class="d-flex gap-2 flex-wrap">
-
-                <!-- ANNOUNCEMENTS -->
-                <a href="{% url 'events:event_announcements' notif.event.id %}"
-                   class="btn btn-primary btn-sm">
-                    View Announcements
-                </a>
-
-                <!-- EVENT DETAILS -->
-                <a href="{% url 'events:view_event' notif.event.id %}"
-                   class="btn btn-outline-secondary btn-sm">
-                    Event Details
-                </a>
-
-            </div>
-
-        {% endif %}
-
-        <hr>
-
         <!-- DATE -->
-        <p class="text-muted">
-            {{ notif.created_at }}
-        </p>
-
-        <a href="{% url 'events:notifications' %}" class="btn btn-secondary mt-3">
-            Back to Notifications
-        </a>
+        <div>
+            <p class="mb-1 fw-semibold text-muted">Date</p>
+            <p class="text-muted mb-0">
+                {{ notif.created_at|date:"d M Y, h:i A" }}
+            </p>
+        </div>
 
     </div>
 
