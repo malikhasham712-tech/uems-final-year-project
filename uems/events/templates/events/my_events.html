@@ -12,9 +12,11 @@
 
     {% if events %}
 
-        <table class="table table-hover admin-table">
+        <div class="table-responsive">
 
-            <thead>
+        <table class="table table-hover admin-table align-middle text-center">
+
+            <thead class="table-light">
                 <tr>
                     <th>Event</th>
                     <th>Date</th>
@@ -31,7 +33,8 @@
 
                     <!-- EVENT -->
                     <td class="fw-semibold">
-                        <a href="{% url 'events:view_event' event.id %}" class="text-decoration-none text-dark">
+                        <a href="{% url 'events:view_event' event.id %}" 
+                           class="text-decoration-none text-dark">
                             {{ event.name }}
                         </a>
                     </td>
@@ -41,15 +44,19 @@
                         {% if event.date %}
                             {{ event.date|date:"d M Y" }}
                         {% else %}
-                            -
+                            <span class="text-muted">-</span>
                         {% endif %}
                     </td>
 
                     <!-- STATUS -->
                     <td>
-                        <span class="badge bg-primary">
-                            {{ event.status|title }}
-                        </span>
+                        {% if event.status == "Completed" %}
+                            <span class="badge bg-success">Completed</span>
+                        {% elif event.status == "Announced" %}
+                            <span class="badge bg-primary">Announced</span>
+                        {% else %}
+                            <span class="badge bg-secondary">{{ event.status }}</span>
+                        {% endif %}
                     </td>
 
                     <!-- ANNOUNCEMENTS -->
@@ -60,29 +67,33 @@
                         </a>
                     </td>
 
-                    <!-- FEEDBACK COLUMN (NEW) -->
+                    <!-- FEEDBACK -->
                     <td>
 
-                        {% if event.status == "Completed" %}
+                        {% if role == "student" %}
 
-                            <div class="d-flex gap-2 justify-content-center flex-wrap">
+                            {% if event.status == "Completed" %}
 
-                                <!-- Submit Feedback -->
                                 <a href="{% url 'events:event_feedback' event.id %}"
                                    class="btn btn-sm btn-success">
                                     Submit
                                 </a>
 
-                                <!-- View Feedback (same page or future enhancement) -->
-                                <a href="{% url 'events:event_feedback' event.id %}"
-                                   class="btn btn-sm btn-outline-primary">
-                                    View
-                                </a>
+                            {% else %}
+                                <span class="text-muted small">Not Available</span>
+                            {% endif %}
 
-                            </div>
+                        {% elif role == "organizer" %}
+
+                            <a href="{% url 'events:view_feedbacks' event.id %}"
+                               class="btn btn-sm btn-primary">
+                                View
+                            </a>
 
                         {% else %}
-                            <span class="text-muted small">Not available</span>
+
+                            <span class="text-muted small">-</span>
+
                         {% endif %}
 
                     </td>
@@ -92,8 +103,7 @@
 
                         <div class="d-flex gap-2 justify-content-center flex-wrap">
 
-                            <!-- CANCEL -->
-                            {% if event.status != "Completed" %}
+                            {% if role == "student" and event.status != "Completed" %}
                                 <a href="{% url 'events:cancel_registration' event.id %}"
                                    class="btn btn-sm btn-outline-danger">
                                     Cancel
@@ -109,6 +119,8 @@
             </tbody>
 
         </table>
+
+        </div>
 
     {% else %}
 

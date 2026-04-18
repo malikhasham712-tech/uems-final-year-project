@@ -81,13 +81,6 @@
             padding: 30px;
         }
 
-        .box {
-            background: white;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-        }
-
         .notif-badge {
             position: absolute;
             top: -5px;
@@ -95,17 +88,9 @@
             font-size: 10px;
         }
 
-        table.admin-table {
-            width: 100%;
-            table-layout: fixed;
-        }
-
-        table.admin-table th,
-        table.admin-table td {
-            padding: 12px 10px;
-            text-align: center;
-            vertical-align: middle;
-            word-wrap: break-word;
+        .notif-item {
+            white-space: normal;
+            font-size: 13px;
         }
     </style>
 </head>
@@ -163,21 +148,25 @@
                         {% endif %}
                     </button>
 
-                    <ul class="dropdown-menu dropdown-menu-end" style="width:300px;">
+                    <ul class="dropdown-menu dropdown-menu-end" style="width:340px;">
 
                         <li class="dropdown-header">Notifications</li>
 
                         {% for n in notifications %}
+
                             <li>
-                                <a class="dropdown-item small"
-                                   href="{% if n.event %}{% url 'events:view_event' n.event.id %}{% else %}#{% endif %}">
-                                    {{ n.message|default:"New update"|truncatechars:40 }}
+                                <a class="dropdown-item notif-item"
+                                   href="{% url 'events:notification_detail' n.id %}">
+                                    {{ n.message|default:"New update"|truncatechars:80 }}
                                 </a>
                             </li>
+
                         {% empty %}
+
                             <li>
                                 <span class="dropdown-item text-muted">No notifications</span>
                             </li>
+
                         {% endfor %}
 
                         <li><hr class="dropdown-divider"></li>

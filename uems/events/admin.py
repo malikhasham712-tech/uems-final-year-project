@@ -55,15 +55,21 @@ class EventAdmin(admin.ModelAdmin):
 
         super().save_model(request, obj, form, change)
 
-        # Organizer notification
+        # ----------------------
+        # ORGANIZER ASSIGNED
+        # ----------------------
         if is_new and obj.organizer:
             Notification.objects.create(
                 user=obj.organizer,
                 event=obj,
+                notification_type="event_assigned",
+                action_url=f"/events/{obj.id}/",
                 message=f"🎉 You are assigned as Organizer of '{obj.name}'"
             )
 
-        # Event announced
+        # ----------------------
+        # EVENT ANNOUNCED
+        # ----------------------
         if old_status != "Announced" and obj.status == "Announced":
 
             users = User.objects.filter(is_active=True)
@@ -72,6 +78,8 @@ class EventAdmin(admin.ModelAdmin):
                 Notification.objects.create(
                     user=user,
                     event=obj,
+                    notification_type="event_announced",
+                    action_url=f"/events/{obj.id}/",
                     message=f"📢 Event Announced: {obj.name}"
                 )
 
@@ -79,44 +87,61 @@ class EventAdmin(admin.ModelAdmin):
                 Notification.objects.create(
                     user=obj.organizer,
                     event=obj,
+                    notification_type="event_announced",
+                    action_url=f"/events/{obj.id}/",
                     message=f"📌 Your event '{obj.name}' is now Announced"
                 )
 
-    # ----------------------
-    # BUTTONS
-    # ----------------------
+        # ----------------------
+        # EVENT COMPLETED
+        # ----------------------
+        if old_status != "Completed" and obj.status == "Completed":
 
+            user_ids = list(obj.registrations.values_list("student", flat=True))
+
+            if obj.organizer:
+                user_ids.append(obj.organizer.id)
+
+            for uid in set(user_ids):
+
+                if uid != (obj.organizer.id if obj.organizer else None):
+                    Notification.objects.create(
+                        user_id=uid,
+                        event=obj,
+                        notification_type="event_completed",
+                        action_url=f"/events/{obj.id}/feedback/",
+                        message=f"🎉 Event Completed: {obj.name}. Please submit feedback."
+                    )
+                else:
+                    Notification.objects.create(
+                        user_id=uid,
+                        event=obj,
+                        notification_type="event_completed",
+                        action_url=f"/events/{obj.id}/",
+                        message=f"📊 Your event '{obj.name}' has been completed."
+                    )
+
+    # ----------------------
+    # VIEW LINKS
+    # ----------------------
     def view_proposals(self, obj):
         proposal = EventProposal.objects.filter(event=obj).first()
-
         if proposal:
             url = reverse("admin:events_eventproposal_change", args=[proposal.id])
             return mark_safe(f'<a class="button" href="{url}">View</a>')
-
-        return "No Proposal"
-
-    view_proposals.short_description = "Proposals"
-
+        return mark_safe('<span style="color:gray;">No Proposal</span>')
 
     def view_registrations(self, obj):
         url = reverse("admin:events_eventregistration_changelist") + f"?event__id__exact={obj.id}"
         return mark_safe(f'<a class="button" href="{url}">View</a>')
 
-    view_registrations.short_description = "Registrations"
-
-
     def view_announcements(self, obj):
         url = reverse("admin:events_announcement_changelist") + f"?event__id__exact={obj.id}"
         return mark_safe(f'<a class="button" href="{url}">View</a>')
 
-    view_announcements.short_description = "Announcements"
-
-
     def view_feedback(self, obj):
         url = reverse("admin:events_feedback_changelist") + f"?event__id__exact={obj.id}"
-        return mark_safe(f'<a class="button btn btn-success" href="{url}">View</a>')
-
-    view_feedback.short_description = "Feedback"
+        return mark_safe(f'<a class="button" style="background:#198754;color:white;padding:4px 10px;border-radius:4px;" href="{url}">View</a>')
 
 
 # ----------------------
@@ -145,11 +170,6 @@ class EventProposalAdmin(admin.ModelAdmin):
     def get_model_perms(self, request):
         return {}
 
-    def get_readonly_fields(self, request, obj=None):
-        if obj:
-            return [f.name for f in obj._meta.fields if f.name != "status"]
-        return []
-
     actions = ['approve_proposals', 'reject_proposals']
 
     @admin.action(description="Approve selected proposals")
@@ -167,7 +187,9 @@ class EventProposalAdmin(admin.ModelAdmin):
                 Notification.objects.create(
                     user=event.organizer,
                     event=event,
-                    message=f"🎉 Your proposal for '{event.name}' is Accepted"
+                    notification_type="event_assigned",
+                    action_url=reverse("events:view_event", args=[event.id]),
+                    message=f"🎉 Proposal Accepted for '{event.name}'"
                 )
 
     @admin.action(description="Reject selected proposals")
@@ -180,6 +202,8 @@ class EventProposalAdmin(admin.ModelAdmin):
             Notification.objects.create(
                 user=proposal.organizer,
                 event=proposal.event,
+                notification_type="general",
+                action_url="#",
                 message=f"❌ Proposal Rejected for '{proposal.event.name}'"
             )
 
@@ -201,7 +225,7 @@ class EventRegistrationAdmin(admin.ModelAdmin):
 
 
 # ----------------------
-# ANNOUNCEMENT (FIXED AUTO EVENT SELECT)
+# ANNOUNCEMENT
 # ----------------------
 @admin.register(Announcement)
 class AnnouncementAdmin(admin.ModelAdmin):
@@ -210,23 +234,6 @@ class AnnouncementAdmin(admin.ModelAdmin):
 
     fields = ('event', 'message')
     readonly_fields = ('event',)
-
-    def get_changeform_initial_data(self, request):
-        initial = super().get_changeform_initial_data(request)
-
-        event_id = request.GET.get('event__id__exact')
-        if event_id:
-            initial['event'] = event_id
-
-        return initial
-
-    def get_form(self, request, obj=None, **kwargs):
-        form = super().get_form(request, obj, **kwargs)
-
-        if request.GET.get('event__id__exact'):
-            form.base_fields['event'].disabled = True
-
-        return form
 
     def save_model(self, request, obj, form, change):
         obj.created_by = request.user
@@ -243,6 +250,8 @@ class AnnouncementAdmin(admin.ModelAdmin):
             Notification.objects.create(
                 user_id=uid,
                 event=event,
+                notification_type="announcement",
+                action_url=reverse("events:view_event", args=[event.id]),
                 message=f"📢 {event.name}: {obj.message}"
             )
 
@@ -255,14 +264,11 @@ class AnnouncementAdmin(admin.ModelAdmin):
 # ----------------------
 @admin.register(Notification)
 class NotificationAdmin(admin.ModelAdmin):
-    list_display = ('user', 'event', 'is_read', 'created_at')
-
-    def get_model_perms(self, request):
-        return {}
+    list_display = ('user', 'event', 'notification_type', 'is_read', 'created_at')
 
 
 # ----------------------
-# FEEDBACK (HIDDEN FROM SIDEBAR)
+# FEEDBACK
 # ----------------------
 @admin.register(Feedback)
 class FeedbackAdmin(admin.ModelAdmin):

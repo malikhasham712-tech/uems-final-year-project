@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.db.models import Count
 from django.contrib import messages
-from django.contrib.auth.models import User
+from django.urls import reverse
 
 from .models import (
     Event,
@@ -22,7 +22,7 @@ from .forms import ProposalForm, EventRegistrationForm
 def get_role(user):
     if user.is_superuser:
         return "admin"
-    if hasattr(user, "profile"):
+    if hasattr(user, "profile") and hasattr(user.profile, "role"):
         return user.profile.role
     return None
 
@@ -99,13 +99,12 @@ def register_event(request, event_id):
 
 
 # ----------------------
-# MY EVENTS (FIXED)
+# MY EVENTS
 # ----------------------
 @login_required
 def my_events(request):
     role = get_role(request.user)
 
-    # STUDENT
     if role == "student":
         events = Event.objects.filter(
             registrations__student=request.user
@@ -116,7 +115,6 @@ def my_events(request):
             "role": "student"
         })
 
-    # ORGANIZER
     if role == "organizer":
         events = Event.objects.filter(
             organizer=request.user
@@ -247,6 +245,8 @@ def send_announcement(request):
             Notification.objects.create(
                 user_id=uid,
                 event=event,
+                notification_type="announcement",
+                action_url=reverse("events:view_event", args=[event.id]),
                 message=f"📢 New Announcement: {event.name}"
             )
 
@@ -296,17 +296,16 @@ def notifications(request):
 def submit_feedback(request, event_id):
     event = get_object_or_404(Event, id=event_id)
 
-    registration = EventRegistration.objects.filter(
-        event=event,
-        student=request.user
-    ).first()
-
-    if not registration:
-        messages.error(request, "Not allowed")
+    if event.status != "Completed":
+        messages.error(request, "Feedback allowed only after event completion.")
         return redirect("events:my_events")
 
-    if event.status != "Completed":
-        messages.error(request, "You can only give feedback after event completion.")
+    if Feedback.objects.filter(event=event, student=request.user).exists():
+        messages.info(request, "You already submitted feedback.")
+        return redirect("events:my_events")
+
+    if not EventRegistration.objects.filter(event=event, student=request.user).exists():
+        messages.error(request, "Not allowed.")
         return redirect("events:my_events")
 
     if request.method == "POST":
@@ -314,7 +313,8 @@ def submit_feedback(request, event_id):
             student=request.user,
             event=event,
             message=request.POST.get("message"),
-            rating=request.POST.get("rating") or None
+            rating=request.POST.get("rating") or None,
+            experience=request.POST.get("experience")
         )
 
         messages.success(request, "Feedback submitted!")
@@ -326,13 +326,28 @@ def submit_feedback(request, event_id):
 
 
 # ----------------------
-# ALIASES
+# VIEW FEEDBACKS
 # ----------------------
 @login_required
-def event_feedback(request, event_id):
-    return submit_feedback(request, event_id)
+def view_feedbacks(request, event_id):
+    event = get_object_or_404(Event, id=event_id)
+
+    role = get_role(request.user)
+
+    if role not in ["organizer", "admin"]:
+        return redirect("events:my_events")
+
+    feedbacks = Feedback.objects.filter(event=event).order_by("-id")
+
+    return render(request, "events/view_feedbacks.html", {
+        "event": event,
+        "feedbacks": feedbacks
+    })
 
 
+# ----------------------
+# CANCEL REGISTRATION
+# ----------------------
 @login_required
 def cancel_registration(request, event_id):
     reg = EventRegistration.objects.filter(
@@ -345,3 +360,19 @@ def cancel_registration(request, event_id):
         messages.success(request, "Registration cancelled.")
 
     return redirect("events:my_events")
+
+@login_required
+def event_feedback(request, event_id):
+    return submit_feedback(request, event_id)
+
+@login_required
+def notification_detail(request, notification_id):
+    notif = get_object_or_404(Notification, id=notification_id, user=request.user)
+
+    # mark as read when opened
+    notif.is_read = True
+    notif.save()
+
+    return render(request, "events/notification_detail.html", {
+        "notif": notif
+    })

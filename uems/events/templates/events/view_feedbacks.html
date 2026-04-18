@@ -1,0 +1,74 @@
+{% extends "accounts/dashboard_base.html" %}
+
+{% block title %}Feedbacks{% endblock %}
+
+{% block content %}
+
+<div class="box">
+
+    <h4 class="text-primary fw-bold mb-4">
+        Feedbacks - {{ event.name }}
+    </h4>
+
+    {% if feedbacks %}
+
+        <div class="table-responsive">
+
+        <table class="table table-hover text-center align-middle">
+
+            <thead class="table-dark">
+                <tr>
+                    <th>Student</th>
+                    <th>Rating</th>
+                    <th>Experience</th>
+                    <th>Message</th>
+                </tr>
+            </thead>
+
+            <tbody>
+            {% for f in feedbacks %}
+                <tr>
+
+                    <!-- Student -->
+                    <td>
+                        {{ f.student.username }}
+                    </td>
+
+                    <!-- Rating -->
+                    <td>
+                        {% if f.rating %}
+                            ⭐ {{ f.rating }}/5
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+
+                    <!-- Experience -->
+                    <td>
+                        {{ f.experience|default:"-" }}
+                    </td>
+
+                    <!-- Message -->
+                    <td>
+                        {{ f.message }}
+                    </td>
+
+                </tr>
+            {% endfor %}
+            </tbody>
+
+        </table>
+
+        </div>
+
+    {% else %}
+
+        <div class="text-center py-4">
+            <p class="text-muted">No feedback submitted yet.</p>
+        </div>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}

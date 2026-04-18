@@ -1,0 +1,34 @@
+{% extends "accounts/dashboard_base.html" %}
+
+{% block title %}Notification{% endblock %}
+
+{% block content %}
+
+<div class="box">
+
+    <h4 class="mb-3 text-primary">Notification</h4>
+
+    <div class="card p-3">
+
+        <p><strong>Message:</strong></p>
+        <p>{{ notif.message }}</p>
+
+        {% if notif.event %}
+            <p><strong>Related Event:</strong> {{ notif.event.name }}</p>
+        {% endif %}
+
+        <p><strong>Type:</strong> {{ notif.notification_type }}</p>
+
+        <p class="text-muted">
+            {{ notif.created_at }}
+        </p>
+
+        <a href="{% url 'events:notifications' %}" class="btn btn-secondary mt-3">
+            Back to Notifications
+        </a>
+
+    </div>
+
+</div>
+
+{% endblock %}

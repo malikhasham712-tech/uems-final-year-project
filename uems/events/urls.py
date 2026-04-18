@@ -21,7 +21,6 @@ urlpatterns = [
     path('event/<int:event_id>/proposals/', views.view_proposals, name='view_proposals'),
     path('event/<int:event_id>/submit-proposal/', views.submit_proposal, name='submit_proposal'),
 
-   
     # ANNOUNCEMENTS
     path('send-announcement/', views.send_announcement, name='send_announcement'),
     path('event/<int:event_id>/announcements/', views.event_announcements, name='event_announcements'),
@@ -29,7 +28,14 @@ urlpatterns = [
     # NOTIFICATIONS
     path('notifications/', views.notifications, name='notifications'),
 
-    # FEEDBACK
+    path('notifications/<int:notification_id>/', views.notification_detail, name='notification_detail'),
+
+    # FEEDBACK (STUDENT SUBMIT)
     path('event/<int:event_id>/feedback/', views.event_feedback, name='event_feedback'),
+
+    # FEEDBACK (ORGANIZER/ADMIN VIEW)
+    path('event/<int:event_id>/feedbacks/', views.view_feedbacks, name='view_feedbacks'),
+
+    # CANCEL
     path('event/<int:event_id>/cancel/', views.cancel_registration, name='cancel_registration'),
 ]

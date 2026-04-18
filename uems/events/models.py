@@ -165,9 +165,17 @@ class Announcement(models.Model):
 
 
 # ----------------------
-# NOTIFICATION
+# NOTIFICATION (FIXED - SAFE FOR MIGRATION)
 # ----------------------
 class Notification(models.Model):
+
+    NOTIF_TYPES = [
+        ('event_assigned', 'Event Assigned'),
+        ('event_announced', 'Event Announced'),
+        ('event_completed', 'Event Completed'),
+        ('announcement', 'Announcement'),
+        ('general', 'General'),
+    ]
 
     user = models.ForeignKey(
         User,
@@ -182,7 +190,23 @@ class Notification(models.Model):
         blank=True
     )
 
+    # 🔥 SAFE FIX (THIS PREVENTS MIGRATION CRASH)
+    notification_type = models.CharField(
+        max_length=50,
+        choices=NOTIF_TYPES,
+        default='general',
+        null=True,
+        blank=True
+    )
+
     message = models.TextField()
+
+    action_url = models.CharField(
+        max_length=500,
+        blank=True,
+        null=True
+    )
+
     is_read = models.BooleanField(default=False)
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -199,6 +223,13 @@ class Notification(models.Model):
 # ----------------------
 class Feedback(models.Model):
 
+    EXPERIENCE_CHOICES = [
+        ('Excellent', 'Excellent'),
+        ('Good', 'Good'),
+        ('Average', 'Average'),
+        ('Poor', 'Poor'),
+    ]
+
     student = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -211,14 +242,26 @@ class Feedback(models.Model):
         related_name="feedbacks"
     )
 
-    message = models.TextField()
     rating = models.IntegerField(null=True, blank=True)
+
+    experience = models.CharField(
+        max_length=20,
+        choices=EXPERIENCE_CHOICES,
+        default='Good'
+    )
+
+    message = models.TextField()
 
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ['-created_at']
-        unique_together = ('student', 'event')   # ✅ IMPORTANT FIX
+        constraints = [
+            models.UniqueConstraint(
+                fields=['student', 'event'],
+                name='unique_feedback_per_student_event'
+            )
+        ]
 
     def __str__(self):
         return f"{self.student.username} - {self.event.name}"
