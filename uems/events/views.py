@@ -2,18 +2,17 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.db.models import Count
 from django.contrib import messages
-from django.urls import reverse
 
 from .models import (
     Event,
     EventProposal,
     EventRegistration,
     Announcement,
-    Notification,
     Feedback
 )
 
 from .forms import ProposalForm, EventRegistrationForm
+from .notification_router import send_notification
 
 
 # ----------------------
@@ -38,7 +37,6 @@ def dashboard(request):
         events = Event.objects.filter(organizer=request.user).prefetch_related(
             "proposals", "registrations"
         )
-
         return render(request, "accounts/dashboard.html", {
             "role": "organizer",
             "events": events
@@ -82,6 +80,7 @@ def register_event(request, event_id):
 
     if request.method == "POST":
         form = EventRegistrationForm(request.POST)
+
         if form.is_valid():
             obj = form.save(commit=False)
             obj.event = event
@@ -106,28 +105,20 @@ def my_events(request):
     role = get_role(request.user)
 
     if role == "student":
-        events = Event.objects.filter(
-            registrations__student=request.user
-        ).distinct()
+        events = Event.objects.filter(registrations__student=request.user).distinct()
 
-        return render(request, "events/my_events.html", {
-            "events": events,
-            "role": "student"
-        })
-
-    if role == "organizer":
-        events = Event.objects.filter(
-            organizer=request.user
-        ).annotate(
+    elif role == "organizer":
+        events = Event.objects.filter(organizer=request.user).annotate(
             total_registrations=Count("registrations")
         )
 
-        return render(request, "events/my_events.html", {
-            "events": events,
-            "role": "organizer"
-        })
+    else:
+        return redirect("/admin/")
 
-    return redirect("/admin/")
+    return render(request, "events/my_events.html", {
+        "events": events,
+        "role": role
+    })
 
 
 # ----------------------
@@ -137,16 +128,12 @@ def my_events(request):
 def view_event(request, event_id):
     event = get_object_or_404(Event, id=event_id)
 
-    proposal = EventProposal.objects.filter(
-        event=event
-    ).order_by("-id").first()
-
-    role = "organizer" if request.user == event.organizer else "student"
+    proposal = EventProposal.objects.filter(event=event).order_by("-id").first()
 
     return render(request, "events/view_event.html", {
         "event": event,
         "proposal": proposal,
-        "role": role
+        "role": get_role(request.user)
     })
 
 
@@ -177,13 +164,20 @@ def submit_proposal(request, event_id):
 
     if request.method == "POST":
         form = ProposalForm(request.POST)
+
         if form.is_valid():
             obj = form.save(commit=False)
             obj.event = event
             obj.organizer = request.user
             obj.status = "Pending"
-            obj.requirements = request.POST.get("requirements")
             obj.save()
+
+            send_notification(
+                user=request.user,
+                event=event,
+                ntype="proposal",
+                message=f"📌 Proposal submitted for {event.name}"
+            )
 
             return redirect("events:view_proposals", event_id=event.id)
 
@@ -225,10 +219,8 @@ def send_announcement(request):
     events = Event.objects.filter(status__iexact="announced")
 
     if request.method == "POST":
-        event_id = request.POST.get("event_id")
+        event = get_object_or_404(Event, id=request.POST.get("event_id"))
         message_text = request.POST.get("message")
-
-        event = get_object_or_404(Event, id=event_id)
 
         Announcement.objects.create(
             event=event,
@@ -236,17 +228,15 @@ def send_announcement(request):
             created_by=request.user
         )
 
-        user_ids = list(event.registrations.values_list("student", flat=True))
-
+        users = list(event.registrations.values_list("student", flat=True))
         if event.organizer:
-            user_ids.append(event.organizer.id)
+            users.append(event.organizer.id)
 
-        for uid in set(user_ids):
-            Notification.objects.create(
+        for uid in set(users):
+            send_notification(
                 user_id=uid,
                 event=event,
-                notification_type="announcement",
-                action_url=reverse("events:view_event", args=[event.id]),
+                ntype="announcement",
                 message=f"📢 New Announcement: {event.name}"
             )
 
@@ -265,16 +255,25 @@ def send_announcement(request):
 def event_announcements(request, event_id):
     event = get_object_or_404(Event, id=event_id)
 
-    if not (request.user.is_superuser or request.user == event.organizer):
-        return redirect("events:my_events")
+    role = get_role(request.user)
 
-    announcements = Announcement.objects.filter(event=event)
+    # 🔐 PERMISSION FIX
+    if role == "student":
+        if not EventRegistration.objects.filter(event=event, student=request.user).exists():
+            messages.error(request, "You are not registered for this event.")
+            return redirect("events:available_events")
+
+    elif role == "organizer":
+        if event.organizer != request.user and not request.user.is_superuser:
+            return redirect("events:my_events")
+
+    announcements = Announcement.objects.filter(event=event).order_by("-created_at")
 
     return render(request, "events/event_announcements.html", {
         "event": event,
-        "announcements": announcements
+        "announcements": announcements,
+        "role": role
     })
-
 
 # ----------------------
 # NOTIFICATIONS
@@ -290,6 +289,24 @@ def notifications(request):
 
 
 # ----------------------
+# NOTIFICATION DETAIL (FIXED LOGIC)
+# ----------------------
+@login_required
+def notification_detail(request, notification_id):
+    notif = get_object_or_404(
+        request.user.notifications,
+        id=notification_id
+    )
+
+    notif.is_read = True
+    notif.save()
+
+    return render(request, "events/notification_detail.html", {
+        "notif": notif
+    })
+
+
+# ----------------------
 # FEEDBACK
 # ----------------------
 @login_required
@@ -301,11 +318,7 @@ def submit_feedback(request, event_id):
         return redirect("events:my_events")
 
     if Feedback.objects.filter(event=event, student=request.user).exists():
-        messages.info(request, "You already submitted feedback.")
-        return redirect("events:my_events")
-
-    if not EventRegistration.objects.filter(event=event, student=request.user).exists():
-        messages.error(request, "Not allowed.")
+        messages.info(request, "Already submitted.")
         return redirect("events:my_events")
 
     if request.method == "POST":
@@ -313,28 +326,27 @@ def submit_feedback(request, event_id):
             student=request.user,
             event=event,
             message=request.POST.get("message"),
-            rating=request.POST.get("rating") or None,
-            experience=request.POST.get("experience")
+            rating=request.POST.get("rating")
         )
 
-        messages.success(request, "Feedback submitted!")
-        return redirect("events:my_events")
+        send_notification(
+            user=request.user,
+            event=event,
+            ntype="feedback",
+            message=f"⭐ Feedback submitted for {event.name}"
+        )
 
-    return render(request, "events/feedback.html", {
-        "event": event
-    })
+        return redirect("events:my_events")
 
 
 # ----------------------
-# VIEW FEEDBACKS
+# VIEW FEEDBACK
 # ----------------------
 @login_required
 def view_feedbacks(request, event_id):
     event = get_object_or_404(Event, id=event_id)
 
-    role = get_role(request.user)
-
-    if role not in ["organizer", "admin"]:
+    if get_role(request.user) not in ["organizer", "admin"]:
         return redirect("events:my_events")
 
     feedbacks = Feedback.objects.filter(event=event).order_by("-id")
@@ -350,10 +362,7 @@ def view_feedbacks(request, event_id):
 # ----------------------
 @login_required
 def cancel_registration(request, event_id):
-    reg = EventRegistration.objects.filter(
-        event_id=event_id,
-        student=request.user
-    ).first()
+    reg = EventRegistration.objects.filter(event_id=event_id, student=request.user).first()
 
     if reg:
         reg.delete()
@@ -364,15 +373,3 @@ def cancel_registration(request, event_id):
 @login_required
 def event_feedback(request, event_id):
     return submit_feedback(request, event_id)
-
-@login_required
-def notification_detail(request, notification_id):
-    notif = get_object_or_404(Notification, id=notification_id, user=request.user)
-
-    # mark as read when opened
-    notif.is_read = True
-    notif.save()
-
-    return render(request, "events/notification_detail.html", {
-        "notif": notif
-    })

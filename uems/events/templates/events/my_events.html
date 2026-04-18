@@ -14,7 +14,7 @@
 
         <div class="table-responsive">
 
-        <table class="table table-hover admin-table align-middle text-center">
+        <table class="table table-hover align-middle text-center">
 
             <thead class="table-light">
                 <tr>
@@ -28,94 +28,73 @@
             </thead>
 
             <tbody>
+
             {% for event in events %}
-                <tr>
+            <tr>
 
-                    <!-- EVENT -->
-                    <td class="fw-semibold">
-                        <a href="{% url 'events:view_event' event.id %}" 
-                           class="text-decoration-none text-dark">
-                            {{ event.name }}
+                <!-- EVENT NAME -->
+                <td class="fw-semibold">
+                    {{ event.name }}
+                </td>
+
+                <!-- DATE -->
+                <td>
+                    {% if event.date %}
+                        {{ event.date|date:"d M Y" }}
+                    {% else %}
+                        <span class="text-muted">-</span>
+                    {% endif %}
+                </td>
+
+                <!-- STATUS -->
+                <td>
+                    {% if event.status == "Completed" %}
+                        <span class="badge bg-success">Completed</span>
+                    {% elif event.status == "Announced" %}
+                        <span class="badge bg-primary">Announced</span>
+                    {% else %}
+                        <span class="badge bg-secondary">{{ event.status }}</span>
+                    {% endif %}
+                </td>
+
+                <!-- ANNOUNCEMENTS (SAFE ONLY) -->
+                <td>
+                    <a href="{% url 'events:event_announcements' event.id %}"
+                        class="btn btn-primary btn-sm">
+                        View
+                    </a>
+                </td>
+
+                <!-- FEEDBACK -->
+                <td>
+                    {% if role == "student" and event.status == "Completed" %}
+                        <a href="{% url 'events:event_feedback' event.id %}"
+                           class="btn btn-sm btn-success">
+                            Submit
                         </a>
-                    </td>
-
-                    <!-- DATE -->
-                    <td>
-                        {% if event.date %}
-                            {{ event.date|date:"d M Y" }}
-                        {% else %}
-                            <span class="text-muted">-</span>
-                        {% endif %}
-                    </td>
-
-                    <!-- STATUS -->
-                    <td>
-                        {% if event.status == "Completed" %}
-                            <span class="badge bg-success">Completed</span>
-                        {% elif event.status == "Announced" %}
-                            <span class="badge bg-primary">Announced</span>
-                        {% else %}
-                            <span class="badge bg-secondary">{{ event.status }}</span>
-                        {% endif %}
-                    </td>
-
-                    <!-- ANNOUNCEMENTS -->
-                    <td>
-                        <a href="{% url 'events:event_announcements' event.id %}"
+                    {% elif role == "organizer" %}
+                        <a href="{% url 'events:view_feedbacks' event.id %}"
                            class="btn btn-sm btn-primary">
                             View
                         </a>
-                    </td>
+                    {% else %}
+                        <span class="text-muted small">Not Available</span>
+                    {% endif %}
+                </td>
 
-                    <!-- FEEDBACK -->
-                    <td>
+                <!-- ACTIONS -->
+                <td>
+                    {% if role == "student" and event.status != "Completed" %}
+                        <a href="{% url 'events:cancel_registration' event.id %}"
+                           class="btn btn-sm btn-outline-danger">
+                            Cancel
+                        </a>
+                    {% endif %}
+                </td>
 
-                        {% if role == "student" %}
-
-                            {% if event.status == "Completed" %}
-
-                                <a href="{% url 'events:event_feedback' event.id %}"
-                                   class="btn btn-sm btn-success">
-                                    Submit
-                                </a>
-
-                            {% else %}
-                                <span class="text-muted small">Not Available</span>
-                            {% endif %}
-
-                        {% elif role == "organizer" %}
-
-                            <a href="{% url 'events:view_feedbacks' event.id %}"
-                               class="btn btn-sm btn-primary">
-                                View
-                            </a>
-
-                        {% else %}
-
-                            <span class="text-muted small">-</span>
-
-                        {% endif %}
-
-                    </td>
-
-                    <!-- ACTIONS -->
-                    <td>
-
-                        <div class="d-flex gap-2 justify-content-center flex-wrap">
-
-                            {% if role == "student" and event.status != "Completed" %}
-                                <a href="{% url 'events:cancel_registration' event.id %}"
-                                   class="btn btn-sm btn-outline-danger">
-                                    Cancel
-                                </a>
-                            {% endif %}
-
-                        </div>
-
-                    </td>
-
-                </tr>
+            </tr>
             {% endfor %}
+
             </tbody>
 
         </table>

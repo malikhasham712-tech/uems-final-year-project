@@ -1,0 +1,43 @@
+{% extends "accounts/dashboard_base.html" %}
+
+{% block title %}Event Announcements{% endblock %}
+
+{% block content %}
+
+<div class="box">
+
+    <h4 class="text-primary mb-3">
+        {{ event.name }} - Announcements
+    </h4>
+
+    <hr>
+
+    {% if announcements %}
+
+        {% for a in announcements %}
+
+            <div class="card mb-3 p-3">
+
+                <!-- MESSAGE -->
+                <p class="mb-1">
+                    {{ a.message }}
+                </p>
+
+                <!-- DATE -->
+                <small class="text-muted">
+                    {{ a.created_at }}
+                </small>
+
+            </div>
+
+        {% endfor %}
+
+    {% else %}
+
+        <p class="text-muted">No announcements available.</p>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}

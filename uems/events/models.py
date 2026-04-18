@@ -21,10 +21,10 @@ class Category(models.Model):
 class Event(models.Model):
 
     STATUS_CHOICES = [
-        ('Created', 'Created'),
-        ('Accepted', 'Accepted'),
-        ('Announced', 'Announced'),
-        ('Completed', 'Completed'),
+        ('created', 'Created'),
+        ('accepted', 'Accepted'),
+        ('announced', 'Announced'),
+        ('completed', 'Completed'),
     ]
 
     name = models.CharField(max_length=200)
@@ -45,7 +45,7 @@ class Event(models.Model):
     status = models.CharField(
         max_length=20,
         choices=STATUS_CHOICES,
-        default='Created'
+        default='created'
     )
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -63,9 +63,9 @@ class Event(models.Model):
 class EventProposal(models.Model):
 
     STATUS_CHOICES = [
-        ('Pending', 'Pending'),
-        ('Accepted', 'Accepted'),
-        ('Rejected', 'Rejected')
+        ('pending', 'Pending'),
+        ('accepted', 'Accepted'),
+        ('rejected', 'Rejected')
     ]
 
     event = models.ForeignKey(
@@ -87,7 +87,7 @@ class EventProposal(models.Model):
     status = models.CharField(
         max_length=10,
         choices=STATUS_CHOICES,
-        default='Pending'
+        default='pending'
     )
 
     submitted_at = models.DateTimeField(auto_now_add=True)
@@ -165,7 +165,7 @@ class Announcement(models.Model):
 
 
 # ----------------------
-# NOTIFICATION (FIXED - SAFE FOR MIGRATION)
+# NOTIFICATION (CLEAN ARCHITECTURE READY)
 # ----------------------
 class Notification(models.Model):
 
@@ -174,6 +174,7 @@ class Notification(models.Model):
         ('event_announced', 'Event Announced'),
         ('event_completed', 'Event Completed'),
         ('announcement', 'Announcement'),
+        ('feedback', 'Feedback'),
         ('general', 'General'),
     ]
 
@@ -190,22 +191,13 @@ class Notification(models.Model):
         blank=True
     )
 
-    # 🔥 SAFE FIX (THIS PREVENTS MIGRATION CRASH)
     notification_type = models.CharField(
         max_length=50,
         choices=NOTIF_TYPES,
-        default='general',
-        null=True,
-        blank=True
+        default='general'
     )
 
     message = models.TextField()
-
-    action_url = models.CharField(
-        max_length=500,
-        blank=True,
-        null=True
-    )
 
     is_read = models.BooleanField(default=False)
 
@@ -215,7 +207,7 @@ class Notification(models.Model):
         ordering = ['-created_at']
 
     def __str__(self):
-        return f"{self.user.username} Notification"
+        return f"{self.user.username} - {self.notification_type}"
 
 
 # ----------------------
@@ -224,10 +216,10 @@ class Notification(models.Model):
 class Feedback(models.Model):
 
     EXPERIENCE_CHOICES = [
-        ('Excellent', 'Excellent'),
-        ('Good', 'Good'),
-        ('Average', 'Average'),
-        ('Poor', 'Poor'),
+        ('excellent', 'Excellent'),
+        ('good', 'Good'),
+        ('average', 'Average'),
+        ('poor', 'Poor'),
     ]
 
     student = models.ForeignKey(
@@ -247,7 +239,7 @@ class Feedback(models.Model):
     experience = models.CharField(
         max_length=20,
         choices=EXPERIENCE_CHOICES,
-        default='Good'
+        default='good'
     )
 
     message = models.TextField()

@@ -27,13 +27,10 @@ urlpatterns = [
 
     # NOTIFICATIONS
     path('notifications/', views.notifications, name='notifications'),
-
     path('notifications/<int:notification_id>/', views.notification_detail, name='notification_detail'),
 
-    # FEEDBACK (STUDENT SUBMIT)
+    # FEEDBACK
     path('event/<int:event_id>/feedback/', views.event_feedback, name='event_feedback'),
-
-    # FEEDBACK (ORGANIZER/ADMIN VIEW)
     path('event/<int:event_id>/feedbacks/', views.view_feedbacks, name='view_feedbacks'),
 
     # CANCEL

@@ -1,48 +1,55 @@
 {% extends "accounts/dashboard_base.html" %}
 
+{% block title %}Notifications{% endblock %}
+
 {% block content %}
 
 <div class="box">
-    <h4>All Notifications</h4>
+
+    <h4 class="text-primary">All Notifications</h4>
     <hr>
 
-    {% for n in notifications %}
-        <div class="mb-3 p-3 border rounded">
+    {% if notifications %}
 
-            <!-- EVENT NAME -->
-            {% if n.event %}
-                <strong>
-                    <a href="{% url 'events:view_event' n.event.id %}" style="text-decoration:none;">
+        {% for n in notifications %}
+
+            <a href="{% url 'events:notification_detail' n.id %}"
+               class="d-block mb-3 p-3 border rounded text-decoration-none bg-white">
+
+                <!-- EVENT TITLE OR GENERAL -->
+                <strong class="text-dark">
+                    {% if n.event %}
                         {{ n.event.name }}
-                    </a>
+                    {% else %}
+                        System Notification
+                    {% endif %}
                 </strong>
-            {% else %}
-                <strong>System Notification</strong>
-            {% endif %}
 
-            <br>
+                <br>
 
-            <!-- MESSAGE -->
-            {% if n.event %}
-                <a href="{% url 'events:view_event' n.event.id %}" style="text-decoration:none;">
+                <!-- MESSAGE -->
+                <span class="text-dark">
                     {{ n.message }}
-                </a>
-            {% else %}
-                {{ n.message }}
-            {% endif %}
+                </span>
 
-            <br>
+                <br>
 
-            <!-- TIME -->
-            <small class="text-muted">
-                {{ n.created_at }}
-            </small>
+                <!-- DATE -->
+                <small class="text-muted">
+                    {{ n.created_at }}
+                </small>
 
+            </a>
+
+        {% endfor %}
+
+    {% else %}
+
+        <div class="text-center py-4">
+            <p class="text-muted">No notifications available.</p>
         </div>
 
-    {% empty %}
-        <p>No notifications available.</p>
-    {% endfor %}
+    {% endif %}
 
 </div>
 

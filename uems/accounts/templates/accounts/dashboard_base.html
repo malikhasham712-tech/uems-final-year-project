@@ -108,6 +108,8 @@
             <a href="{% url 'events:dashboard' %}" class="nav-link active">Dashboard</a>
         {% elif role == 'student' %}
             <a href="{% url 'events:my_events' %}" class="nav-link active">My Events</a>
+        {% else %}
+            <a href="/admin/" class="nav-link active">Admin Panel</a>
         {% endif %}
 
         <div class="mt-auto">
@@ -129,22 +131,24 @@
                     Welcome, {{ request.user.username }}
                 </div>
                 <div class="subtext">
-                    {{ role|title }} • Event Management System
+                    {{ role|default:"User"|title }} • Event Management System
                 </div>
             </div>
 
             <div class="d-flex align-items-center gap-2">
 
-                <!-- NOTIFICATIONS -->
-                <div class="dropdown">
+                <!-- 🔔 NOTIFICATIONS -->
+                <div class="dropdown position-relative">
 
                     <button class="btn btn-light position-relative dropdown-toggle" data-bs-toggle="dropdown">
                         <i class="fa fa-bell"></i>
 
                         {% if unread_notifications %}
-                            <span class="badge bg-danger notif-badge">
-                                {{ unread_notifications }}
-                            </span>
+                            {% if unread_notifications > 0 %}
+                                <span class="badge bg-danger notif-badge">
+                                    {{ unread_notifications }}
+                                </span>
+                            {% endif %}
                         {% endif %}
                     </button>
 
@@ -152,27 +156,26 @@
 
                         <li class="dropdown-header">Notifications</li>
 
-                        {% for n in notifications %}
-
-                            <li>
-                                <a class="dropdown-item notif-item"
-                                   href="{% url 'events:notification_detail' n.id %}">
-                                    {{ n.message|default:"New update"|truncatechars:80 }}
-                                </a>
-                            </li>
-
-                        {% empty %}
-
+                        {% if notifications %}
+                            {% for n in notifications %}
+                                <li>
+                                    <a class="dropdown-item notif-item"
+                                       href="{% url 'events:notification_detail' n.id %}">
+                                        {{ n.message|default:"New update"|truncatechars:80 }}
+                                    </a>
+                                </li>
+                            {% endfor %}
+                        {% else %}
                             <li>
                                 <span class="dropdown-item text-muted">No notifications</span>
                             </li>
-
-                        {% endfor %}
+                        {% endif %}
 
                         <li><hr class="dropdown-divider"></li>
 
                         <li>
-                            <a class="dropdown-item text-center" href="{% url 'events:notifications' %}">
+                            <a class="dropdown-item text-center"
+                               href="{% url 'events:notifications' %}">
                                 View All
                             </a>
                         </li>
@@ -181,6 +184,7 @@
 
                 </div>
 
+                <!-- ACTION BUTTONS -->
                 <button onclick="history.back()" class="btn btn-outline-secondary btn-sm">Back</button>
 
                 {% if role == 'organizer' %}
