@@ -1,19 +1,40 @@
-<h3>Send Announcement</h3>
+{% extends "accounts/dashboard_base.html" %}
 
-<form method="POST">
-    {% csrf_token %}
+{% block title %}Send Announcement{% endblock %}
 
-    <select name="event_id" required>
-        {% for event in events %}
-            <option value="{{ event.id }}">{{ event.name }}</option>
-        {% endfor %}
-    </select>
+{% block content %}
 
-    <br><br>
+<div class="box">
 
-    <textarea name="message" placeholder="Write message..." required></textarea>
+    <div class="card p-4 shadow-sm">
 
-    <br><br>
+        <h4 class="text-primary mb-3">Send Announcement</h4>
 
-    <button type="submit">Send</button>
-</form>
+        <form method="POST">
+            {% csrf_token %}
+
+            <label class="form-label">Select Event</label>
+            <select name="event_id" class="form-select mb-3" required>
+                {% for event in events %}
+                    <option value="{{ event.id }}">{{ event.name }}</option>
+                {% endfor %}
+            </select>
+
+            <label class="form-label">Message</label>
+            <textarea name="message"
+                      class="form-control mb-3"
+                      placeholder="Write announcement..."
+                      rows="5"
+                      required></textarea>
+
+            <button type="submit" class="btn btn-primary">
+                Send Announcement
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
+
+{% endblock %}

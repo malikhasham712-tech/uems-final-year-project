@@ -8,6 +8,19 @@
 
     <div class="card p-4 shadow-sm">
 
+        <!-- EVENT -->
+        <div class="mb-3">
+            <p class="mb-1 fw-semibold text-muted">Event</p>
+
+            <p class="fs-6 mb-0">
+                {% if notif.event %}
+                    {{ notif.event.name }}
+                {% else %}
+                    System Notification
+                {% endif %}
+            </p>
+        </div>
+
         <!-- MESSAGE -->
         <div class="mb-4">
             <p class="mb-1 fw-semibold text-muted">Message</p>
@@ -16,13 +29,31 @@
             </p>
         </div>
 
+        <!-- TYPE -->
+        <div class="mb-4">
+            <p class="mb-1 fw-semibold text-muted">Type</p>
+            <p class="text-dark mb-0">
+                {{ notif.notification_type|title }}
+            </p>
+        </div>
+
         <!-- DATE -->
-        <div>
+        <div class="mb-4">
             <p class="mb-1 fw-semibold text-muted">Date</p>
             <p class="text-muted mb-0">
                 {{ notif.created_at|date:"d M Y, h:i A" }}
             </p>
         </div>
+
+        <!-- 🔥 ANNOUNCEMENT SPECIAL REDIRECT -->
+        {% if notif.notification_type == "announcement" and notif.event %}
+
+            <a href="{% url 'events:event_announcements' notif.event.id %}"
+               class="btn btn-primary">
+                View Announcement
+            </a>
+
+        {% endif %}
 
     </div>
 

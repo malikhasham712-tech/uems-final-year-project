@@ -6,17 +6,16 @@
 
 <div class="box">
 
-    <h4 class="text-primary">All Notifications</h4>
-    <hr>
+    <h4 class="text-primary mb-3">All Notifications</h4>
 
     {% if notifications %}
 
         {% for n in notifications %}
 
             <a href="{% url 'events:notification_detail' n.id %}"
-               class="d-block mb-3 p-3 border rounded text-decoration-none bg-white">
+               class="d-block mb-3 p-3 border rounded text-decoration-none bg-white shadow-sm">
 
-                <!-- EVENT TITLE OR GENERAL -->
+                <!-- EVENT NAME -->
                 <strong class="text-dark">
                     {% if n.event %}
                         {{ n.event.name }}
@@ -34,9 +33,20 @@
 
                 <br>
 
+                <!-- TYPE -->
+                <small class="text-muted">
+                    Type: {{ n.notification_type|title }}
+                </small>
+
+                {% if n.notification_type == "announcement" %}
+                    <span class="badge bg-info ms-2">Announcement</span>
+                {% endif %}
+
+                <br>
+
                 <!-- DATE -->
                 <small class="text-muted">
-                    {{ n.created_at }}
+                    {{ n.created_at|date:"d M Y, h:i A" }}
                 </small>
 
             </a>

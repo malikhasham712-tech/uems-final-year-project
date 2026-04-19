@@ -213,7 +213,7 @@ def event_registrations(request, event_id):
 
 
 # ----------------------
-# ANNOUNCEMENTS
+# ANNOUNCEMENTS (FIXED CORE LOGIC)
 # ----------------------
 @login_required
 def send_announcement(request):
@@ -226,12 +226,14 @@ def send_announcement(request):
         event = get_object_or_404(Event, id=request.POST.get("event_id"))
         message_text = request.POST.get("message")
 
-        Announcement.objects.create(
+        # Save announcement
+        announcement = Announcement.objects.create(
             event=event,
             message=message_text,
             created_by=request.user
         )
 
+        # Get all users (students + organizer)
         user_ids = list(event.registrations.values_list("student", flat=True))
 
         if event.organizer:
@@ -239,12 +241,16 @@ def send_announcement(request):
 
         users = User.objects.filter(id__in=set(user_ids))
 
+        # 🔥 FIXED NOTIFICATION MESSAGE (IMPORTANT)
         for user in users:
             send_notification(
                 user=user,
                 event=event,
                 ntype="announcement",
-                message=f"📢 New Announcement: {event.name}"
+                message=(
+                    f"📢 {event.name}\n"
+                    f"Announcement: {message_text}"
+                )
             )
 
         messages.success(request, "Announcement sent successfully!")
@@ -305,30 +311,35 @@ def notification_detail(request, notification_id):
     notif.is_read = True
     notif.save()
 
+    # -----------------------------------
+    # SPECIAL CASE: ANNOUNCEMENT ROUTING
+    # -----------------------------------
+    if notif.notification_type == "announcement" and notif.event:
+        return redirect("events:event_announcements", event_id=notif.event.id)
+
+    # -----------------------------------
+    # DEFAULT BEHAVIOR (ALL OTHER TYPES)
+    # -----------------------------------
     return render(request, "events/notification_detail.html", {
         "notif": notif
     })
 
-
 # ----------------------
-# FEEDBACK (FINAL FIX)
+# FEEDBACK
 # ----------------------
 @login_required
 def submit_feedback(request, event_id):
     event = get_object_or_404(Event, id=event_id)
 
-    # FIX: consistent lowercase check
     if event.status != "completed":
         messages.error(request, "Feedback allowed only after event completion.")
         return redirect("events:my_events")
 
-    # must be registered
     is_registered = event.registrations.filter(student=request.user).exists()
     if not is_registered:
         messages.error(request, "You must be registered to give feedback.")
         return redirect("events:my_events")
 
-    # duplicate check
     if Feedback.objects.filter(event=event, student=request.user).exists():
         messages.info(request, "Already submitted.")
         return redirect("events:my_events")

@@ -104,12 +104,37 @@
 
         <h5>{{ role|default:"User"|title }}</h5>
 
+        <!-- ORGANIZER -->
         {% if role == 'organizer' %}
-            <a href="{% url 'events:dashboard' %}" class="nav-link active">Dashboard</a>
+            <a href="{% url 'events:dashboard' %}" class="nav-link">
+                <i class="fa fa-home"></i> Dashboard
+            </a>
+
+            <a href="{% url 'events:my_events' %}" class="nav-link active">
+                <i class="fa fa-calendar"></i> My Events
+            </a>
+
+        <!-- STUDENT -->
         {% elif role == 'student' %}
-            <a href="{% url 'events:my_events' %}" class="nav-link active">My Events</a>
+            <a href="{% url 'events:my_events' %}" class="nav-link active">
+                <i class="fa fa-calendar"></i> My Events
+            </a>
+
+            <a href="{% url 'events:available_events' %}" class="nav-link">
+                <i class="fa fa-list"></i> Available Events
+            </a>
+
+        <!-- ADMIN -->
+        {% elif request.user.is_superuser %}
+            <a href="/admin/" class="nav-link active">
+                <i class="fa fa-cog"></i> Admin Panel
+            </a>
+
+        <!-- DEFAULT SAFE -->
         {% else %}
-            <a href="/admin/" class="nav-link active">Admin Panel</a>
+            <a href="{% url 'events:my_events' %}" class="nav-link active">
+                <i class="fa fa-calendar"></i> My Events
+            </a>
         {% endif %}
 
         <div class="mt-auto">
@@ -143,12 +168,10 @@
                     <button class="btn btn-light position-relative dropdown-toggle" data-bs-toggle="dropdown">
                         <i class="fa fa-bell"></i>
 
-                        {% if unread_notifications %}
-                            {% if unread_notifications > 0 %}
-                                <span class="badge bg-danger notif-badge">
-                                    {{ unread_notifications }}
-                                </span>
-                            {% endif %}
+                        {% if unread_notifications and unread_notifications > 0 %}
+                            <span class="badge bg-danger notif-badge">
+                                {{ unread_notifications }}
+                            </span>
                         {% endif %}
                     </button>
 
@@ -161,7 +184,7 @@
                                 <li>
                                     <a class="dropdown-item notif-item"
                                        href="{% url 'events:notification_detail' n.id %}">
-                                        {{ n.message|default:"New update"|truncatechars:80 }}
+                                        {{ n.message|truncatechars:80 }}
                                     </a>
                                 </li>
                             {% endfor %}
@@ -184,7 +207,7 @@
 
                 </div>
 
-                <!-- ACTION BUTTONS -->
+                <!-- BUTTONS -->
                 <button onclick="history.back()" class="btn btn-outline-secondary btn-sm">Back</button>
 
                 {% if role == 'organizer' %}
