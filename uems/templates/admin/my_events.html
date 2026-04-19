@@ -14,12 +14,14 @@
 
         <table class="table table-bordered table-hover align-middle text-center">
 
-            <thead class="table-dark">
+            <thead class="table-light">
                 <tr>
                     <th>Event Name</th>
                     <th>Date</th>
                     <th>Status</th>
-                    <th>Actions</th>
+                    <th>Proposals</th>
+                    <th>Registrations</th>
+                    <th>Feedback</th>
                 </tr>
             </thead>
 
@@ -42,48 +44,67 @@
                         {% endif %}
                     </td>
 
-                    <!-- STATUS (FIXED SYSTEM) -->
+                    <!-- STATUS (FIXED) -->
                     <td>
-                        {% if event.status == "Pending" %}
-                            <span class="badge bg-warning text-dark">Pending</span>
+                        {% with status=event.status|lower %}
 
-                        {% elif event.status == "Approved" %}
-                            <span class="badge bg-primary">Approved</span>
+                            {% if status == "created" %}
+                                <span class="badge bg-secondary">Created</span>
 
-                        {% elif event.status == "Announced" %}
-                            <span class="badge bg-primary">Announced</span>
+                            {% elif status == "accepted" %}
+                                <span class="badge bg-info text-dark">Accepted</span>
 
-                        {% elif event.status == "Completed" %}
-                            <span class="badge bg-dark">Completed</span>
+                            {% elif status == "announced" %}
+                                <span class="badge bg-primary">Announced</span>
 
-                        {% else %}
-                            <span class="badge bg-secondary">
-                                {{ event.status }}
-                            </span>
-                        {% endif %}
+                            {% elif status == "completed" %}
+                                <span class="badge bg-dark">Completed</span>
+
+                            {% else %}
+                                <span class="badge bg-secondary">{{ event.status }}</span>
+                            {% endif %}
+
+                        {% endwith %}
                     </td>
 
-                    <!-- ACTIONS -->
+                    <!-- PROPOSALS -->
+                    <td>
+                        <a href="{% url 'events:view_proposals' event.id %}"
+                           class="btn btn-sm btn-outline-primary">
+                            View
+                        </a>
+                    </td>
+
+                    <!-- REGISTRATIONS -->
+                    <td>
+                        <a href="{% url 'events:event_registrations' event.id %}"
+                           class="btn btn-sm btn-primary">
+                            View
+                        </a>
+                    </td>
+
+                    <!-- FEEDBACK (IMPORTANT FIX) -->
                     <td>
 
-                        <div class="d-flex flex-wrap gap-2 justify-content-center">
+                        {% if event.status|lower == "completed" and role == "student" %}
 
-                            <a href="{% url 'events:view_proposals' event.id %}"
-                               class="btn btn-sm btn-outline-primary">
-                                View Proposals
+                            <a href="{% url 'events:event_feedback' event.id %}"
+                               class="btn btn-sm btn-success">
+                                Submit
                             </a>
 
-                            <a href="{% url 'events:submit_proposal' event.id %}"
-                               class="btn btn-sm btn-secondary">
-                                Submit Proposal
+                        {% elif role == "organizer" %}
+
+                            <a href="{% url 'events:view_feedbacks' event.id %}"
+                               class="btn btn-sm btn-outline-dark">
+                                View
                             </a>
 
-                            <a href="{% url 'events:event_registrations' event.id %}"
-                               class="btn btn-sm btn-primary">
-                                Registrations
-                            </a>
+                        {% else %}
 
-                        </div>
+                            <span class="text-muted small">Not available</span>
+
+                        {% endif %}
 
                     </td>
 

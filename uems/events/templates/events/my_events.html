@@ -46,18 +46,18 @@
                     {% endif %}
                 </td>
 
-                <!-- STATUS -->
+                <!-- STATUS (FIXED CASE SAFE) -->
                 <td>
-                    {% if event.status == "Completed" %}
+                    {% if event.status|lower == "completed" %}
                         <span class="badge bg-success">Completed</span>
-                    {% elif event.status == "Announced" %}
+                    {% elif event.status|lower == "announced" %}
                         <span class="badge bg-primary">Announced</span>
                     {% else %}
                         <span class="badge bg-secondary">{{ event.status }}</span>
                     {% endif %}
                 </td>
 
-                <!-- ANNOUNCEMENTS (SAFE ONLY) -->
+                <!-- ANNOUNCEMENTS -->
                 <td>
                     <a href="{% url 'events:event_announcements' event.id %}"
                         class="btn btn-primary btn-sm">
@@ -65,18 +65,20 @@
                     </a>
                 </td>
 
-                <!-- FEEDBACK -->
+                <!-- FEEDBACK (FIXED LOGIC) -->
                 <td>
-                    {% if role == "student" and event.status == "Completed" %}
+                    {% if role == "student" and event.status|lower == "completed" %}
                         <a href="{% url 'events:event_feedback' event.id %}"
                            class="btn btn-sm btn-success">
                             Submit
                         </a>
+
                     {% elif role == "organizer" %}
                         <a href="{% url 'events:view_feedbacks' event.id %}"
                            class="btn btn-sm btn-primary">
                             View
                         </a>
+
                     {% else %}
                         <span class="text-muted small">Not Available</span>
                     {% endif %}
@@ -84,7 +86,7 @@
 
                 <!-- ACTIONS -->
                 <td>
-                    {% if role == "student" and event.status != "Completed" %}
+                    {% if role == "student" and event.status|lower != "completed" %}
                         <a href="{% url 'events:cancel_registration' event.id %}"
                            class="btn btn-sm btn-outline-danger">
                             Cancel

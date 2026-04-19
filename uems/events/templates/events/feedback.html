@@ -7,10 +7,32 @@
 <div class="d-flex justify-content-center">
     <div class="box" style="max-width: 600px; width:100%;">
 
-        <!-- HEADER -->
         <h4 class="text-primary fw-bold text-center mb-4">
             Feedback - {{ event.name }}
         </h4>
+
+        {% with status=event.status|lower %}
+
+        <!-- ❌ EVENT NOT COMPLETED -->
+        {% if status != "completed" %}
+            <div class="alert alert-warning text-center">
+                Feedback will be available after the event is completed.
+            </div>
+
+        <!-- ❌ NOT REGISTERED -->
+        {% elif is_registered == False %}
+            <div class="alert alert-danger text-center">
+                You must be registered in this event to submit feedback.
+            </div>
+
+        <!-- ❌ ALREADY SUBMITTED -->
+        {% elif already_submitted %}
+            <div class="alert alert-success text-center">
+                You have already submitted your feedback. Thank you!
+            </div>
+
+        <!-- ✅ FORM -->
+        {% else %}
 
         <form method="POST">
             {% csrf_token %}
@@ -39,22 +61,21 @@
                 </div>
             </div>
 
-            <!-- EXPERIENCE DROPDOWN -->
+            <!-- EXPERIENCE -->
             <div class="mb-4">
                 <label class="form-label fw-semibold">
                     Experience
                 </label>
 
-                <select name="experience" class="form-select">
-                    <option value="">Select Experience</option>
-                    <option value="Excellent">Excellent</option>
-                    <option value="Good">Good</option>
-                    <option value="Average">Average</option>
-                    <option value="Poor">Poor</option>
+                <select name="experience" class="form-select" required>
+                    <option value="excellent">Excellent</option>
+                    <option value="good">Good</option>
+                    <option value="average">Average</option>
+                    <option value="poor">Poor</option>
                 </select>
             </div>
 
-            <!-- REMARKS -->
+            <!-- MESSAGE -->
             <div class="mb-4">
                 <label class="form-label fw-semibold">
                     Remarks
@@ -67,7 +88,7 @@
                           required></textarea>
             </div>
 
-            <!-- SUBMIT BUTTON -->
+            <!-- SUBMIT -->
             <div class="text-center">
                 <button type="submit" class="btn btn-primary px-4">
                     Submit Feedback
@@ -75,6 +96,10 @@
             </div>
 
         </form>
+
+        {% endif %}
+
+        {% endwith %}
 
     </div>
 </div>

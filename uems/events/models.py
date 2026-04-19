@@ -2,9 +2,32 @@ from django.db import models
 from django.contrib.auth.models import User
 
 
-# ----------------------
+# =====================================================
+# ENUMS (CLEAN + PRODUCTION SAFE)
+# =====================================================
+class EventStatus(models.TextChoices):
+    CREATED = "created", "Created"
+    ACCEPTED = "accepted", "Accepted"
+    ANNOUNCED = "announced", "Announced"
+    COMPLETED = "completed", "Completed"
+
+
+class ProposalStatus(models.TextChoices):
+    PENDING = "pending", "Pending"
+    ACCEPTED = "accepted", "Accepted"
+    REJECTED = "rejected", "Rejected"
+
+
+class ExperienceLevel(models.TextChoices):
+    EXCELLENT = "excellent", "Excellent"
+    GOOD = "good", "Good"
+    AVERAGE = "average", "Average"
+    POOR = "poor", "Poor"
+
+
+# =====================================================
 # CATEGORY
-# ----------------------
+# =====================================================
 class Category(models.Model):
     name = models.CharField(max_length=100, unique=True)
 
@@ -15,18 +38,10 @@ class Category(models.Model):
         return self.name
 
 
-# ----------------------
+# =====================================================
 # EVENT
-# ----------------------
+# =====================================================
 class Event(models.Model):
-
-    STATUS_CHOICES = [
-        ('created', 'Created'),
-        ('accepted', 'Accepted'),
-        ('announced', 'Announced'),
-        ('completed', 'Completed'),
-    ]
-
     name = models.CharField(max_length=200)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     description = models.TextField(blank=True)
@@ -44,8 +59,8 @@ class Event(models.Model):
 
     status = models.CharField(
         max_length=20,
-        choices=STATUS_CHOICES,
-        default='created'
+        choices=EventStatus.choices,
+        default=EventStatus.CREATED
     )
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -53,27 +68,14 @@ class Event(models.Model):
     class Meta:
         ordering = ['-created_at']
 
-    # ✅ FORCE LOWERCASE STATUS
-    def save(self, *args, **kwargs):
-        if self.status:
-            self.status = self.status.lower()
-        super().save(*args, **kwargs)
-
     def __str__(self):
         return self.name
 
 
-# ----------------------
-# PROPOSAL
-# ----------------------
+# =====================================================
+# EVENT PROPOSAL
+# =====================================================
 class EventProposal(models.Model):
-
-    STATUS_CHOICES = [
-        ('pending', 'Pending'),
-        ('accepted', 'Accepted'),
-        ('rejected', 'Rejected')
-    ]
-
     event = models.ForeignKey(
         Event,
         on_delete=models.CASCADE,
@@ -92,8 +94,8 @@ class EventProposal(models.Model):
 
     status = models.CharField(
         max_length=10,
-        choices=STATUS_CHOICES,
-        default='pending'
+        choices=ProposalStatus.choices,
+        default=ProposalStatus.PENDING
     )
 
     submitted_at = models.DateTimeField(auto_now_add=True)
@@ -101,21 +103,14 @@ class EventProposal(models.Model):
     class Meta:
         ordering = ['-submitted_at']
 
-    # ✅ IMPORTANT FIX: NORMALIZE STATUS
-    def save(self, *args, **kwargs):
-        if self.status:
-            self.status = self.status.lower()
-        super().save(*args, **kwargs)
-
     def __str__(self):
         return f"{self.event.name} - {self.organizer.username}"
 
 
-# ----------------------
+# =====================================================
 # REGISTRATION
-# ----------------------
+# =====================================================
 class EventRegistration(models.Model):
-
     event = models.ForeignKey(
         Event,
         on_delete=models.CASCADE,
@@ -146,11 +141,10 @@ class EventRegistration(models.Model):
         return f"{self.student_name} - {self.event.name}"
 
 
-# ----------------------
+# =====================================================
 # ANNOUNCEMENT
-# ----------------------
+# =====================================================
 class Announcement(models.Model):
-
     event = models.ForeignKey(
         Event,
         on_delete=models.CASCADE,
@@ -176,9 +170,9 @@ class Announcement(models.Model):
         return f"Announcement - {self.event.name}"
 
 
-# ----------------------
+# =====================================================
 # NOTIFICATION
-# ----------------------
+# =====================================================
 class Notification(models.Model):
 
     NOTIF_TYPES = [
@@ -210,9 +204,7 @@ class Notification(models.Model):
     )
 
     message = models.TextField()
-
     is_read = models.BooleanField(default=False)
-
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -222,17 +214,10 @@ class Notification(models.Model):
         return f"{self.user.username} - {self.notification_type}"
 
 
-# ----------------------
+# =====================================================
 # FEEDBACK
-# ----------------------
+# =====================================================
 class Feedback(models.Model):
-
-    EXPERIENCE_CHOICES = [
-        ('excellent', 'Excellent'),
-        ('good', 'Good'),
-        ('average', 'Average'),
-        ('poor', 'Poor'),
-    ]
 
     student = models.ForeignKey(
         User,
@@ -250,8 +235,8 @@ class Feedback(models.Model):
 
     experience = models.CharField(
         max_length=20,
-        choices=EXPERIENCE_CHOICES,
-        default='good'
+        choices=ExperienceLevel.choices,
+        default=ExperienceLevel.GOOD
     )
 
     message = models.TextField()
@@ -260,6 +245,7 @@ class Feedback(models.Model):
 
     class Meta:
         ordering = ['-created_at']
+
         constraints = [
             models.UniqueConstraint(
                 fields=['student', 'event'],

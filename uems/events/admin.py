@@ -49,7 +49,9 @@ class EventAdmin(admin.ModelAdmin):
 
     def save_model(self, request, obj, form, change):
 
-        # ✅ Normalize status
+        # ----------------------
+        # NORMALIZE STATUS SAFELY
+        # ----------------------
         obj.status = (obj.status or "").lower()
 
         old_status = None
@@ -119,7 +121,7 @@ class EventAdmin(admin.ModelAdmin):
     # BUTTONS
     # ----------------------
     def view_proposals(self, obj):
-        proposal = EventProposal.objects.filter(event=obj).first()
+        proposal = obj.proposals.first()
         if proposal:
             url = reverse("admin:events_eventproposal_change", args=[proposal.id])
             return mark_safe(f'<a class="button" href="{url}">View</a>')
@@ -143,20 +145,20 @@ class EventAdmin(admin.ModelAdmin):
 # ----------------------
 # EVENT PROPOSAL
 # ----------------------
+@admin.register(EventProposal)
 class EventProposalAdmin(admin.ModelAdmin):
 
     list_display = ('event', 'organizer', 'proposed_venue', 'status', 'submitted_at')
 
     def get_model_perms(self, request):
-        return {}
+        return {}  # hidden from sidebar
 
     actions = ['approve_proposals', 'reject_proposals']
 
-    # ✅ KEEP DEFAULT = pending (DO NOT TOUCH ON CREATE)
-
     def approve_proposals(self, request, queryset):
         for proposal in queryset:
-            proposal.status = "accepted"   # ✅ lowercase
+
+            proposal.status = "accepted"
             proposal.save()
 
             event = proposal.event
@@ -173,7 +175,8 @@ class EventProposalAdmin(admin.ModelAdmin):
 
     def reject_proposals(self, request, queryset):
         for proposal in queryset:
-            proposal.status = "rejected"   # ✅ lowercase
+
+            proposal.status = "rejected"
             proposal.save()
 
             if proposal.event.organizer:
@@ -183,9 +186,6 @@ class EventProposalAdmin(admin.ModelAdmin):
                     ntype="general",
                     message=f"❌ Proposal Rejected for '{proposal.event.name}'"
                 )
-
-
-admin.site.register(EventProposal, EventProposalAdmin)
 
 
 # ----------------------

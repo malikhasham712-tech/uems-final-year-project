@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.db.models import Count
 from django.contrib import messages
+from django.contrib.auth.models import User
 
 from .models import (
     Event,
@@ -53,7 +54,7 @@ def dashboard(request):
 # ----------------------
 @login_required
 def available_events(request):
-    events = Event.objects.filter(status__iexact="announced")
+    events = Event.objects.filter(status="announced")
 
     return render(request, "events/available_events.html", {
         "events": events,
@@ -72,7 +73,7 @@ def register_event(request, event_id):
         messages.error(request, "Only students allowed.")
         return redirect("events:available_events")
 
-    event = get_object_or_404(Event, id=event_id, status__iexact="announced")
+    event = get_object_or_404(Event, id=event_id, status="announced")
 
     if EventRegistration.objects.filter(event=event, student=request.user).exists():
         messages.info(request, "Already registered.")
@@ -130,9 +131,12 @@ def view_event(request, event_id):
 
     proposal = EventProposal.objects.filter(event=event).order_by("-id").first()
 
+    is_registered = event.registrations.filter(student=request.user).exists()
+
     return render(request, "events/view_event.html", {
         "event": event,
         "proposal": proposal,
+        "is_registered": is_registered,
         "role": get_role(request.user)
     })
 
@@ -169,13 +173,13 @@ def submit_proposal(request, event_id):
             obj = form.save(commit=False)
             obj.event = event
             obj.organizer = request.user
-            obj.status = "Pending"
+            obj.status = "pending"
             obj.save()
 
             send_notification(
                 user=request.user,
                 event=event,
-                ntype="proposal",
+                ntype="general",
                 message=f"📌 Proposal submitted for {event.name}"
             )
 
@@ -189,7 +193,7 @@ def submit_proposal(request, event_id):
 
 
 # ----------------------
-# EVENT REGISTRATIONS
+# REGISTRATIONS
 # ----------------------
 @login_required
 def event_registrations(request, event_id):
@@ -216,7 +220,7 @@ def send_announcement(request):
     if not request.user.is_superuser:
         return redirect("events:dashboard")
 
-    events = Event.objects.filter(status__iexact="announced")
+    events = Event.objects.filter(status="announced")
 
     if request.method == "POST":
         event = get_object_or_404(Event, id=request.POST.get("event_id"))
@@ -228,13 +232,16 @@ def send_announcement(request):
             created_by=request.user
         )
 
-        users = list(event.registrations.values_list("student", flat=True))
-        if event.organizer:
-            users.append(event.organizer.id)
+        user_ids = list(event.registrations.values_list("student", flat=True))
 
-        for uid in set(users):
+        if event.organizer:
+            user_ids.append(event.organizer.id)
+
+        users = User.objects.filter(id__in=set(user_ids))
+
+        for user in users:
             send_notification(
-                user_id=uid,
+                user=user,
                 event=event,
                 ntype="announcement",
                 message=f"📢 New Announcement: {event.name}"
@@ -249,7 +256,7 @@ def send_announcement(request):
 
 
 # ----------------------
-# EVENT ANNOUNCEMENTS
+# ANNOUNCEMENTS VIEW
 # ----------------------
 @login_required
 def event_announcements(request, event_id):
@@ -257,7 +264,6 @@ def event_announcements(request, event_id):
 
     role = get_role(request.user)
 
-    # 🔐 PERMISSION FIX
     if role == "student":
         if not EventRegistration.objects.filter(event=event, student=request.user).exists():
             messages.error(request, "You are not registered for this event.")
@@ -275,6 +281,7 @@ def event_announcements(request, event_id):
         "role": role
     })
 
+
 # ----------------------
 # NOTIFICATIONS
 # ----------------------
@@ -289,14 +296,11 @@ def notifications(request):
 
 
 # ----------------------
-# NOTIFICATION DETAIL (FIXED LOGIC)
+# NOTIFICATION DETAIL
 # ----------------------
 @login_required
 def notification_detail(request, notification_id):
-    notif = get_object_or_404(
-        request.user.notifications,
-        id=notification_id
-    )
+    notif = get_object_or_404(request.user.notifications, id=notification_id)
 
     notif.is_read = True
     notif.save()
@@ -307,16 +311,24 @@ def notification_detail(request, notification_id):
 
 
 # ----------------------
-# FEEDBACK
+# FEEDBACK (FINAL FIX)
 # ----------------------
 @login_required
 def submit_feedback(request, event_id):
     event = get_object_or_404(Event, id=event_id)
 
-    if event.status != "Completed":
+    # FIX: consistent lowercase check
+    if event.status != "completed":
         messages.error(request, "Feedback allowed only after event completion.")
         return redirect("events:my_events")
 
+    # must be registered
+    is_registered = event.registrations.filter(student=request.user).exists()
+    if not is_registered:
+        messages.error(request, "You must be registered to give feedback.")
+        return redirect("events:my_events")
+
+    # duplicate check
     if Feedback.objects.filter(event=event, student=request.user).exists():
         messages.info(request, "Already submitted.")
         return redirect("events:my_events")
@@ -326,7 +338,8 @@ def submit_feedback(request, event_id):
             student=request.user,
             event=event,
             message=request.POST.get("message"),
-            rating=request.POST.get("rating")
+            rating=request.POST.get("rating"),
+            experience=(request.POST.get("experience") or "good").lower()
         )
 
         send_notification(
@@ -336,7 +349,14 @@ def submit_feedback(request, event_id):
             message=f"⭐ Feedback submitted for {event.name}"
         )
 
+        messages.success(request, "Feedback submitted successfully!")
         return redirect("events:my_events")
+
+    return render(request, "events/feedback.html", {
+        "event": event,
+        "is_registered": is_registered,
+        "already_submitted": False
+    })
 
 
 # ----------------------
@@ -369,6 +389,7 @@ def cancel_registration(request, event_id):
         messages.success(request, "Registration cancelled.")
 
     return redirect("events:my_events")
+
 
 @login_required
 def event_feedback(request, event_id):
