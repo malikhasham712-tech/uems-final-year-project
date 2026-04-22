@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 
 
 # =====================================================
-# ENUMS (CLEAN + PRODUCTION SAFE)
+# ENUMS (PRODUCTION SAFE - NEVER CHANGE CASE IN DB)
 # =====================================================
 class EventStatus(models.TextChoices):
     CREATED = "created", "Created"
@@ -142,7 +142,7 @@ class EventRegistration(models.Model):
 
 
 # =====================================================
-# ANNOUNCEMENT
+# ANNOUNCEMENT (ADMIN ONLY CREATION)
 # =====================================================
 class Announcement(models.Model):
     event = models.ForeignKey(
@@ -171,7 +171,7 @@ class Announcement(models.Model):
 
 
 # =====================================================
-# NOTIFICATION
+# NOTIFICATION (SAFE + FLEXIBLE)
 # =====================================================
 class Notification(models.Model):
 
@@ -215,7 +215,7 @@ class Notification(models.Model):
 
 
 # =====================================================
-# FEEDBACK
+# FEEDBACK (CLEAN + NO KEY ERRORS EVER)
 # =====================================================
 class Feedback(models.Model):
 
@@ -245,7 +245,6 @@ class Feedback(models.Model):
 
     class Meta:
         ordering = ['-created_at']
-
         constraints = [
             models.UniqueConstraint(
                 fields=['student', 'event'],
@@ -255,3 +254,25 @@ class Feedback(models.Model):
 
     def __str__(self):
         return f"{self.student.username} - {self.event.name}"
+
+
+# =====================================================
+# EVENT REPORT (ADMIN ANALYTICS ONLY)
+# =====================================================
+class EventReport(models.Model):
+
+    name = models.CharField(max_length=200)
+
+    event = models.ForeignKey(
+        Event,
+        on_delete=models.CASCADE,
+        related_name="reports"
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return self.name

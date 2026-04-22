@@ -3,6 +3,9 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Count
 from django.contrib import messages
 from django.contrib.auth.models import User
+from django.http import HttpResponse
+
+from openpyxl import Workbook
 
 from .models import (
     Event,
@@ -16,20 +19,20 @@ from .forms import ProposalForm, EventRegistrationForm
 from .notification_router import send_notification
 
 
-# ----------------------
+# =====================================================
 # ROLE HELPER
-# ----------------------
+# =====================================================
 def get_role(user):
     if user.is_superuser:
         return "admin"
     if hasattr(user, "profile") and hasattr(user.profile, "role"):
         return user.profile.role
-    return None
+    return "student"
 
 
-# ----------------------
+# =====================================================
 # DASHBOARD
-# ----------------------
+# =====================================================
 @login_required
 def dashboard(request):
     role = get_role(request.user)
@@ -49,9 +52,9 @@ def dashboard(request):
     return redirect("/admin/")
 
 
-# ----------------------
+# =====================================================
 # AVAILABLE EVENTS
-# ----------------------
+# =====================================================
 @login_required
 def available_events(request):
     events = Event.objects.filter(status="announced")
@@ -62,9 +65,9 @@ def available_events(request):
     })
 
 
-# ----------------------
+# =====================================================
 # REGISTER EVENT
-# ----------------------
+# =====================================================
 @login_required
 def register_event(request, event_id):
     role = get_role(request.user)
@@ -98,9 +101,9 @@ def register_event(request, event_id):
     })
 
 
-# ----------------------
+# =====================================================
 # MY EVENTS
-# ----------------------
+# =====================================================
 @login_required
 def my_events(request):
     role = get_role(request.user)
@@ -122,15 +125,14 @@ def my_events(request):
     })
 
 
-# ----------------------
+# =====================================================
 # VIEW EVENT
-# ----------------------
+# =====================================================
 @login_required
 def view_event(request, event_id):
     event = get_object_or_404(Event, id=event_id)
 
     proposal = EventProposal.objects.filter(event=event).order_by("-id").first()
-
     is_registered = event.registrations.filter(student=request.user).exists()
 
     return render(request, "events/view_event.html", {
@@ -141,9 +143,9 @@ def view_event(request, event_id):
     })
 
 
-# ----------------------
+# =====================================================
 # PROPOSALS
-# ----------------------
+# =====================================================
 @login_required
 def view_proposals(request, event_id):
     event = get_object_or_404(Event, id=event_id)
@@ -192,9 +194,9 @@ def submit_proposal(request, event_id):
     })
 
 
-# ----------------------
+# =====================================================
 # REGISTRATIONS
-# ----------------------
+# =====================================================
 @login_required
 def event_registrations(request, event_id):
     event = get_object_or_404(Event, id=event_id)
@@ -212,9 +214,9 @@ def event_registrations(request, event_id):
     })
 
 
-# ----------------------
-# ANNOUNCEMENTS (FIXED CORE LOGIC)
-# ----------------------
+# =====================================================
+# ANNOUNCEMENTS (ADMIN ONLY CREATE)
+# =====================================================
 @login_required
 def send_announcement(request):
     if not request.user.is_superuser:
@@ -226,14 +228,12 @@ def send_announcement(request):
         event = get_object_or_404(Event, id=request.POST.get("event_id"))
         message_text = request.POST.get("message")
 
-        # Save announcement
-        announcement = Announcement.objects.create(
+        Announcement.objects.create(
             event=event,
             message=message_text,
             created_by=request.user
         )
 
-        # Get all users (students + organizer)
         user_ids = list(event.registrations.values_list("student", flat=True))
 
         if event.organizer:
@@ -241,16 +241,12 @@ def send_announcement(request):
 
         users = User.objects.filter(id__in=set(user_ids))
 
-        # 🔥 FIXED NOTIFICATION MESSAGE (IMPORTANT)
         for user in users:
             send_notification(
                 user=user,
                 event=event,
                 ntype="announcement",
-                message=(
-                    f"📢 {event.name}\n"
-                    f"Announcement: {message_text}"
-                )
+                message=f"📢 {event.name}\nAnnouncement: {message_text}"
             )
 
         messages.success(request, "Announcement sent successfully!")
@@ -261,36 +257,9 @@ def send_announcement(request):
     })
 
 
-# ----------------------
-# ANNOUNCEMENTS VIEW
-# ----------------------
-@login_required
-def event_announcements(request, event_id):
-    event = get_object_or_404(Event, id=event_id)
-
-    role = get_role(request.user)
-
-    if role == "student":
-        if not EventRegistration.objects.filter(event=event, student=request.user).exists():
-            messages.error(request, "You are not registered for this event.")
-            return redirect("events:available_events")
-
-    elif role == "organizer":
-        if event.organizer != request.user and not request.user.is_superuser:
-            return redirect("events:my_events")
-
-    announcements = Announcement.objects.filter(event=event).order_by("-created_at")
-
-    return render(request, "events/event_announcements.html", {
-        "event": event,
-        "announcements": announcements,
-        "role": role
-    })
-
-
-# ----------------------
+# =====================================================
 # NOTIFICATIONS
-# ----------------------
+# =====================================================
 @login_required
 def notifications(request):
     notifs = request.user.notifications.all().order_by("-created_at")
@@ -301,9 +270,6 @@ def notifications(request):
     })
 
 
-# ----------------------
-# NOTIFICATION DETAIL
-# ----------------------
 @login_required
 def notification_detail(request, notification_id):
     notif = get_object_or_404(request.user.notifications, id=notification_id)
@@ -311,37 +277,23 @@ def notification_detail(request, notification_id):
     notif.is_read = True
     notif.save()
 
-    # -----------------------------------
-    # SPECIAL CASE: ANNOUNCEMENT ROUTING
-    # -----------------------------------
     if notif.notification_type == "announcement" and notif.event:
         return redirect("events:event_announcements", event_id=notif.event.id)
 
-    # -----------------------------------
-    # DEFAULT BEHAVIOR (ALL OTHER TYPES)
-    # -----------------------------------
     return render(request, "events/notification_detail.html", {
         "notif": notif
     })
 
-# ----------------------
+
+# =====================================================
 # FEEDBACK
-# ----------------------
+# =====================================================
 @login_required
 def submit_feedback(request, event_id):
     event = get_object_or_404(Event, id=event_id)
 
     if event.status != "completed":
         messages.error(request, "Feedback allowed only after event completion.")
-        return redirect("events:my_events")
-
-    is_registered = event.registrations.filter(student=request.user).exists()
-    if not is_registered:
-        messages.error(request, "You must be registered to give feedback.")
-        return redirect("events:my_events")
-
-    if Feedback.objects.filter(event=event, student=request.user).exists():
-        messages.info(request, "Already submitted.")
         return redirect("events:my_events")
 
     if request.method == "POST":
@@ -353,26 +305,15 @@ def submit_feedback(request, event_id):
             experience=(request.POST.get("experience") or "good").lower()
         )
 
-        send_notification(
-            user=request.user,
-            event=event,
-            ntype="feedback",
-            message=f"⭐ Feedback submitted for {event.name}"
-        )
-
         messages.success(request, "Feedback submitted successfully!")
         return redirect("events:my_events")
 
-    return render(request, "events/feedback.html", {
-        "event": event,
-        "is_registered": is_registered,
-        "already_submitted": False
-    })
+    return render(request, "events/feedback.html", {"event": event})
 
 
-# ----------------------
+# =====================================================
 # VIEW FEEDBACK
-# ----------------------
+# =====================================================
 @login_required
 def view_feedbacks(request, event_id):
     event = get_object_or_404(Event, id=event_id)
@@ -388,9 +329,9 @@ def view_feedbacks(request, event_id):
     })
 
 
-# ----------------------
+# =====================================================
 # CANCEL REGISTRATION
-# ----------------------
+# =====================================================
 @login_required
 def cancel_registration(request, event_id):
     reg = EventRegistration.objects.filter(event_id=event_id, student=request.user).first()
@@ -405,3 +346,88 @@ def cancel_registration(request, event_id):
 @login_required
 def event_feedback(request, event_id):
     return submit_feedback(request, event_id)
+
+
+# =====================================================
+# EVENT REPORT MODULE
+# =====================================================
+@login_required
+def select_event_report(request):
+    if not request.user.is_superuser:
+        return redirect("events:dashboard")
+
+    events = Event.objects.filter(status="completed")
+
+    return render(request, "events/select_event_report.html", {"events": events})
+
+
+@login_required
+def event_report(request, event_id):
+    event = get_object_or_404(Event, id=event_id)
+    feedbacks = Feedback.objects.filter(event=event)
+
+    summary = {
+        "excellent": feedbacks.filter(experience="excellent").count(),
+        "good": feedbacks.filter(experience="good").count(),
+        "average": feedbacks.filter(experience="average").count(),
+        "poor": feedbacks.filter(experience="poor").count(),
+    }
+
+    return render(request, "events/event_report.html", {
+        "event": event,
+        "feedbacks": feedbacks,
+        "summary": summary
+    })
+
+
+@login_required
+def export_event_report(request, event_id):
+    event = get_object_or_404(Event, id=event_id)
+    feedbacks = Feedback.objects.filter(event=event)
+
+    wb = Workbook()
+    ws = wb.active
+
+    ws.append(["Event Report", event.name])
+    ws.append([])
+    ws.append(["Student", "Experience", "Message"])
+
+    for fb in feedbacks:
+        ws.append([fb.student.username, fb.experience, fb.message])
+
+    ws.append([])
+    ws.append(["Summary"])
+    ws.append(["Excellent", feedbacks.filter(experience="excellent").count()])
+    ws.append(["Good", feedbacks.filter(experience="good").count()])
+    ws.append(["Average", feedbacks.filter(experience="average").count()])
+    ws.append(["Poor", feedbacks.filter(experience="poor").count()])
+
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = f'attachment; filename=report_{event.id}.xlsx'
+
+    wb.save(response)
+    return response
+
+
+# =====================================================
+# EVENT ANNOUNCEMENTS (VIEW ONLY)
+# =====================================================
+@login_required
+def event_announcements(request, event_id):
+    event = get_object_or_404(Event, id=event_id)
+
+    role = get_role(request.user)
+
+    if role not in ["student", "organizer", "admin"]:
+        return redirect("events:dashboard")
+
+    announcements = Announcement.objects.filter(event=event).order_by("-created_at")
+
+    return render(request, "events/event_announcements.html", {
+        "event": event,
+        "announcements": announcements,
+        "role": role,
+        "can_create": False
+    })

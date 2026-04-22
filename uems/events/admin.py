@@ -1,7 +1,9 @@
 from django.contrib import admin
-from django.urls import reverse
+from django.urls import reverse, path
 from django.contrib.auth.models import User
 from django.utils.safestring import mark_safe
+from django.http import HttpResponse
+import openpyxl
 
 from .models import (
     Category,
@@ -10,24 +12,118 @@ from .models import (
     EventRegistration,
     Announcement,
     Notification,
-    Feedback
+    Feedback,
+    EventReport
 )
 
 from .notification_router import send_notification
 
 
-# ----------------------
+# =====================================================
 # CATEGORY
-# ----------------------
+# =====================================================
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
     list_display = ('name',)
     search_fields = ('name',)
 
 
-# ----------------------
-# EVENT
-# ----------------------
+# =====================================================
+# EVENT REPORT (FIXED + PRODUCTION SAFE)
+# =====================================================
+@admin.register(EventReport)
+class EventReportAdmin(admin.ModelAdmin):
+
+    list_display = ('name', 'event', 'created_at')
+    fields = ('name', 'event')
+
+    change_form_template = "admin/event_report_change.html"
+
+    def has_add_permission(self, request):
+        return request.user.is_superuser
+
+    def has_change_permission(self, request, obj=None):
+        return request.user.is_superuser
+
+    # -------------------------
+    # CUSTOM URL (FIXED NAME)
+    # -------------------------
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path(
+                'export/<int:report_id>/',
+                self.admin_site.admin_view(self.export_excel),
+                name='events_eventreport_export'   # ✅ FIXED
+            ),
+        ]
+        return custom_urls + urls
+
+    # -------------------------
+    # CHANGE VIEW DATA
+    # -------------------------
+    def change_view(self, request, object_id, form_url='', extra_context=None):
+
+        report = EventReport.objects.get(pk=object_id)
+        feedbacks = Feedback.objects.filter(event=report.event)
+
+        data = {
+            "excellent": [],
+            "good": [],
+            "average": [],
+            "poor": []
+        }
+
+        for fb in feedbacks:
+            key = (fb.experience or "").lower().strip()
+
+            if key in data:
+                data[key].append(fb.student.username)
+
+        extra_context = extra_context or {}
+        extra_context.update({
+            "report": report,
+            "data": data,
+            "feedbacks": feedbacks,
+            "show_save": False,   # removes ugly default form buttons
+        })
+
+        return super().change_view(request, object_id, form_url, extra_context)
+
+    # -------------------------
+    # EXPORT EXCEL
+    # -------------------------
+    def export_excel(self, request, report_id):
+
+        report = EventReport.objects.get(id=report_id)
+        feedbacks = Feedback.objects.filter(event=report.event)
+
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Report"
+
+        ws.append(["Student", "Experience", "Message"])
+
+        for fb in feedbacks:
+            ws.append([
+                fb.student.username,
+                (fb.experience or "").lower(),
+                fb.message
+            ])
+
+        response = HttpResponse(
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+
+        response['Content-Disposition'] = f'attachment; filename={report.name}.xlsx'
+
+        wb.save(response)
+        return response
+
+
+# =====================================================
+# EVENT ADMIN (SAFE)
+# =====================================================
 @admin.register(Event)
 class EventAdmin(admin.ModelAdmin):
 
@@ -49,9 +145,6 @@ class EventAdmin(admin.ModelAdmin):
 
     def save_model(self, request, obj, form, change):
 
-        # ----------------------
-        # NORMALIZE STATUS SAFELY
-        # ----------------------
         obj.status = (obj.status or "").lower()
 
         old_status = None
@@ -63,9 +156,6 @@ class EventAdmin(admin.ModelAdmin):
 
         super().save_model(request, obj, form, change)
 
-        # ----------------------
-        # 1. ORGANIZER ASSIGNED
-        # ----------------------
         if is_new and obj.organizer:
             send_notification(
                 user=obj.organizer,
@@ -74,9 +164,6 @@ class EventAdmin(admin.ModelAdmin):
                 message=f"🎉 You are assigned as Organizer of '{obj.name}'"
             )
 
-        # ----------------------
-        # 2. EVENT ANNOUNCED
-        # ----------------------
         if old_status != "announced" and obj.status == "announced":
 
             students = User.objects.filter(is_staff=False, is_active=True)
@@ -97,9 +184,6 @@ class EventAdmin(admin.ModelAdmin):
                     message=f"📢 Event Announced: {obj.name}"
                 )
 
-        # ----------------------
-        # 3. EVENT COMPLETED
-        # ----------------------
         if old_status != "completed" and obj.status == "completed":
 
             user_ids = list(obj.registrations.values_list("student", flat=True))
@@ -117,9 +201,6 @@ class EventAdmin(admin.ModelAdmin):
                     message=f"🎉 Event Completed: {obj.name}"
                 )
 
-    # ----------------------
-    # BUTTONS
-    # ----------------------
     def view_proposals(self, obj):
         proposal = obj.proposals.first()
         if proposal:
@@ -142,104 +223,28 @@ class EventAdmin(admin.ModelAdmin):
         )
 
 
-# ----------------------
-# EVENT PROPOSAL
-# ----------------------
+# =====================================================
+# HIDDEN MODELS
+# =====================================================
 @admin.register(EventProposal)
 class EventProposalAdmin(admin.ModelAdmin):
-
-    list_display = ('event', 'organizer', 'proposed_venue', 'status', 'submitted_at')
-
     def get_model_perms(self, request):
-        return {}  # hidden from sidebar
-
-    actions = ['approve_proposals', 'reject_proposals']
-
-    def approve_proposals(self, request, queryset):
-        for proposal in queryset:
-
-            proposal.status = "accepted"
-            proposal.save()
-
-            event = proposal.event
-            event.status = "accepted"
-            event.save()
-
-            if event.organizer:
-                send_notification(
-                    user=event.organizer,
-                    event=event,
-                    ntype="event_assigned",
-                    message=f"🎉 Proposal Accepted for '{event.name}'"
-                )
-
-    def reject_proposals(self, request, queryset):
-        for proposal in queryset:
-
-            proposal.status = "rejected"
-            proposal.save()
-
-            if proposal.event.organizer:
-                send_notification(
-                    user=proposal.event.organizer,
-                    event=proposal.event,
-                    ntype="general",
-                    message=f"❌ Proposal Rejected for '{proposal.event.name}'"
-                )
+        return {}
 
 
-# ----------------------
-# REGISTRATION
-# ----------------------
 @admin.register(EventRegistration)
 class EventRegistrationAdmin(admin.ModelAdmin):
-    list_display = ('student', 'event', 'created_at')
-
     def get_model_perms(self, request):
         return {}
 
 
-# ----------------------
-# ANNOUNCEMENT
-# ----------------------
 @admin.register(Announcement)
 class AnnouncementAdmin(admin.ModelAdmin):
-
-    list_display = ('event', 'created_by', 'created_at')
-    fields = ('event', 'message')
-
-    def save_model(self, request, obj, form, change):
-
-        obj.created_by = request.user
-        super().save_model(request, obj, form, change)
-
-        event = obj.event
-
-        user_ids = list(event.registrations.values_list("student", flat=True))
-
-        if event.organizer:
-            user_ids.append(event.organizer.id)
-
-        users = User.objects.filter(id__in=set(user_ids))
-
-        for user in users:
-            send_notification(
-                user=user,
-                event=event,
-                ntype="announcement",
-                message=f"📢 New Announcement: {event.name}"
-            )
-
     def get_model_perms(self, request):
         return {}
 
 
-# ----------------------
-# FEEDBACK
-# ----------------------
 @admin.register(Feedback)
 class FeedbackAdmin(admin.ModelAdmin):
-    list_display = ('student', 'event', 'rating', 'created_at')
-
     def get_model_perms(self, request):
         return {}

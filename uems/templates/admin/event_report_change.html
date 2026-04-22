@@ -1,0 +1,120 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+
+{% if report and report.event %}
+
+<div style="padding:20px; max-width:900px; margin:auto;">
+
+    <!-- HEADER -->
+    <div style="background:#f8f9fa; padding:15px; border-radius:8px; margin-bottom:20px;">
+        <h2 style="margin:0; color:#0d6efd;">📊 Event Report Dashboard</h2>
+        <h3 style="margin:8px 0 0 0;">{{ report.name }}</h3>
+        <p style="margin:5px 0;">
+            <strong>Event:</strong> {{ report.event.name }}
+        </p>
+    </div>
+
+    <!-- KPI CARDS -->
+    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:20px;">
+
+        <div style="flex:1; min-width:120px; background:#198754; color:white; padding:12px; border-radius:8px; text-align:center;">
+            <h3 style="margin:0;">{{ data.excellent|length }}</h3>
+            <small>Excellent</small>
+        </div>
+
+        <div style="flex:1; min-width:120px; background:#0d6efd; color:white; padding:12px; border-radius:8px; text-align:center;">
+            <h3 style="margin:0;">{{ data.good|length }}</h3>
+            <small>Good</small>
+        </div>
+
+        <div style="flex:1; min-width:120px; background:#ffc107; color:black; padding:12px; border-radius:8px; text-align:center;">
+            <h3 style="margin:0;">{{ data.average|length }}</h3>
+            <small>Average</small>
+        </div>
+
+        <div style="flex:1; min-width:120px; background:#dc3545; color:white; padding:12px; border-radius:8px; text-align:center;">
+            <h3 style="margin:0;">{{ data.poor|length }}</h3>
+            <small>Poor</small>
+        </div>
+
+    </div>
+
+    <!-- PIE CHART -->
+    <div style="background:#fff; padding:15px; border-radius:8px; text-align:center; margin-bottom:20px;">
+
+        <h3 style="margin-bottom:10px;">Feedback Distribution</h3>
+
+        <canvas id="feedbackChart"
+                style="max-width:260px; max-height:260px; margin:auto; display:block;"></canvas>
+
+    </div>
+
+    <!-- ACTION BUTTONS -->
+    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+
+        <a href="/admin/events/eventreport/export/{{ report.id }}/"
+           style="background:#198754; color:white; padding:10px 15px; border-radius:5px; text-decoration:none;">
+            ⬇ Export Excel
+        </a>
+
+        <a href="{% url 'admin:events_eventreport_changelist' %}"
+           style="background:#6c757d; color:white; padding:10px 15px; border-radius:5px; text-decoration:none;">
+            ← Back
+        </a>
+
+    </div>
+
+</div>
+
+<!-- CHART.JS -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const canvas = document.getElementById('feedbackChart');
+
+    if (!canvas) return;
+
+    new Chart(canvas, {
+        type: 'pie',
+        data: {
+            labels: ['Excellent', 'Good', 'Average', 'Poor'],
+            datasets: [{
+                data: [
+                    {{ data.excellent|length|default:0 }},
+                    {{ data.good|length|default:0 }},
+                    {{ data.average|length|default:0 }},
+                    {{ data.poor|length|default:0 }}
+                ],
+                backgroundColor: [
+                    '#198754',
+                    '#0d6efd',
+                    '#ffc107',
+                    '#dc3545'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+
+});
+</script>
+
+{% else %}
+
+<div style="padding:20px;">
+    <h3 style="color:red;">⚠ Report data not available</h3>
+</div>
+
+{% endif %}
+
+{% endblock %}
