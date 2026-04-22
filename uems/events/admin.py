@@ -29,7 +29,7 @@ class CategoryAdmin(admin.ModelAdmin):
 
 
 # =====================================================
-# EVENT REPORT (FIXED + PRODUCTION SAFE)
+# EVENT REPORT (FINAL SAFE VERSION)
 # =====================================================
 @admin.register(EventReport)
 class EventReportAdmin(admin.ModelAdmin):
@@ -46,7 +46,7 @@ class EventReportAdmin(admin.ModelAdmin):
         return request.user.is_superuser
 
     # -------------------------
-    # CUSTOM URL (FIXED NAME)
+    # CUSTOM EXPORT URL
     # -------------------------
     def get_urls(self):
         urls = super().get_urls()
@@ -54,18 +54,17 @@ class EventReportAdmin(admin.ModelAdmin):
             path(
                 'export/<int:report_id>/',
                 self.admin_site.admin_view(self.export_excel),
-                name='events_eventreport_export'   # ✅ FIXED
+                name='events_eventreport_export'
             ),
         ]
         return custom_urls + urls
 
     # -------------------------
-    # CHANGE VIEW DATA
+    # CHANGE VIEW (SAFE DATA)
     # -------------------------
     def change_view(self, request, object_id, form_url='', extra_context=None):
 
-        report = EventReport.objects.get(pk=object_id)
-        feedbacks = Feedback.objects.filter(event=report.event)
+        report = EventReport.objects.filter(pk=object_id).first()
 
         data = {
             "excellent": [],
@@ -74,18 +73,24 @@ class EventReportAdmin(admin.ModelAdmin):
             "poor": []
         }
 
-        for fb in feedbacks:
-            key = (fb.experience or "").lower().strip()
+        feedbacks = []
 
-            if key in data:
-                data[key].append(fb.student.username)
+        if report and report.event:
+            feedbacks = Feedback.objects.filter(event=report.event)
+
+            for fb in feedbacks:
+                key = (fb.experience or "").lower().strip()
+                if key in data:
+                    data[key].append(fb.student.username)
 
         extra_context = extra_context or {}
         extra_context.update({
             "report": report,
             "data": data,
             "feedbacks": feedbacks,
-            "show_save": False,   # removes ugly default form buttons
+            "show_save": False,
+            "show_save_and_continue": False,
+            "show_save_and_add_another": False,
         })
 
         return super().change_view(request, object_id, form_url, extra_context)
@@ -95,7 +100,11 @@ class EventReportAdmin(admin.ModelAdmin):
     # -------------------------
     def export_excel(self, request, report_id):
 
-        report = EventReport.objects.get(id=report_id)
+        report = EventReport.objects.filter(id=report_id).first()
+
+        if not report or not report.event:
+            return HttpResponse("Invalid Report", status=400)
+
         feedbacks = Feedback.objects.filter(event=report.event)
 
         wb = openpyxl.Workbook()
@@ -115,14 +124,15 @@ class EventReportAdmin(admin.ModelAdmin):
             content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         )
 
-        response['Content-Disposition'] = f'attachment; filename={report.name}.xlsx'
+        filename = report.name.replace(" ", "_")
+        response['Content-Disposition'] = f'attachment; filename={filename}.xlsx'
 
         wb.save(response)
         return response
 
 
 # =====================================================
-# EVENT ADMIN (SAFE)
+# EVENT ADMIN (CLEAN + SAFE)
 # =====================================================
 @admin.register(Event)
 class EventAdmin(admin.ModelAdmin):
@@ -156,6 +166,7 @@ class EventAdmin(admin.ModelAdmin):
 
         super().save_model(request, obj, form, change)
 
+        # ORGANIZER ASSIGNED
         if is_new and obj.organizer:
             send_notification(
                 user=obj.organizer,
@@ -164,6 +175,7 @@ class EventAdmin(admin.ModelAdmin):
                 message=f"🎉 You are assigned as Organizer of '{obj.name}'"
             )
 
+        # EVENT ANNOUNCED
         if old_status != "announced" and obj.status == "announced":
 
             students = User.objects.filter(is_staff=False, is_active=True)
@@ -184,6 +196,7 @@ class EventAdmin(admin.ModelAdmin):
                     message=f"📢 Event Announced: {obj.name}"
                 )
 
+        # EVENT COMPLETED
         if old_status != "completed" and obj.status == "completed":
 
             user_ids = list(obj.registrations.values_list("student", flat=True))
