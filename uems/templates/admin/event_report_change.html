@@ -4,54 +4,196 @@
 
 {% if report and report.event %}
 
-<div style="padding:20px; max-width:850px; margin:auto;">
+<style>
+    .report-container {
+        max-width: 900px;
+        margin: auto;
+        padding: 20px;
+        font-family: system-ui, -apple-system, sans-serif;
+    }
+
+    .card {
+        background: #ffffff;
+        border-radius: 10px;
+        padding: 18px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    }
+
+    /* HEADER */
+    .header-title {
+        margin: 0;
+        color: #1e293b;
+        font-size: 22px;
+        font-weight: 600;
+    }
+
+    .header-sub {
+        color: #64748b;
+        font-size: 13px;
+    }
+
+    /* TABLE */
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+    }
+
+    th {
+        background: #0f172a;
+        color: white;
+        padding: 10px;
+        text-align: left;
+    }
+
+    td {
+        padding: 10px;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    tr:hover {
+        background: #f1f5f9;
+    }
+
+    .center {
+        text-align: center;
+    }
+
+    /* KPI */
+    .kpi-container {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 20px;
+    }
+
+    .kpi-box {
+        flex: 1;
+        min-width: 120px;
+        padding: 12px;
+        border-radius: 8px;
+        text-align: center;
+        color: white;
+        transition: 0.3s;
+    }
+
+    .kpi-box:hover {
+        transform: translateY(-2px);
+        opacity: 0.95;
+    }
+
+    .ex { background: #16a34a; }
+    .gd { background: #2563eb; }
+    .av { background: #f59e0b; color: black; }
+    .pr { background: #dc2626; }
+
+    /* BUTTONS */
+    .btn {
+        padding: 10px 16px;
+        border-radius: 6px;
+        text-decoration: none;
+        color: white;
+        font-size: 14px;
+        transition: 0.2s;
+    }
+
+    .btn-primary {
+        background: #2563eb;
+    }
+
+    .btn-primary:hover {
+        background: #1d4ed8;
+    }
+
+    .btn-dark {
+        background: #374151;
+    }
+
+    .btn-dark:hover {
+        background: #1f2937;
+    }
+
+</style>
+
+<div class="report-container">
 
     <!-- HEADER -->
-    <div style="background:#f8f9fa; padding:12px 15px; border-radius:6px; margin-bottom:20px;">
-        <h2 style="margin:0; color:#0d6efd;">Event Report</h2>
-        <h3 style="margin:6px 0 0 0;">{{ report.name }}</h3>
-        <p style="margin:4px 0;">
-            <strong>Event:</strong> {{ report.event.name }}
-        </p>
+    <div style="margin-bottom:20px;">
+        <h2 class="header-title">{{ report.event.name }}</h2>
+        <div class="header-sub">{{ report.name }}</div>
+    </div>
+
+    <!-- TABLE -->
+    <div class="card">
+
+        <h3 style="margin-bottom:12px;">Student Feedback</h3>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Student</th>
+                    <th class="center">Experience</th>
+                    <th>Message</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for fb in feedbacks %}
+                <tr>
+                    <td>{{ fb.student.username }}</td>
+                    <td class="center" style="text-transform:capitalize;">
+                        {{ fb.experience|default:"-" }}
+                    </td>
+                    <td>{{ fb.message|default:"-" }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="3" class="center">No feedback available</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
     </div>
 
     <!-- KPI -->
-    <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px;">
+    <div class="kpi-container">
 
-        <div style="flex:1; min-width:110px; background:#198754; color:white; padding:10px; border-radius:6px; text-align:center;">
+        <div class="kpi-box ex">
             <strong id="ex">{{ data.excellent|length }}</strong><br>Excellent
         </div>
 
-        <div style="flex:1; min-width:110px; background:#0d6efd; color:white; padding:10px; border-radius:6px; text-align:center;">
+        <div class="kpi-box gd">
             <strong id="gd">{{ data.good|length }}</strong><br>Good
         </div>
 
-        <div style="flex:1; min-width:110px; background:#ffc107; color:black; padding:10px; border-radius:6px; text-align:center;">
+        <div class="kpi-box av">
             <strong id="av">{{ data.average|length }}</strong><br>Average
         </div>
 
-        <div style="flex:1; min-width:110px; background:#dc3545; color:white; padding:10px; border-radius:6px; text-align:center;">
+        <div class="kpi-box pr">
             <strong id="pr">{{ data.poor|length }}</strong><br>Poor
         </div>
 
     </div>
 
     <!-- CHART -->
-    <div style="background:#fff; padding:12px; border-radius:6px; text-align:center; margin-bottom:20px;">
-        <h4>Feedback Distribution</h4>
-        <canvas id="feedbackChart" style="max-width:220px; max-height:220px;"></canvas>
+    <div class="card" style="text-align:center;">
+        <h4 style="margin-bottom:10px;">Feedback Distribution</h4>
+        <canvas id="feedbackChart" style="max-width:180px; max-height:180px;"></canvas>
     </div>
 
     <!-- BUTTONS -->
     <div style="display:flex; gap:10px;">
 
         <a href="/admin/events/eventreport/export/{{ report.id }}/"
-           style="background:#198754; color:white; padding:8px 12px; border-radius:5px; text-decoration:none;">
+           class="btn btn-primary">
             Export Excel
         </a>
 
         <a href="{% url 'admin:events_eventreport_changelist' %}"
-           style="background:#6c757d; color:white; padding:8px 12px; border-radius:5px; text-decoration:none;">
+           class="btn btn-dark">
             Back
         </a>
 
@@ -65,14 +207,16 @@
 <script>
 document.addEventListener("DOMContentLoaded", function () {
 
-    const ctx = document.getElementById('feedbackChart').getContext('2d');
+    const canvas = document.getElementById('feedbackChart');
+    if (!canvas) return;
 
-    // SAFE: read values from DOM (no Django inside JS)
-    const dataValues = [
-        parseInt(document.getElementById('ex').innerText),
-        parseInt(document.getElementById('gd').innerText),
-        parseInt(document.getElementById('av').innerText),
-        parseInt(document.getElementById('pr').innerText)
+    const ctx = canvas.getContext('2d');
+
+    const values = [
+        parseInt(document.getElementById('ex').innerText) || 0,
+        parseInt(document.getElementById('gd').innerText) || 0,
+        parseInt(document.getElementById('av').innerText) || 0,
+        parseInt(document.getElementById('pr').innerText) || 0
     ];
 
     new Chart(ctx, {
@@ -80,19 +224,21 @@ document.addEventListener("DOMContentLoaded", function () {
         data: {
             labels: ['Excellent', 'Good', 'Average', 'Poor'],
             datasets: [{
-                data: dataValues,
+                data: values,
                 backgroundColor: [
-                    '#198754',
-                    '#0d6efd',
-                    '#ffc107',
-                    '#dc3545'
+                    '#16a34a',
+                    '#2563eb',
+                    '#f59e0b',
+                    '#dc2626'
                 ]
             }]
         },
         options: {
             responsive: true,
             plugins: {
-                legend: { position: 'bottom' }
+                legend: {
+                    position: 'bottom'
+                }
             }
         }
     });

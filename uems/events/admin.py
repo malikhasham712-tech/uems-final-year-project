@@ -29,7 +29,7 @@ class CategoryAdmin(admin.ModelAdmin):
 
 
 # =====================================================
-# EVENT REPORT (FINAL SAFE VERSION)
+# EVENT REPORT (FINAL SAFE VERSION + RANKING)
 # =====================================================
 @admin.register(EventReport)
 class EventReportAdmin(admin.ModelAdmin):
@@ -60,7 +60,7 @@ class EventReportAdmin(admin.ModelAdmin):
         return custom_urls + urls
 
     # -------------------------
-    # CHANGE VIEW (SAFE DATA)
+    # CHANGE VIEW (SAFE DATA + RANKING)
     # -------------------------
     def change_view(self, request, object_id, form_url='', extra_context=None):
 
@@ -74,20 +74,49 @@ class EventReportAdmin(admin.ModelAdmin):
         }
 
         feedbacks = []
+        ranking = []
 
         if report and report.event:
             feedbacks = Feedback.objects.filter(event=report.event)
 
+            # -------------------------
+            # EXPERIENCE DATA
+            # -------------------------
             for fb in feedbacks:
                 key = (fb.experience or "").lower().strip()
                 if key in data:
                     data[key].append(fb.student.username)
+
+            # -------------------------
+            # STUDENT RANKING
+            # -------------------------
+            score_map = {
+                "excellent": 4,
+                "good": 3,
+                "average": 2,
+                "poor": 1
+            }
+
+            student_scores = {}
+
+            for fb in feedbacks:
+                username = fb.student.username
+                score = score_map.get((fb.experience or "").lower(), 3)
+
+                if username not in student_scores:
+                    student_scores[username] = 0
+
+                student_scores[username] += score
+
+            # SORT DESCENDING
+            ranking = sorted(student_scores.items(), key=lambda x: x[1], reverse=True)
 
         extra_context = extra_context or {}
         extra_context.update({
             "report": report,
             "data": data,
             "feedbacks": feedbacks,
+            "ranking": ranking[:10],  # 🔥 Top 10 students
             "show_save": False,
             "show_save_and_continue": False,
             "show_save_and_add_another": False,
