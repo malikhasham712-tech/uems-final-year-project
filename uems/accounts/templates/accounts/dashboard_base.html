@@ -32,6 +32,7 @@
         .sidebar h5 {
             margin-bottom: 25px;
             font-weight: 600;
+            text-transform: capitalize;
         }
 
         .nav-link {
@@ -102,21 +103,34 @@
     <!-- SIDEBAR -->
     <div class="sidebar">
 
-        <h5>{{ role|default:"User"|title }}</h5>
+        <!-- SAFE ROLE DISPLAY -->
+        <h5>
+            {% if request.user.is_superuser %}
+                Admin
+            {% else %}
+                {{ role|default:"student"|title }}
+            {% endif %}
+        </h5>
 
         <!-- ORGANIZER -->
         {% if role == 'organizer' %}
+
             <a href="{% url 'events:dashboard' %}" class="nav-link">
                 <i class="fa fa-home"></i> Dashboard
             </a>
 
-            <a href="{% url 'events:my_events' %}" class="nav-link active">
+            <a href="{% url 'events:my_events' %}" class="nav-link">
                 <i class="fa fa-calendar"></i> My Events
+            </a>
+
+            <a href="{% url 'events:send_announcement' %}" class="nav-link">
+                <i class="fa fa-bullhorn"></i> Announcements
             </a>
 
         <!-- STUDENT -->
         {% elif role == 'student' %}
-            <a href="{% url 'events:my_events' %}" class="nav-link active">
+
+            <a href="{% url 'events:my_events' %}" class="nav-link">
                 <i class="fa fa-calendar"></i> My Events
             </a>
 
@@ -126,15 +140,21 @@
 
         <!-- ADMIN -->
         {% elif request.user.is_superuser %}
-            <a href="/admin/" class="nav-link active">
+
+            <a href="/admin/" class="nav-link">
                 <i class="fa fa-cog"></i> Admin Panel
             </a>
 
-        <!-- DEFAULT SAFE -->
+            <a href="{% url 'events:select_event_report' %}" class="nav-link">
+                <i class="fa fa-chart-bar"></i> Reports
+            </a>
+
         {% else %}
-            <a href="{% url 'events:my_events' %}" class="nav-link active">
+
+            <a href="{% url 'events:my_events' %}" class="nav-link">
                 <i class="fa fa-calendar"></i> My Events
             </a>
+
         {% endif %}
 
         <div class="mt-auto">
@@ -155,23 +175,31 @@
                 <div class="welcome">
                     Welcome, {{ request.user.username }}
                 </div>
+
                 <div class="subtext">
-                    {{ role|default:"User"|title }} • Event Management System
+                    {% if request.user.is_superuser %}
+                        Admin
+                    {% else %}
+                        {{ role|default:"student"|title }}
+                    {% endif %}
+                    • Event Management System
                 </div>
             </div>
 
             <div class="d-flex align-items-center gap-2">
 
-                <!-- 🔔 NOTIFICATIONS -->
+                <!-- NOTIFICATIONS -->
                 <div class="dropdown position-relative">
 
                     <button class="btn btn-light position-relative dropdown-toggle" data-bs-toggle="dropdown">
                         <i class="fa fa-bell"></i>
 
-                        {% if unread_notifications and unread_notifications > 0 %}
-                            <span class="badge bg-danger notif-badge">
-                                {{ unread_notifications }}
-                            </span>
+                        {% if notifications %}
+                            {% if notifications|length > 0 %}
+                                <span class="badge bg-danger notif-badge">
+                                    {{ notifications|length }}
+                                </span>
+                            {% endif %}
                         {% endif %}
                     </button>
 
@@ -208,9 +236,13 @@
                 </div>
 
                 <!-- BUTTONS -->
-                <button onclick="history.back()" class="btn btn-outline-secondary btn-sm">Back</button>
+                <button onclick="history.back()" class="btn btn-outline-secondary btn-sm">
+                    Back
+                </button>
 
-                {% if role == 'organizer' %}
+                {% if request.user.is_superuser %}
+                    <a href="/admin/" class="btn btn-primary btn-sm">Admin</a>
+                {% elif role == 'organizer' %}
                     <a href="{% url 'events:dashboard' %}" class="btn btn-primary btn-sm">Dashboard</a>
                 {% else %}
                     <a href="{% url 'events:available_events' %}" class="btn btn-primary btn-sm">Events</a>

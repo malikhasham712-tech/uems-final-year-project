@@ -79,17 +79,11 @@ class EventReportAdmin(admin.ModelAdmin):
         if report and report.event:
             feedbacks = Feedback.objects.filter(event=report.event)
 
-            # -------------------------
-            # EXPERIENCE DATA
-            # -------------------------
             for fb in feedbacks:
                 key = (fb.experience or "").lower().strip()
                 if key in data:
                     data[key].append(fb.student.username)
 
-            # -------------------------
-            # STUDENT RANKING
-            # -------------------------
             score_map = {
                 "excellent": 4,
                 "good": 3,
@@ -108,7 +102,6 @@ class EventReportAdmin(admin.ModelAdmin):
 
                 student_scores[username] += score
 
-            # SORT DESCENDING
             ranking = sorted(student_scores.items(), key=lambda x: x[1], reverse=True)
 
         extra_context = extra_context or {}
@@ -116,7 +109,7 @@ class EventReportAdmin(admin.ModelAdmin):
             "report": report,
             "data": data,
             "feedbacks": feedbacks,
-            "ranking": ranking[:10],  # 🔥 Top 10 students
+            "ranking": ranking[:10],
             "show_save": False,
             "show_save_and_continue": False,
             "show_save_and_add_another": False,
@@ -195,7 +188,6 @@ class EventAdmin(admin.ModelAdmin):
 
         super().save_model(request, obj, form, change)
 
-        # ORGANIZER ASSIGNED
         if is_new and obj.organizer:
             send_notification(
                 user=obj.organizer,
@@ -204,7 +196,6 @@ class EventAdmin(admin.ModelAdmin):
                 message=f"🎉 You are assigned as Organizer of '{obj.name}'"
             )
 
-        # EVENT ANNOUNCED
         if old_status != "announced" and obj.status == "announced":
 
             students = User.objects.filter(is_staff=False, is_active=True)
@@ -225,7 +216,6 @@ class EventAdmin(admin.ModelAdmin):
                     message=f"📢 Event Announced: {obj.name}"
                 )
 
-        # EVENT COMPLETED
         if old_status != "completed" and obj.status == "completed":
 
             user_ids = list(obj.registrations.values_list("student", flat=True))
@@ -266,27 +256,55 @@ class EventAdmin(admin.ModelAdmin):
 
 
 # =====================================================
-# HIDDEN MODELS
+# REGISTRATION (READ ONLY ADMIN)
+# =====================================================
+@admin.register(EventRegistration)
+class EventRegistrationAdmin(admin.ModelAdmin):
+
+    list_display = ('event', 'student', 'created_at')
+
+    readonly_fields = ('event', 'student', 'created_at')
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+# =====================================================
+# FEEDBACK (READ ONLY ADMIN)
+# =====================================================
+@admin.register(Feedback)
+class FeedbackAdmin(admin.ModelAdmin):
+
+    list_display = ('event', 'student', 'experience', 'message')
+
+    readonly_fields = ('event', 'student', 'experience', 'message')
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+# =====================================================
+# HIDDEN MODELS (SYSTEM ONLY)
 # =====================================================
 @admin.register(EventProposal)
 class EventProposalAdmin(admin.ModelAdmin):
-    def get_model_perms(self, request):
-        return {}
-
-
-@admin.register(EventRegistration)
-class EventRegistrationAdmin(admin.ModelAdmin):
-    def get_model_perms(self, request):
-        return {}
+    def has_module_permission(self, request):
+        return False
 
 
 @admin.register(Announcement)
 class AnnouncementAdmin(admin.ModelAdmin):
-    def get_model_perms(self, request):
-        return {}
-
-
-@admin.register(Feedback)
-class FeedbackAdmin(admin.ModelAdmin):
-    def get_model_perms(self, request):
-        return {}
+    def has_module_permission(self, request):
+        return False

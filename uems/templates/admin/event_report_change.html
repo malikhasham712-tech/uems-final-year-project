@@ -2,12 +2,10 @@
 
 {% block content %}
 
-{% if report and report.event %}
-
 <style>
     .container {
         max-width: 900px;
-        margin-left: 0;   /* LEFT ALIGN */
+        margin-left: 0;
         padding: 20px;
     }
 
@@ -89,21 +87,26 @@
         background: #374151;
     }
 
-    .btn-light {
-        background: #374151;
-        color: white;
+    /* ✅ IMPROVED BACK BUTTON */
+    .btn-back {
+        background: white;
+        color: #111827;
+        border: 2px solid #111827;
+        font-weight: 600;
     }
 
-    .btn-light:hover {
-        background: #6b7280;
+    .btn-back:hover {
+        background: #111827;
+        color: white;
     }
 
     .top-actions {
         float: right;
         margin-top: -40px;
     }
-
 </style>
+
+{% if report and report.event %}
 
 <div class="container">
 
@@ -112,13 +115,14 @@
         <div class="title">{{ report.event.name }}</div>
         <div class="subtitle">Feedback Graph</div>
 
-        <!-- BUTTONS (TOP RIGHT) -->
+        <!-- BUTTONS -->
         <div class="top-actions">
             <a href="/admin/events/eventreport/export/{{ report.id }}/" class="btn btn-dark">
                 Export
             </a>
-            <a href="{% url 'admin:events_eventreport_changelist' %}" class="btn btn-light">
-                Back
+
+            <a href="{% url 'admin:events_eventreport_changelist' %}" class="btn btn-back">
+                ← Back
             </a>
         </div>
     </div>
@@ -129,7 +133,6 @@
             <canvas id="feedbackChart"></canvas>
         </div>
 
-        <!-- DISTRIBUTION -->
         <div class="legend">
             <strong>Feedback Distribution:</strong><br>
             <span style="color:#198754;">● Excellent</span>
@@ -170,6 +173,8 @@
 
 </div>
 
+{% endif %}
+
 <!-- CHART -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -177,7 +182,6 @@
 document.addEventListener("DOMContentLoaded", function () {
 
     const ctx = document.getElementById('feedbackChart');
-
     if (!ctx) return;
 
     const dataValues = [
@@ -205,7 +209,7 @@ document.addEventListener("DOMContentLoaded", function () {
             responsive: true,
             plugins: {
                 legend: {
-                    display: false   // using custom legend
+                    display: false
                 }
             }
         }
@@ -214,12 +218,4 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 </script>
 
-{% else %}
-
-<div style="padding:20px;">
-    <h3 style="color:red;">Report data not available</h3>
-</div>
-
-{% endif %}
-
-{% endblock %}
+{% endblock %}v

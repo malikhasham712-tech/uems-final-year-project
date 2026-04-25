@@ -42,7 +42,7 @@ def dashboard(request):
             "proposals", "registrations"
         )
         return render(request, "accounts/dashboard.html", {
-            "role": "organizer",
+            "role": role,
             "events": events
         })
 
@@ -126,19 +126,30 @@ def my_events(request):
 
 
 # =====================================================
-# VIEW EVENT
+# VIEW EVENT (FIXED - MAIN FIX HERE)
 # =====================================================
 @login_required
 def view_event(request, event_id):
     event = get_object_or_404(Event, id=event_id)
 
     proposal = EventProposal.objects.filter(event=event).order_by("-id").first()
+
     is_registered = event.registrations.filter(student=request.user).exists()
+
+    feedback_obj = Feedback.objects.filter(
+        event=event,
+        student=request.user
+    ).first()
+
+    # ✅ FIXED FLAG FOR TEMPLATE
+    feedback_submitted = feedback_obj is not None
 
     return render(request, "events/view_event.html", {
         "event": event,
         "proposal": proposal,
         "is_registered": is_registered,
+        "feedback": feedback_obj,
+        "feedback_submitted": feedback_submitted,
         "role": get_role(request.user)
     })
 
@@ -215,7 +226,7 @@ def event_registrations(request, event_id):
 
 
 # =====================================================
-# ANNOUNCEMENTS (ADMIN ONLY CREATE)
+# ANNOUNCEMENTS
 # =====================================================
 @login_required
 def send_announcement(request):
@@ -286,7 +297,7 @@ def notification_detail(request, notification_id):
 
 
 # =====================================================
-# FEEDBACK
+# FEEDBACK (SAFE FIXED FLOW)
 # =====================================================
 @login_required
 def submit_feedback(request, event_id):
@@ -296,7 +307,14 @@ def submit_feedback(request, event_id):
         messages.error(request, "Feedback allowed only after event completion.")
         return redirect("events:my_events")
 
+    existing = Feedback.objects.filter(event=event, student=request.user).first()
+
     if request.method == "POST":
+
+        if existing:
+            messages.info(request, "Feedback already submitted.")
+            return redirect("events:my_events")
+
         Feedback.objects.create(
             student=request.user,
             event=event,
@@ -308,7 +326,15 @@ def submit_feedback(request, event_id):
         messages.success(request, "Feedback submitted successfully!")
         return redirect("events:my_events")
 
-    return render(request, "events/feedback.html", {"event": event})
+    return render(request, "events/feedback.html", {
+        "event": event,
+        "feedback": existing
+    })
+
+
+@login_required
+def event_feedback(request, event_id):
+    return submit_feedback(request, event_id)
 
 
 # =====================================================
@@ -341,11 +367,6 @@ def cancel_registration(request, event_id):
         messages.success(request, "Registration cancelled.")
 
     return redirect("events:my_events")
-
-
-@login_required
-def event_feedback(request, event_id):
-    return submit_feedback(request, event_id)
 
 
 # =====================================================
@@ -412,7 +433,7 @@ def export_event_report(request, event_id):
 
 
 # =====================================================
-# EVENT ANNOUNCEMENTS (VIEW ONLY)
+# EVENT ANNOUNCEMENTS
 # =====================================================
 @login_required
 def event_announcements(request, event_id):
