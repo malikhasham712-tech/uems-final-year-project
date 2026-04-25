@@ -5,135 +5,149 @@
 {% if report and report.event %}
 
 <style>
-    .report-container {
+    .container {
         max-width: 900px;
-        margin: auto;
+        margin-left: 0;   /* LEFT ALIGN */
         padding: 20px;
-        font-family: system-ui, -apple-system, sans-serif;
+    }
+
+    .title {
+        font-size: 20px;
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 5px;
+    }
+
+    .subtitle {
+        font-size: 14px;
+        color: #6b7280;
+        margin-bottom: 15px;
     }
 
     .card {
         background: #ffffff;
-        border-radius: 10px;
-        padding: 18px;
+        border-radius: 8px;
+        padding: 16px;
         margin-bottom: 20px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        border: 1px solid #e5e7eb;
     }
 
-    /* HEADER */
-    .header-title {
-        margin: 0;
-        color: #1e293b;
-        font-size: 22px;
-        font-weight: 600;
+    .chart-box {
+        width: 260px;
     }
 
-    .header-sub {
-        color: #64748b;
+    .legend {
+        margin-top: 10px;
         font-size: 13px;
     }
 
-    /* TABLE */
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 14px;
+    .legend span {
+        margin-right: 12px;
+        font-weight: 500;
     }
 
-    th {
-        background: #0f172a;
+    .table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+    }
+
+    .table th {
+        background: #111827;
         color: white;
         padding: 10px;
         text-align: left;
     }
 
-    td {
+    .table td {
         padding: 10px;
         border-bottom: 1px solid #e5e7eb;
+        vertical-align: top;
     }
 
-    tr:hover {
-        background: #f1f5f9;
+    .message {
+        max-width: 400px;
+        word-break: break-word;
+        color: #374151;
     }
 
-    .center {
-        text-align: center;
-    }
-
-    /* KPI */
-    .kpi-container {
-        display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
-        margin-bottom: 20px;
-    }
-
-    .kpi-box {
-        flex: 1;
-        min-width: 120px;
-        padding: 12px;
-        border-radius: 8px;
-        text-align: center;
-        color: white;
-        transition: 0.3s;
-    }
-
-    .kpi-box:hover {
-        transform: translateY(-2px);
-        opacity: 0.95;
-    }
-
-    .ex { background: #16a34a; }
-    .gd { background: #2563eb; }
-    .av { background: #f59e0b; color: black; }
-    .pr { background: #dc2626; }
-
-    /* BUTTONS */
     .btn {
-        padding: 10px 16px;
+        padding: 8px 14px;
         border-radius: 6px;
         text-decoration: none;
-        color: white;
-        font-size: 14px;
+        font-size: 13px;
+        font-weight: 500;
         transition: 0.2s;
     }
 
-    .btn-primary {
-        background: #2563eb;
-    }
-
-    .btn-primary:hover {
-        background: #1d4ed8;
-    }
-
     .btn-dark {
-        background: #374151;
+        background: #111827;
+        color: white;
     }
 
     .btn-dark:hover {
-        background: #1f2937;
+        background: #374151;
+    }
+
+    .btn-light {
+        background: #374151;
+        color: white;
+    }
+
+    .btn-light:hover {
+        background: #6b7280;
+    }
+
+    .top-actions {
+        float: right;
+        margin-top: -40px;
     }
 
 </style>
 
-<div class="report-container">
+<div class="container">
 
     <!-- HEADER -->
-    <div style="margin-bottom:20px;">
-        <h2 class="header-title">{{ report.event.name }}</h2>
-        <div class="header-sub">{{ report.name }}</div>
+    <div>
+        <div class="title">{{ report.event.name }}</div>
+        <div class="subtitle">Feedback Graph</div>
+
+        <!-- BUTTONS (TOP RIGHT) -->
+        <div class="top-actions">
+            <a href="/admin/events/eventreport/export/{{ report.id }}/" class="btn btn-dark">
+                Export
+            </a>
+            <a href="{% url 'admin:events_eventreport_changelist' %}" class="btn btn-light">
+                Back
+            </a>
+        </div>
+    </div>
+
+    <!-- GRAPH -->
+    <div class="card">
+        <div class="chart-box">
+            <canvas id="feedbackChart"></canvas>
+        </div>
+
+        <!-- DISTRIBUTION -->
+        <div class="legend">
+            <strong>Feedback Distribution:</strong><br>
+            <span style="color:#198754;">● Excellent</span>
+            <span style="color:#0d6efd;">● Good</span>
+            <span style="color:#ffc107;">● Average</span>
+            <span style="color:#dc3545;">● Poor</span>
+        </div>
     </div>
 
     <!-- TABLE -->
     <div class="card">
+        <h4 style="margin-bottom:10px;">Student Feedback</h4>
 
-        <h3 style="margin-bottom:12px;">Student Feedback</h3>
-
-        <table>
+        <table class="table">
             <thead>
                 <tr>
                     <th>Student</th>
-                    <th class="center">Experience</th>
+                    <th>Experience</th>
                     <th>Message</th>
                 </tr>
             </thead>
@@ -142,81 +156,35 @@
                 {% for fb in feedbacks %}
                 <tr>
                     <td>{{ fb.student.username }}</td>
-                    <td class="center" style="text-transform:capitalize;">
-                        {{ fb.experience|default:"-" }}
-                    </td>
-                    <td>{{ fb.message|default:"-" }}</td>
+                    <td>{{ fb.experience }}</td>
+                    <td class="message">{{ fb.message }}</td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="3" class="center">No feedback available</td>
+                    <td colspan="3">No feedback available</td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
-
-    </div>
-
-    <!-- KPI -->
-    <div class="kpi-container">
-
-        <div class="kpi-box ex">
-            <strong id="ex">{{ data.excellent|length }}</strong><br>Excellent
-        </div>
-
-        <div class="kpi-box gd">
-            <strong id="gd">{{ data.good|length }}</strong><br>Good
-        </div>
-
-        <div class="kpi-box av">
-            <strong id="av">{{ data.average|length }}</strong><br>Average
-        </div>
-
-        <div class="kpi-box pr">
-            <strong id="pr">{{ data.poor|length }}</strong><br>Poor
-        </div>
-
-    </div>
-
-    <!-- CHART -->
-    <div class="card" style="text-align:center;">
-        <h4 style="margin-bottom:10px;">Feedback Distribution</h4>
-        <canvas id="feedbackChart" style="max-width:180px; max-height:180px;"></canvas>
-    </div>
-
-    <!-- BUTTONS -->
-    <div style="display:flex; gap:10px;">
-
-        <a href="/admin/events/eventreport/export/{{ report.id }}/"
-           class="btn btn-primary">
-            Export Excel
-        </a>
-
-        <a href="{% url 'admin:events_eventreport_changelist' %}"
-           class="btn btn-dark">
-            Back
-        </a>
-
     </div>
 
 </div>
 
-<!-- Chart.js -->
+<!-- CHART -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
 
-    const canvas = document.getElementById('feedbackChart');
-    if (!canvas) return;
+    const ctx = document.getElementById('feedbackChart');
 
-    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
 
-    const values = [
-        parseInt(document.getElementById('ex').innerText) || 0,
-        parseInt(document.getElementById('gd').innerText) || 0,
-        parseInt(document.getElementById('av').innerText) || 0,
-        parseInt(document.getElementById('pr').innerText) || 0
+    const dataValues = [
+        {{ data.excellent|length|default:0 }},
+        {{ data.good|length|default:0 }},
+        {{ data.average|length|default:0 }},
+        {{ data.poor|length|default:0 }}
     ];
 
     new Chart(ctx, {
@@ -224,12 +192,12 @@ document.addEventListener("DOMContentLoaded", function () {
         data: {
             labels: ['Excellent', 'Good', 'Average', 'Poor'],
             datasets: [{
-                data: values,
+                data: dataValues,
                 backgroundColor: [
-                    '#16a34a',
-                    '#2563eb',
-                    '#f59e0b',
-                    '#dc2626'
+                    '#198754',
+                    '#0d6efd',
+                    '#ffc107',
+                    '#dc3545'
                 ]
             }]
         },
@@ -237,7 +205,7 @@ document.addEventListener("DOMContentLoaded", function () {
             responsive: true,
             plugins: {
                 legend: {
-                    position: 'bottom'
+                    display: false   // using custom legend
                 }
             }
         }
