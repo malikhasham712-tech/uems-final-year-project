@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 
 
 # =====================================================
-# ENUMS (PRODUCTION SAFE - NEVER CHANGE CASE IN DB)
+# ENUMS (PRODUCTION SAFE - DO NOT CHANGE VALUES)
 # =====================================================
 class EventStatus(models.TextChoices):
     CREATED = "created", "Created"
@@ -23,6 +23,12 @@ class ExperienceLevel(models.TextChoices):
     GOOD = "good", "Good"
     AVERAGE = "average", "Average"
     POOR = "poor", "Poor"
+
+
+class RegistrationStatus(models.TextChoices):
+    REGISTERED = "registered", "Registered"
+    CANCELLED = "cancelled", "Cancelled"
+    ATTENDED = "attended", "Attended"
 
 
 # =====================================================
@@ -128,13 +134,19 @@ class EventRegistration(models.Model):
 
     status = models.CharField(
         max_length=20,
-        default="registered"
+        choices=RegistrationStatus.choices,
+        default=RegistrationStatus.REGISTERED
     )
 
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ('event', 'student')
+        constraints = [
+            models.UniqueConstraint(
+                fields=['event', 'student'],
+                name='unique_event_student_registration'
+            )
+        ]
         ordering = ['-created_at']
 
     def __str__(self):
@@ -142,7 +154,7 @@ class EventRegistration(models.Model):
 
 
 # =====================================================
-# ANNOUNCEMENT (ADMIN ONLY CREATION)
+# ANNOUNCEMENT
 # =====================================================
 class Announcement(models.Model):
     event = models.ForeignKey(
@@ -171,7 +183,7 @@ class Announcement(models.Model):
 
 
 # =====================================================
-# NOTIFICATION (SAFE + FLEXIBLE)
+# NOTIFICATION
 # =====================================================
 class Notification(models.Model):
 
@@ -215,7 +227,7 @@ class Notification(models.Model):
 
 
 # =====================================================
-# FEEDBACK (CLEAN + NO KEY ERRORS EVER)
+# FEEDBACK
 # =====================================================
 class Feedback(models.Model):
 
@@ -257,22 +269,20 @@ class Feedback(models.Model):
 
 
 # =====================================================
-# EVENT REPORT (ADMIN ANALYTICS ONLY)
+# EVENT REPORT (FINAL FIXED VERSION)
 # =====================================================
 class EventReport(models.Model):
-
-    name = models.CharField(max_length=200)
 
     event = models.ForeignKey(
         Event,
         on_delete=models.CASCADE,
-        related_name="reports"
+        related_name="reports",
+        null=True,
+        blank=True   # SAFE for old data
     )
 
+    name = models.CharField(max_length=200)
     created_at = models.DateTimeField(auto_now_add=True)
 
-    class Meta:
-        ordering = ['-created_at']
-
     def __str__(self):
-        return self.name
+        return f"{self.name}"

@@ -1,0 +1,124 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+
+<style>
+    .container {
+        padding: 20px;
+        max-width: 1000px;
+    }
+
+    .top-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+
+    .title {
+        font-size: 22px;
+        font-weight: 600;
+    }
+
+    .back-btn {
+        padding: 6px 12px;
+        background: #6b7280;
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+        font-size: 13px;
+    }
+
+    .back-btn:hover {
+        background: #4b5563;
+    }
+
+    .table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+        border: 1px solid #e5e7eb;
+    }
+
+    .table th {
+        background: #111827;
+        color: white;
+        padding: 10px;
+        text-align: left;
+    }
+
+    .table td {
+        padding: 10px;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .btn {
+        padding: 6px 12px;
+        background: #0d6efd;
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+        font-size: 13px;
+        display: inline-block;
+    }
+
+    .btn:hover {
+        background: #084298;
+    }
+
+    .empty {
+        text-align: center;
+        padding: 20px;
+        color: #6b7280;
+    }
+</style>
+
+<div class="container">
+
+    <div class="top-bar">
+        <div class="title">Feedback Report</div>
+
+        <a href="/admin/" class="back-btn">← Back</a>
+    </div>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Event Name</th>
+                <th>Date</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for event in events %}
+
+                {% with report=event.reports.first %}
+                <tr>
+                    <td>{{ event.name }}</td>
+                    <td>{{ event.date }}</td>
+                    <td>
+
+                        {% if report %}
+                            <a href="{% url 'admin:events_eventreport_change' report.id %}" class="btn">
+                                View Feedback Report
+                            </a>
+                        {% else %}
+                            <span style="color:#9ca3af;">No Report</span>
+                        {% endif %}
+
+                    </td>
+                </tr>
+                {% endwith %}
+
+            {% empty %}
+            <tr>
+                <td colspan="3" class="empty">No events available</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+</div>
+
+{% endblock %}

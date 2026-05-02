@@ -1,23 +1,16 @@
 from django.contrib import admin
-from django.urls import reverse, path
-from django.contrib.auth.models import User
+from django.urls import path, reverse
 from django.utils.safestring import mark_safe
-from django.http import HttpResponse
-import openpyxl
+from django.shortcuts import render, get_object_or_404
 
 from .models import (
     Category,
     Event,
-    EventProposal,
     EventRegistration,
     Announcement,
-    Notification,
     Feedback,
-    EventReport
+    EventProposal
 )
-
-from .notification_router import send_notification
-
 
 # =====================================================
 # CATEGORY
@@ -26,111 +19,6 @@ from .notification_router import send_notification
 class CategoryAdmin(admin.ModelAdmin):
     list_display = ('name',)
     search_fields = ('name',)
-
-
-# =====================================================
-# EVENT REPORT (FIXED FINAL WORKING)
-# =====================================================
-@admin.register(EventReport)
-class EventReportAdmin(admin.ModelAdmin):
-
-    list_display = ('name', 'event', 'created_at')
-    fields = ('name', 'event')
-
-    # ✅ FORCE CUSTOM TEMPLATE
-    change_form_template = "admin/event_report_change.html"
-
-    def has_add_permission(self, request):
-        return request.user.is_superuser
-
-    def has_change_permission(self, request, obj=None):
-        return request.user.is_superuser
-
-    # -------------------------
-    # CUSTOM EXPORT URL
-    # -------------------------
-    def get_urls(self):
-        urls = super().get_urls()
-        custom_urls = [
-            path(
-                'export/<int:report_id>/',
-                self.admin_site.admin_view(self.export_excel),
-                name='events_eventreport_export'
-            ),
-        ]
-        return custom_urls + urls
-
-    # -------------------------
-    # LOAD DATA INTO TEMPLATE
-    # -------------------------
-    def changeform_view(self, request, object_id=None, form_url='', extra_context=None):
-
-        report = EventReport.objects.filter(pk=object_id).first()
-
-        data = {"excellent": [], "good": [], "average": [], "poor": []}
-        feedbacks = []
-        ranking = []
-
-        if report and report.event:
-            feedbacks = Feedback.objects.filter(event=report.event)
-
-            for fb in feedbacks:
-                key = (fb.experience or "").lower().strip()
-                if key in data:
-                    data[key].append(fb.student.username)
-
-            score_map = {"excellent": 4, "good": 3, "average": 2, "poor": 1}
-            student_scores = {}
-
-            for fb in feedbacks:
-                username = fb.student.username
-                score = score_map.get((fb.experience or "").lower(), 3)
-                student_scores[username] = student_scores.get(username, 0) + score
-
-            ranking = sorted(student_scores.items(), key=lambda x: x[1], reverse=True)
-
-        extra_context = extra_context or {}
-        extra_context.update({
-            "report": report,
-            "data": data,
-            "feedbacks": feedbacks,
-            "ranking": ranking[:10],
-
-            # hide admin buttons
-            "show_save": False,
-            "show_save_and_continue": False,
-            "show_save_and_add_another": False,
-        })
-
-        return super().changeform_view(request, object_id, form_url, extra_context)
-
-    # -------------------------
-    # EXPORT EXCEL
-    # -------------------------
-    def export_excel(self, request, report_id):
-
-        report = EventReport.objects.filter(id=report_id).first()
-
-        if not report or not report.event:
-            return HttpResponse("Invalid Report", status=400)
-
-        feedbacks = Feedback.objects.filter(event=report.event)
-
-        wb = openpyxl.Workbook()
-        ws = wb.active
-
-        ws.append(["Student", "Experience", "Message"])
-
-        for fb in feedbacks:
-            ws.append([fb.student.username, fb.experience, fb.message])
-
-        response = HttpResponse(
-            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-        )
-
-        response['Content-Disposition'] = f'attachment; filename={report.name}.xlsx'
-        wb.save(response)
-        return response
 
 
 # =====================================================
@@ -145,39 +33,105 @@ class EventAdmin(admin.ModelAdmin):
         'date',
         'status',
         'organizer',
-        'view_proposals',
-        'view_registrations',
-        'view_announcements',
-        'view_feedback'
+        'feedback_report_button'
     )
 
-    list_filter = ('status', 'category')
-    search_fields = ('name',)
+    def feedback_report_button(self, obj):
 
-    def view_proposals(self, obj):
-        proposal = obj.proposals.first()
-        if proposal:
-            url = reverse("admin:events_eventproposal_change", args=[proposal.id])
-            return mark_safe(f'<a class="button" href="{url}">View</a>')
-        return "No Proposal"
+        url = reverse("admin:events_feedback_dashboard")
 
-    def view_registrations(self, obj):
-        url = reverse("admin:events_eventregistration_changelist") + f"?event__id__exact={obj.id}"
-        return mark_safe(f'<a class="button" href="{url}">View</a>')
-
-    def view_announcements(self, obj):
-        url = reverse("admin:events_announcement_changelist") + f"?event__id__exact={obj.id}"
-        return mark_safe(f'<a class="button" href="{url}">View</a>')
-
-    def view_feedback(self, obj):
-        url = reverse("admin:events_feedback_changelist") + f"?event__id__exact={obj.id}"
         return mark_safe(
-            f'<a class="button" style="background:#198754;color:white;padding:4px 10px;border-radius:4px;" href="{url}">View</a>'
+            f'<a class="button" style="background:#0d6efd;color:white;padding:4px 10px;border-radius:4px;" href="{url}">Feedback Report</a>'
         )
+
+    feedback_report_button.short_description = "Report"
 
 
 # =====================================================
-# HIDE MODELS FROM SIDEBAR
+# CUSTOM ADMIN REPORT SYSTEM (SAFE)
+# =====================================================
+class FeedbackReportAdminView:
+
+    def get_urls(self):
+        return [
+            path(
+                'feedback-report/',
+                self.dashboard,
+                name='events_feedback_dashboard'
+            ),
+            path(
+                'feedback-report/<int:event_id>/',
+                self.event_report,
+                name='events_event_feedback_report'
+            ),
+        ]
+
+    # ---------------------------
+    # DASHBOARD (ALL EVENTS)
+    # ---------------------------
+    def dashboard(self, request):
+
+        events = Event.objects.all().order_by('-date')
+
+        data = []
+
+        for event in events:
+            count = Feedback.objects.filter(event=event).count()
+
+            data.append({
+                "event": event,
+                "count": count
+            })
+
+        return render(request, "admin/feedback_dashboard.html", {
+            "data": data
+        })
+
+    # ---------------------------
+    # SINGLE EVENT REPORT
+    # ---------------------------
+    def event_report(self, request, event_id):
+
+        event = get_object_or_404(Event, id=event_id)
+        feedbacks = Feedback.objects.filter(event=event)
+
+        stats = {
+            "excellent": [],
+            "good": [],
+            "average": [],
+            "poor": []
+        }
+
+        for fb in feedbacks:
+            if fb.experience in stats:
+                stats[fb.experience].append(
+                    fb.student.username if fb.student else "Unknown"
+                )
+
+        return render(request, "admin/event_feedback_report.html", {
+            "event": event,
+            "feedbacks": feedbacks,
+            "stats": stats
+        })
+
+
+# =====================================================
+# ATTACH CUSTOM URLS SAFELY (NO MONKEY PATCH)
+# =====================================================
+from django.contrib import admin as django_admin
+
+_feedback_view = FeedbackReportAdminView()
+
+def custom_admin_urls(get_urls):
+    def wrapper():
+        return _feedback_view.get_urls() + get_urls()
+    return wrapper
+
+django_admin.site.get_urls = custom_admin_urls(django_admin.site.get_urls)
+
+
+# =====================================================
+# HIDDEN MODELS
 # =====================================================
 class HiddenAdmin(admin.ModelAdmin):
     def has_module_permission(self, request):
