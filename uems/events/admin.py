@@ -1,7 +1,6 @@
 from django.contrib import admin
-from django.urls import path, reverse
-from django.utils.safestring import mark_safe
-from django.shortcuts import render, get_object_or_404
+from django.urls import reverse
+from django.utils.html import format_html
 
 from .models import (
     Category,
@@ -9,7 +8,8 @@ from .models import (
     EventRegistration,
     Announcement,
     Feedback,
-    EventProposal
+    EventProposal,
+    EventReport
 )
 
 # =====================================================
@@ -29,70 +29,63 @@ class EventAdmin(admin.ModelAdmin):
 
     list_display = (
         'name',
+        'category',
         'venue',
         'date',
         'status',
-        'organizer',
-        'feedback_report_button'
+        'organizer'
     )
 
-    def feedback_report_button(self, obj):
-
-        url = reverse("admin:events_feedback_dashboard")
-
-        return mark_safe(
-            f'<a class="button" style="background:#0d6efd;color:white;padding:4px 10px;border-radius:4px;" href="{url}">Feedback Report</a>'
-        )
-
-    feedback_report_button.short_description = "Report"
+    list_filter = ('status', 'category')
+    search_fields = ('name',)
 
 
 # =====================================================
-# CUSTOM ADMIN REPORT SYSTEM (SAFE)
+# EVENT REPORT ADMIN (SAFE DASHBOARD VERSION)
 # =====================================================
-class FeedbackReportAdminView:
+@admin.register(EventReport)
+class EventReportAdmin(admin.ModelAdmin):
 
-    def get_urls(self):
-        return [
-            path(
-                'feedback-report/',
-                self.dashboard,
-                name='events_feedback_dashboard'
-            ),
-            path(
-                'feedback-report/<int:event_id>/',
-                self.event_report,
-                name='events_event_feedback_report'
-            ),
-        ]
+    list_display = ("name", "event", "created_at")
+    readonly_fields = ("name", "event", "created_at")
 
-    # ---------------------------
-    # DASHBOARD (ALL EVENTS)
-    # ---------------------------
-    def dashboard(self, request):
+    # -------------------------------------
+    # LIST PAGE
+    # -------------------------------------
+    def changelist_view(self, request, extra_context=None):
 
-        events = Event.objects.all().order_by('-date')
+        events = Event.objects.filter(
+            status='completed',
+            feedbacks__isnull=False
+        ).distinct()
 
         data = []
 
         for event in events:
-            count = Feedback.objects.filter(event=event).count()
+            report = self.get_or_create_report(event)
 
             data.append({
                 "event": event,
-                "count": count
+                "report": report,
+                "url": reverse(
+                    "admin:events_eventreport_change",
+                    args=[report.id]
+                )
             })
 
-        return render(request, "admin/feedback_dashboard.html", {
-            "data": data
-        })
+        extra_context = extra_context or {}
+        extra_context["data"] = data
 
-    # ---------------------------
-    # SINGLE EVENT REPORT
-    # ---------------------------
-    def event_report(self, request, event_id):
+        return super().changelist_view(request, extra_context=extra_context)
 
-        event = get_object_or_404(Event, id=event_id)
+    # -------------------------------------
+    # DETAIL PAGE
+    # -------------------------------------
+    def change_view(self, request, object_id, form_url='', extra_context=None):
+
+        report = EventReport.objects.get(id=object_id)
+        event = report.event
+
         feedbacks = Feedback.objects.filter(event=event)
 
         stats = {
@@ -103,35 +96,40 @@ class FeedbackReportAdminView:
         }
 
         for fb in feedbacks:
-            if fb.experience in stats:
-                stats[fb.experience].append(
+            level = fb.experience
+            if level in stats:
+                stats[level].append(
                     fb.student.username if fb.student else "Unknown"
                 )
 
-        return render(request, "admin/event_feedback_report.html", {
+        extra_context = extra_context or {}
+        extra_context.update({
             "event": event,
             "feedbacks": feedbacks,
-            "stats": stats
+            "stats": stats,
+            "report": report
         })
 
+        return super().change_view(
+            request,
+            object_id,
+            form_url,
+            extra_context=extra_context
+        )
+
+    # -------------------------------------
+    # AUTO CREATE REPORT
+    # -------------------------------------
+    def get_or_create_report(self, event):
+        report, _ = EventReport.objects.get_or_create(
+            event=event,
+            defaults={"name": f"{event.name} Report"}
+        )
+        return report
+
 
 # =====================================================
-# ATTACH CUSTOM URLS SAFELY (NO MONKEY PATCH)
-# =====================================================
-from django.contrib import admin as django_admin
-
-_feedback_view = FeedbackReportAdminView()
-
-def custom_admin_urls(get_urls):
-    def wrapper():
-        return _feedback_view.get_urls() + get_urls()
-    return wrapper
-
-django_admin.site.get_urls = custom_admin_urls(django_admin.site.get_urls)
-
-
-# =====================================================
-# HIDDEN MODELS
+# HIDDEN MODELS (NOT SHOWN IN ADMIN SIDEBAR)
 # =====================================================
 class HiddenAdmin(admin.ModelAdmin):
     def has_module_permission(self, request):

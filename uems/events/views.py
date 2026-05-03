@@ -30,6 +30,10 @@ def get_role(user):
     return "student"
 
 
+def is_organizer_or_admin(user, event):
+    return user.is_superuser or user == event.organizer
+
+
 # =====================================================
 # DASHBOARD
 # =====================================================
@@ -53,7 +57,7 @@ def dashboard(request):
 
 
 # =====================================================
-# AVAILABLE EVENTS
+# EVENTS
 # =====================================================
 @login_required
 def available_events(request):
@@ -65,8 +69,46 @@ def available_events(request):
     })
 
 
+@login_required
+def my_events(request):
+    role = get_role(request.user)
+
+    if role == "student":
+        events = Event.objects.filter(registrations__student=request.user).distinct()
+
+    elif role == "organizer":
+        events = Event.objects.filter(organizer=request.user).annotate(
+            total_registrations=Count("registrations")
+        )
+    else:
+        return redirect("/admin/")
+
+    return render(request, "events/my_events.html", {
+        "events": events,
+        "role": role
+    })
+
+
+@login_required
+def view_event(request, event_id):
+    event = get_object_or_404(Event, id=event_id)
+
+    proposal = EventProposal.objects.filter(event=event).order_by("-id").first()
+    is_registered = event.registrations.filter(student=request.user).exists()
+    feedback_obj = Feedback.objects.filter(event=event, student=request.user).first()
+
+    return render(request, "events/view_event.html", {
+        "event": event,
+        "proposal": proposal,
+        "is_registered": is_registered,
+        "feedback": feedback_obj,
+        "feedback_submitted": feedback_obj is not None,
+        "role": get_role(request.user)
+    })
+
+
 # =====================================================
-# REGISTER EVENT
+# REGISTRATION
 # =====================================================
 @login_required
 def register_event(request, event_id):
@@ -101,56 +143,20 @@ def register_event(request, event_id):
     })
 
 
-# =====================================================
-# MY EVENTS
-# =====================================================
 @login_required
-def my_events(request):
-    role = get_role(request.user)
-
-    if role == "student":
-        events = Event.objects.filter(registrations__student=request.user).distinct()
-
-    elif role == "organizer":
-        events = Event.objects.filter(organizer=request.user).annotate(
-            total_registrations=Count("registrations")
-        )
-
-    else:
-        return redirect("/admin/")
-
-    return render(request, "events/my_events.html", {
-        "events": events,
-        "role": role
-    })
-
-
-# =====================================================
-# VIEW EVENT (FIXED - MAIN FIX HERE)
-# =====================================================
-@login_required
-def view_event(request, event_id):
+def event_registrations(request, event_id):
     event = get_object_or_404(Event, id=event_id)
 
-    proposal = EventProposal.objects.filter(event=event).order_by("-id").first()
+    if not is_organizer_or_admin(request.user, event):
+        return redirect("events:my_events")
 
-    is_registered = event.registrations.filter(student=request.user).exists()
+    regs = EventRegistration.objects.filter(event=event).select_related("student")
 
-    feedback_obj = Feedback.objects.filter(
-        event=event,
-        student=request.user
-    ).first()
-
-    # ✅ FIXED FLAG FOR TEMPLATE
-    feedback_submitted = feedback_obj is not None
-
-    return render(request, "events/view_event.html", {
+    return render(request, "events/event_registrations.html", {
         "event": event,
-        "proposal": proposal,
-        "is_registered": is_registered,
-        "feedback": feedback_obj,
-        "feedback_submitted": feedback_submitted,
-        "role": get_role(request.user)
+        "registrations": regs,
+        "total": regs.count(),
+        "role": "organizer"
     })
 
 
@@ -161,7 +167,7 @@ def view_event(request, event_id):
 def view_proposals(request, event_id):
     event = get_object_or_404(Event, id=event_id)
 
-    if not (request.user.is_superuser or request.user == event.organizer):
+    if not is_organizer_or_admin(request.user, event):
         return redirect("events:my_events")
 
     return render(request, "events/view_proposals.html", {
@@ -176,7 +182,7 @@ def view_proposals(request, event_id):
 def submit_proposal(request, event_id):
     event = get_object_or_404(Event, id=event_id)
 
-    if not (request.user.is_superuser or request.user == event.organizer):
+    if not is_organizer_or_admin(request.user, event):
         return redirect("events:my_events")
 
     if request.method == "POST":
@@ -206,26 +212,6 @@ def submit_proposal(request, event_id):
 
 
 # =====================================================
-# REGISTRATIONS
-# =====================================================
-@login_required
-def event_registrations(request, event_id):
-    event = get_object_or_404(Event, id=event_id)
-
-    if not (request.user.is_superuser or request.user == event.organizer):
-        return redirect("events:my_events")
-
-    regs = EventRegistration.objects.filter(event=event).select_related("student")
-
-    return render(request, "events/event_registrations.html", {
-        "event": event,
-        "registrations": regs,
-        "total": regs.count(),
-        "role": "organizer"
-    })
-
-
-# =====================================================
 # ANNOUNCEMENTS
 # =====================================================
 @login_required
@@ -245,12 +231,12 @@ def send_announcement(request):
             created_by=request.user
         )
 
-        user_ids = list(event.registrations.values_list("student", flat=True))
-
-        if event.organizer:
-            user_ids.append(event.organizer.id)
-
-        users = User.objects.filter(id__in=set(user_ids))
+        users = User.objects.filter(
+            id__in=set(
+                list(event.registrations.values_list("student", flat=True)) +
+                ([event.organizer.id] if event.organizer else [])
+            )
+        )
 
         for user in users:
             send_notification(
@@ -265,6 +251,24 @@ def send_announcement(request):
 
     return render(request, "events/send_announcement.html", {
         "events": events
+    })
+
+
+@login_required
+def event_announcements(request, event_id):
+    event = get_object_or_404(Event, id=event_id)
+
+    role = get_role(request.user)
+
+    if role not in ["student", "organizer", "admin"]:
+        return redirect("events:dashboard")
+
+    announcements = Announcement.objects.filter(event=event).order_by("-created_at")
+
+    return render(request, "events/event_announcements.html", {
+        "event": event,
+        "announcements": announcements,
+        "role": role
     })
 
 
@@ -297,7 +301,7 @@ def notification_detail(request, notification_id):
 
 
 # =====================================================
-# FEEDBACK (SAFE FIXED FLOW)
+# FEEDBACK
 # =====================================================
 @login_required
 def submit_feedback(request, event_id):
@@ -337,9 +341,6 @@ def event_feedback(request, event_id):
     return submit_feedback(request, event_id)
 
 
-# =====================================================
-# VIEW FEEDBACK
-# =====================================================
 @login_required
 def view_feedbacks(request, event_id):
     event = get_object_or_404(Event, id=event_id)
@@ -370,16 +371,26 @@ def cancel_registration(request, event_id):
 
 
 # =====================================================
-# EVENT REPORT MODULE
+# EVENT REPORT MODULE (FINAL CLEAN FLOW)
 # =====================================================
 @login_required
-def select_event_report(request):
+def event_report_list(request):
     if not request.user.is_superuser:
         return redirect("events:dashboard")
 
     events = Event.objects.filter(status="completed")
 
-    return render(request, "events/select_event_report.html", {"events": events})
+    data = [
+        {
+            "event": e,
+            "url": f"/events/reports/{e.id}/"
+        }
+        for e in events
+    ]
+
+    return render(request, "events/event_report_list.html", {
+        "data": data
+    })
 
 
 @login_required
@@ -430,25 +441,3 @@ def export_event_report(request, event_id):
 
     wb.save(response)
     return response
-
-
-# =====================================================
-# EVENT ANNOUNCEMENTS
-# =====================================================
-@login_required
-def event_announcements(request, event_id):
-    event = get_object_or_404(Event, id=event_id)
-
-    role = get_role(request.user)
-
-    if role not in ["student", "organizer", "admin"]:
-        return redirect("events:dashboard")
-
-    announcements = Announcement.objects.filter(event=event).order_by("-created_at")
-
-    return render(request, "events/event_announcements.html", {
-        "event": event,
-        "announcements": announcements,
-        "role": role,
-        "can_create": False
-    })

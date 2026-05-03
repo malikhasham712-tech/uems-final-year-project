@@ -269,7 +269,7 @@ class Feedback(models.Model):
 
 
 # =====================================================
-# EVENT REPORT (FINAL FIXED VERSION)
+# EVENT REPORT
 # =====================================================
 class EventReport(models.Model):
 
@@ -278,11 +278,14 @@ class EventReport(models.Model):
         on_delete=models.CASCADE,
         related_name="reports",
         null=True,
-        blank=True   # SAFE for old data
+        blank=True
     )
 
     name = models.CharField(max_length=200)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        ordering = ['-created_at']
+
     def __str__(self):
-        return f"{self.name}"
+        return self.name

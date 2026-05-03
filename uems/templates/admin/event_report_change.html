@@ -164,7 +164,7 @@
                 {% for fb in feedbacks %}
                 <tr>
                     <td>{{ fb.student.username|default:"Unknown" }}</td>
-                    <td>{{ fb.experience }}</td>
+                    <td>{{ fb.get_experience_display }}</td>
                     <td class="message">{{ fb.message }}</td>
                 </tr>
                 {% empty %}

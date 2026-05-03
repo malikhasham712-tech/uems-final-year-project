@@ -53,11 +53,15 @@ urlpatterns = [
     path('event/<int:event_id>/cancel/', views.cancel_registration, name='cancel_registration'),
 
     # ======================
-    # EVENT REPORT MODULE
+    # EVENT REPORT MODULE (CLEANED)
     # ======================
-    path('reports/', views.select_event_report, name='select_event_report'),
+
+    # LIST PAGE (sidebar opens here)
+    path('reports/', views.event_report_list, name='event_report_list'),
+
+    # REPORT DETAIL PAGE
     path('reports/<int:event_id>/', views.event_report, name='event_report'),
 
-    # ✅ FIXED EXPORT ROUTE (IMPORTANT)
+    # EXPORT
     path('reports/<int:event_id>/export/', views.export_event_report, name='export_event_report'),
 ]

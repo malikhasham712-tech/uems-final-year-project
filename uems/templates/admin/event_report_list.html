@@ -75,12 +75,17 @@
 
 <div class="container">
 
+    <!-- TOP BAR -->
     <div class="top-bar">
         <div class="title">Feedback Report</div>
 
-        <a href="/admin/" class="back-btn">← Back</a>
+        <!-- FIX: use Django admin index instead of hardcoded URL -->
+        <a href="{% url 'admin:index' %}" class="back-btn">
+            ← Back
+        </a>
     </div>
 
+    <!-- TABLE -->
     <table class="table">
         <thead>
             <tr>
@@ -91,29 +96,24 @@
         </thead>
 
         <tbody>
-            {% for event in events %}
+            {% for item in data %}
+            <tr>
+                <td>{{ item.event.name }}</td>
+                <td>{{ item.event.date }}</td>
+                <td>
 
-                {% with report=event.reports.first %}
-                <tr>
-                    <td>{{ event.name }}</td>
-                    <td>{{ event.date }}</td>
-                    <td>
+                    <!-- FIX: use proper Django URL instead of item.url -->
+                    <a href="{% url 'events:event_report_change' item.event.id %}" class="btn">
+                        View Feedback Report
+                    </a>
 
-                        {% if report %}
-                            <a href="{% url 'admin:events_eventreport_change' report.id %}" class="btn">
-                                View Feedback Report
-                            </a>
-                        {% else %}
-                            <span style="color:#9ca3af;">No Report</span>
-                        {% endif %}
-
-                    </td>
-                </tr>
-                {% endwith %}
-
+                </td>
+            </tr>
             {% empty %}
             <tr>
-                <td colspan="3" class="empty">No events available</td>
+                <td colspan="3" class="empty">
+                    No events available
+                </td>
             </tr>
             {% endfor %}
         </tbody>
