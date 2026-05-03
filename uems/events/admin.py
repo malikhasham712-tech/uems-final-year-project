@@ -44,33 +44,33 @@ class EventAdmin(admin.ModelAdmin):
 
 
 # =====================================================
-# EVENT REPORT ADMIN (FINAL FIXED FLOW)
+# EVENT REPORT ADMIN (CLEAN + STABLE)
 # =====================================================
 @admin.register(EventReport)
 class EventReportAdmin(admin.ModelAdmin):
 
     list_display = ("name", "event", "created_at")
-    readonly_fields = ("name", "event", "created_at")
+    readonly_fields = ("created_at",)
 
-    # STEP 1 TEMPLATE
     change_list_template = "admin/event_report_landing.html"
 
-    # STEP 3 TEMPLATE
-    change_form_template = "admin/event_report_change.html"
+    # -------------------------------------------------
+    # SAVE (MANUAL SYSTEM ONLY)
+    # -------------------------------------------------
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
 
-    # =================================================
-    # STEP 1: LANDING PAGE
-    # =================================================
+    # -------------------------------------------------
+    # LIST PAGE TITLE
+    # -------------------------------------------------
     def changelist_view(self, request, extra_context=None):
-
         extra_context = extra_context or {}
-        extra_context["title"] = "Feedback Report"
-
+        extra_context["title"] = "Feedback Reports"
         return super().changelist_view(request, extra_context=extra_context)
 
-    # =================================================
-    # STEP 2: FEEDBACK LIST PAGE (THIS WAS MISSING ❗)
-    # =================================================
+    # -------------------------------------------------
+    # FEEDBACK LIST PAGE (OPTIONAL DASHBOARD ENTRY)
+    # -------------------------------------------------
     def feedback_list_view(self, request):
 
         events = Event.objects.filter(
@@ -81,7 +81,7 @@ class EventReportAdmin(admin.ModelAdmin):
         rows = []
 
         for event in events:
-            report = self.get_or_create_report(event)
+            report = EventReport.objects.filter(event=event).first()
 
             rows.append({
                 "event": event,
@@ -93,27 +93,32 @@ class EventReportAdmin(admin.ModelAdmin):
             "rows": rows
         })
 
-    # =================================================
-    # STEP 3: REPORT DETAIL VIEW
-    # =================================================
+    # -------------------------------------------------
+    # DETAIL VIEW (DASHBOARD VIEW - SAFE)
+    # -------------------------------------------------
     def change_view(self, request, object_id, form_url='', extra_context=None):
 
         report = get_object_or_404(EventReport, pk=object_id)
         event = report.event
 
-        feedbacks = Feedback.objects.filter(event=event)
+        # SAFE HANDLING (NO EVENT BREAK)
+        if event:
+            feedbacks = Feedback.objects.filter(event=event)
 
-        stats = {
-            "excellent": feedbacks.filter(experience="excellent").count(),
-            "good": feedbacks.filter(experience="good").count(),
-            "average": feedbacks.filter(experience="average").count(),
-            "poor": feedbacks.filter(experience="poor").count(),
-        }
-
-        events = Event.objects.filter(
-            status="completed",
-            feedbacks__isnull=False
-        ).distinct()
+            stats = {
+                "excellent": feedbacks.filter(experience="excellent").count(),
+                "good": feedbacks.filter(experience="good").count(),
+                "average": feedbacks.filter(experience="average").count(),
+                "poor": feedbacks.filter(experience="poor").count(),
+            }
+        else:
+            feedbacks = Feedback.objects.none()
+            stats = {
+                "excellent": 0,
+                "good": 0,
+                "average": 0,
+                "poor": 0,
+            }
 
         extra_context = extra_context or {}
         extra_context.update({
@@ -121,25 +126,23 @@ class EventReportAdmin(admin.ModelAdmin):
             "report": report,
             "feedbacks": feedbacks,
             "stats": stats,
-            "events": events,
         })
 
-        return super().change_view(
+        return TemplateResponse(
             request,
-            object_id,
-            form_url,
-            extra_context=extra_context
+            "admin/event_report_change.html",
+            extra_context
         )
 
-    # =================================================
+    # -------------------------------------------------
     # EXPORT EXCEL
-    # =================================================
+    # -------------------------------------------------
     def export_feedback_excel(self, request, object_id):
 
         report = get_object_or_404(EventReport, pk=object_id)
         event = report.event
 
-        feedbacks = Feedback.objects.filter(event=event)
+        feedbacks = Feedback.objects.filter(event=event) if event else Feedback.objects.none()
 
         wb = Workbook()
         ws = wb.active
@@ -158,27 +161,24 @@ class EventReportAdmin(admin.ModelAdmin):
             content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         )
 
-        safe_name = event.name.replace(" ", "_")
+        safe_name = (report.name or "report").replace(" ", "_")
         response['Content-Disposition'] = f'attachment; filename="{safe_name}_feedback.xlsx"'
 
         wb.save(response)
         return response
 
-    # =================================================
-    # URLS (CRITICAL FIX)
-    # =================================================
+    # -------------------------------------------------
+    # URLS
+    # -------------------------------------------------
     def get_urls(self):
         urls = super().get_urls()
 
         custom_urls = [
-            # STEP 2 URL
             path(
                 'feedback/',
                 self.admin_site.admin_view(self.feedback_list_view),
                 name="eventreport_feedback_list"
             ),
-
-            # EXPORT
             path(
                 '<int:object_id>/export/',
                 self.admin_site.admin_view(self.export_feedback_excel),
@@ -187,16 +187,6 @@ class EventReportAdmin(admin.ModelAdmin):
         ]
 
         return custom_urls + urls
-
-    # =================================================
-    # AUTO CREATE REPORT
-    # =================================================
-    def get_or_create_report(self, event):
-        report, _ = EventReport.objects.get_or_create(
-            event=event,
-            defaults={"name": f"{event.name} Report"}
-        )
-        return report
 
 
 # =====================================================

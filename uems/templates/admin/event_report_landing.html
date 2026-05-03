@@ -4,11 +4,10 @@
 
 <style>
 
-/* PAGE WRAPPER */
+/* CONTAINER */
 .container {
-    max-width: 1100px;
     padding: 24px;
-    color: #111827;
+    max-width: 1100px;
 }
 
 /* HEADER */
@@ -17,7 +16,7 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 20px;
-    padding: 14px;
+    padding: 12px 16px;
     background: #111827;
     border-radius: 8px;
 }
@@ -36,7 +35,6 @@
     font-size: 13px;
     text-decoration: none;
     font-weight: 600;
-    display: inline-block;
 }
 
 .btn-add {
@@ -49,35 +47,31 @@
     color: white;
 }
 
+/* CARD WRAPPER */
+.card-wrapper {
+    margin-top: 20px;
+}
+
 /* CARD */
 .card {
-    margin-top: 20px;
-    background: white;
-    border: 1px solid #e5e7eb;
-    border-radius: 10px;
+    display: block;
     padding: 18px;
+    background: #1f2937;
+    color: white;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 600;
     transition: 0.2s;
 }
 
+/* HOVER */
 .card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+    background: #374151;
 }
 
-/* LINK INSIDE CARD */
-.card a {
-    display: block;
-    text-decoration: none;
-    color: white;
-    font-weight: 600;
-    padding: 18px;
-    background: #111827;
-    border-radius: 8px;
-}
-
-/* REMOVE DEFAULT H1 */
+/* REMOVE DJANGO TITLE */
 h1 {
-    display: none !important;
+    display: none;
 }
 
 </style>
@@ -93,12 +87,10 @@ h1 {
 
         <div style="display:flex; gap:8px;">
 
-            <!-- ADD REPORT -->
             <a href="{% url 'admin:events_eventreport_add' %}" class="btn btn-add">
                 + Add Report
             </a>
 
-            <!-- BACK -->
             <a href="{% url 'admin:index' %}" class="btn btn-back">
                 ← Back
             </a>
@@ -107,11 +99,10 @@ h1 {
 
     </div>
 
-    <!-- ONLY ONE MODULE CARD -->
-    <div class="card">
+    <!-- CARD -->
+    <div class="card-wrapper">
 
-        <!-- THIS GOES TO STEP 2 (we created in admin.py: feedback_list_view) -->
-        <a href="{% url 'admin:eventreport_feedback_list' %}">
+        <a href="{% url 'admin:eventreport_feedback_list' %}" class="card">
             Feedback Report →
         </a>
 

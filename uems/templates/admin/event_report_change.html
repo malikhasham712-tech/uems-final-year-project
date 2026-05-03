@@ -6,14 +6,13 @@
 
 <style>
 
-/* GLOBAL FIX */
+/* CONTAINER */
 .container {
     max-width: 1100px;
     padding: 24px;
-    color: #111827;
 }
 
-/* HEADER (ONLY EVENT NAME) */
+/* HEADER */
 .header {
     display: flex;
     justify-content: space-between;
@@ -37,7 +36,6 @@
     font-size: 13px;
     text-decoration: none;
     font-weight: 600;
-    display: inline-block;
 }
 
 .btn-back {
@@ -51,16 +49,16 @@
     margin-right: 8px;
 }
 
-/* CARDS */
+/* CARD */
 .card {
-    background: white;
-    border: 1px solid #e5e7eb;
+    background: #111827;
+    border: 1px solid #374151;
     border-radius: 10px;
     padding: 16px;
     margin-bottom: 18px;
 }
 
-/* CHART (SMALL FIX) */
+/* CHART */
 .chart-box {
     width: 180px;
     margin: auto;
@@ -72,27 +70,34 @@
     margin-top: 10px;
     font-size: 13px;
     font-weight: 600;
-    color: #111827;
+    color: white;
 }
 
-/* TABLE FIX (MAIN ISSUE FIXED) */
+/* TABLE */
 .table {
     width: 100%;
     border-collapse: collapse;
-    background: white;
 }
 
 .table th {
     background: #111827;
-    color: white;
+    color: white !important;
     padding: 10px;
     text-align: left;
 }
 
+.table tbody tr {
+    background: #1f2937;
+}
+
 .table td {
     padding: 10px;
-    border-bottom: 1px solid #e5e7eb;
-    color: #111827;
+    border-bottom: 1px solid #374151;
+    color: white !important;
+}
+
+.table tbody tr:hover {
+    background: #1f2937;
 }
 
 /* BADGES */
@@ -108,13 +113,14 @@
 .average { background: #fef9c3; color: #854d0e; }
 .poor { background: #fee2e2; color: #991b1b; }
 
+/* MESSAGE */
 .message {
     max-width: 500px;
     word-break: break-word;
-    color: #111827;
+    color: white !important;
 }
 
-/* REMOVE DJANGO TITLE */
+/* HIDE DEFAULT TITLE */
 h1 {
     display: none;
 }
@@ -126,15 +132,17 @@ h1 {
     <!-- HEADER -->
     <div class="header">
 
-        <!-- ONLY EVENT NAME -->
         <div class="title">
-            {{ event.name }}
+            {% if event %}
+                {{ event.name }}
+            {% else %}
+                Create Event Report
+            {% endif %}
         </div>
 
         <div>
 
-            <!-- EXPORT SAFE -->
-            {% if report %}
+            {% if report and event %}
                 <a href="{% url 'admin:eventreport_export' report.id %}" class="btn btn-export">
                     Export Excel
                 </a>
@@ -147,6 +155,8 @@ h1 {
         </div>
 
     </div>
+
+    {% if event %}
 
     <!-- CHART -->
     <div class="card">
@@ -199,7 +209,7 @@ h1 {
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="3" style="text-align:center;padding:20px;">
+                    <td colspan="3" style="text-align:center;padding:20px;color:white;">
                         No feedback available
                     </td>
                 </tr>
@@ -211,9 +221,19 @@ h1 {
 
     </div>
 
+    {% else %}
+
+    <!-- ADD PAGE SAFE MESSAGE -->
+    <div class="card" style="color:white;text-align:center;">
+        📝 Create a new report by entering name and saving.
+    </div>
+
+    {% endif %}
+
 </div>
 
-<!-- CHART -->
+{% if event %}
+
 <script>
 new Chart(document.getElementById('feedbackChart'), {
     type: 'pie',
@@ -236,5 +256,7 @@ new Chart(document.getElementById('feedbackChart'), {
     }
 });
 </script>
+
+{% endif %}
 
 {% endblock %}

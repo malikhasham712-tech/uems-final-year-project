@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 
 
 # =====================================================
-# ENUMS (PRODUCTION SAFE - DO NOT CHANGE VALUES)
+# ENUMS
 # =====================================================
 class EventStatus(models.TextChoices):
     CREATED = "created", "Created"
@@ -269,7 +269,7 @@ class Feedback(models.Model):
 
 
 # =====================================================
-# EVENT REPORT
+# EVENT REPORT (MANUAL SYSTEM - FINAL)
 # =====================================================
 class EventReport(models.Model):
 
@@ -282,6 +282,7 @@ class EventReport(models.Model):
     )
 
     name = models.CharField(max_length=200)
+
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

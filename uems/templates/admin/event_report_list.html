@@ -4,12 +4,7 @@
 
 <style>
 
-/* GLOBAL TEXT FIX */
-.container, .container * {
-    color: #111827 !important;
-}
-
-/* PAGE WRAPPER */
+/* CONTAINER */
 .container {
     padding: 20px;
     max-width: 1100px;
@@ -21,7 +16,7 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 18px;
-    padding: 12px;
+    padding: 12px 16px;
     background: #111827;
     border-radius: 8px;
 }
@@ -30,46 +25,26 @@
 .title {
     font-size: 18px;
     font-weight: 700;
-    color: white !important;
+    color: white;
 }
 
-/* SUBTITLE */
-.subtitle {
-    font-size: 13px;
-    color: #d1d5db !important;
-    margin-top: 3px;
-}
-
-/* BUTTONS */
-.btn {
-    padding: 8px 12px;
-    border-radius: 6px;
-    font-size: 13px;
-    text-decoration: none;
-    font-weight: 600;
-    display: inline-block;
-}
-
+/* BUTTON */
 .btn-back {
+    padding: 8px 12px;
     background: #374151;
-    color: white !important;
-}
-
-.btn-add {
-    background: #16a34a;
-    color: white !important;
+    color: white;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 13px;
 }
 
 /* TABLE */
 .table {
     width: 100%;
     border-collapse: collapse;
-    background: white;
-    border-radius: 8px;
-    overflow: hidden;
 }
 
-/* HEADER ROW */
+/* HEADER */
 .table th {
     background: #111827;
     color: white !important;
@@ -77,19 +52,24 @@
     text-align: left;
 }
 
-/* BODY ROWS */
+/* DARK ROWS */
+.table tbody tr {
+    background: #1f2937;
+}
+
+/* WHITE TEXT */
 .table td {
     padding: 12px;
-    border-bottom: 1px solid #e5e7eb;
-    color: #111827 !important;
+    border-bottom: 1px solid #374151;
+    color: white !important;
 }
 
-/* ROW HOVER */
+/* NO HOVER CHANGE */
 .table tbody tr:hover {
-    background: #f3f4f6;
+    background: #1f2937;
 }
 
-/* BUTTON INSIDE TABLE */
+/* VIEW BUTTON */
 .btn-view {
     background: #2563eb;
     color: white !important;
@@ -99,15 +79,16 @@
     font-size: 12px;
 }
 
+/* EMPTY */
 .empty {
     text-align: center;
     padding: 20px;
-    color: #6b7280 !important;
+    color: #d1d5db !important;
 }
 
-/* REMOVE DEFAULT H1 */
+/* REMOVE DJANGO TITLE */
 h1 {
-    display: none !important;
+    display: none;
 }
 
 </style>
@@ -117,22 +98,14 @@ h1 {
     <!-- HEADER -->
     <div class="header">
 
-        <div>
-            <div class="title">Feedback Report</div>
-            <div class="subtitle">Event-wise feedback analysis dashboard</div>
+        <div class="title">
+            Feedback Report
         </div>
 
-        <div style="display:flex; gap:8px;">
-
-            <a href="{% url 'admin:events_eventreport_add' %}" class="btn btn-add">
-                + Add Report
-            </a>
-
-            <a href="{% url 'admin:index' %}" class="btn btn-back">
-                ← Back
-            </a>
-
-        </div>
+        <!-- ONLY BACK BUTTON (Add removed) -->
+        <a href="{% url 'admin:index' %}" class="btn-back">
+            ← Back
+        </a>
 
     </div>
 
