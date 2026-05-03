@@ -3,120 +3,187 @@
 {% block content %}
 
 <style>
-    .container {
-        padding: 20px;
-        max-width: 1000px;
-    }
 
-    .top-bar {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 15px;
-    }
+/* GLOBAL TEXT FIX */
+.container, .container * {
+    color: #111827 !important;
+}
 
-    .title {
-        font-size: 22px;
-        font-weight: 600;
-    }
+/* PAGE WRAPPER */
+.container {
+    padding: 20px;
+    max-width: 1100px;
+}
 
-    .back-btn {
-        padding: 6px 12px;
-        background: #6b7280;
-        color: white;
-        text-decoration: none;
-        border-radius: 5px;
-        font-size: 13px;
-    }
+/* HEADER */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 18px;
+    padding: 12px;
+    background: #111827;
+    border-radius: 8px;
+}
 
-    .back-btn:hover {
-        background: #4b5563;
-    }
+/* TITLE */
+.title {
+    font-size: 18px;
+    font-weight: 700;
+    color: white !important;
+}
 
-    .table {
-        width: 100%;
-        border-collapse: collapse;
-        background: white;
-        border: 1px solid #e5e7eb;
-    }
+/* SUBTITLE */
+.subtitle {
+    font-size: 13px;
+    color: #d1d5db !important;
+    margin-top: 3px;
+}
 
-    .table th {
-        background: #111827;
-        color: white;
-        padding: 10px;
-        text-align: left;
-    }
+/* BUTTONS */
+.btn {
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    text-decoration: none;
+    font-weight: 600;
+    display: inline-block;
+}
 
-    .table td {
-        padding: 10px;
-        border-bottom: 1px solid #e5e7eb;
-    }
+.btn-back {
+    background: #374151;
+    color: white !important;
+}
 
-    .btn {
-        padding: 6px 12px;
-        background: #0d6efd;
-        color: white;
-        text-decoration: none;
-        border-radius: 5px;
-        font-size: 13px;
-        display: inline-block;
-    }
+.btn-add {
+    background: #16a34a;
+    color: white !important;
+}
 
-    .btn:hover {
-        background: #084298;
-    }
+/* TABLE */
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+}
 
-    .empty {
-        text-align: center;
-        padding: 20px;
-        color: #6b7280;
-    }
+/* HEADER ROW */
+.table th {
+    background: #111827;
+    color: white !important;
+    padding: 12px;
+    text-align: left;
+}
+
+/* BODY ROWS */
+.table td {
+    padding: 12px;
+    border-bottom: 1px solid #e5e7eb;
+    color: #111827 !important;
+}
+
+/* ROW HOVER */
+.table tbody tr:hover {
+    background: #f3f4f6;
+}
+
+/* BUTTON INSIDE TABLE */
+.btn-view {
+    background: #2563eb;
+    color: white !important;
+    padding: 6px 10px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 12px;
+}
+
+.empty {
+    text-align: center;
+    padding: 20px;
+    color: #6b7280 !important;
+}
+
+/* REMOVE DEFAULT H1 */
+h1 {
+    display: none !important;
+}
+
 </style>
 
 <div class="container">
 
-    <!-- TOP BAR -->
-    <div class="top-bar">
-        <div class="title">Feedback Report</div>
+    <!-- HEADER -->
+    <div class="header">
 
-        <!-- FIX: use Django admin index instead of hardcoded URL -->
-        <a href="{% url 'admin:index' %}" class="back-btn">
-            ← Back
-        </a>
+        <div>
+            <div class="title">Feedback Report</div>
+            <div class="subtitle">Event-wise feedback analysis dashboard</div>
+        </div>
+
+        <div style="display:flex; gap:8px;">
+
+            <a href="{% url 'admin:events_eventreport_add' %}" class="btn btn-add">
+                + Add Report
+            </a>
+
+            <a href="{% url 'admin:index' %}" class="btn btn-back">
+                ← Back
+            </a>
+
+        </div>
+
     </div>
 
     <!-- TABLE -->
     <table class="table">
+
         <thead>
             <tr>
                 <th>Event Name</th>
                 <th>Date</th>
+                <th>Feedback Count</th>
                 <th>Action</th>
             </tr>
         </thead>
 
         <tbody>
-            {% for item in data %}
+
+            {% for item in rows %}
             <tr>
-                <td>{{ item.event.name }}</td>
-                <td>{{ item.event.date }}</td>
-                <td>
 
-                    <!-- FIX: use proper Django URL instead of item.url -->
-                    <a href="{% url 'events:event_report_change' item.event.id %}" class="btn">
-                        View Feedback Report
-                    </a>
-
+                <td style="font-weight:600;">
+                    {{ item.event.name }}
                 </td>
+
+                <td>
+                    {{ item.event.date|default:"-" }}
+                </td>
+
+                <td>
+                    {{ item.feedback_count }}
+                </td>
+
+                <td>
+                    <a href="{% url 'admin:events_eventreport_change' item.report.id %}" class="btn-view">
+                        View Report
+                    </a>
+                </td>
+
             </tr>
             {% empty %}
+
             <tr>
-                <td colspan="3" class="empty">
-                    No events available
+                <td colspan="4" class="empty">
+                    No completed events with feedback
                 </td>
             </tr>
+
             {% endfor %}
+
         </tbody>
+
     </table>
 
 </div>

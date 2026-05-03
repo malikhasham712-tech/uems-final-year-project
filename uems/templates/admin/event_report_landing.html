@@ -3,100 +3,83 @@
 {% block content %}
 
 <style>
-    .container {
-        max-width: 1000px;
-        margin-left: 0;
-        padding: 24px;
-    }
 
-    /* HEADER */
-    .header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 22px;
-    }
+/* PAGE WRAPPER */
+.container {
+    max-width: 1100px;
+    padding: 24px;
+    color: #111827;
+}
 
-    .title {
-        font-size: 22px;
-        font-weight: 700;
-        color: #111827;
-    }
+/* HEADER */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 14px;
+    background: #111827;
+    border-radius: 8px;
+}
 
-    .subtitle {
-        font-size: 13px;
-        color: #6b7280;
-        margin-top: 3px;
-    }
+/* TITLE */
+.title {
+    font-size: 18px;
+    font-weight: 700;
+    color: white;
+}
 
-    /* BUTTONS */
-    .btn {
-        padding: 9px 14px;
-        border-radius: 6px;
-        text-decoration: none;
-        font-size: 13px;
-        font-weight: 500;
-        display: inline-block;
-        transition: 0.2s;
-    }
+/* BUTTONS */
+.btn {
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    text-decoration: none;
+    font-weight: 600;
+    display: inline-block;
+}
 
-    .btn-primary {
-        background: #0d6efd;
-        color: white;
-    }
+.btn-add {
+    background: #16a34a;
+    color: white;
+}
 
-    .btn-primary:hover {
-        background: #084298;
-    }
+.btn-back {
+    background: #374151;
+    color: white;
+}
 
-    .btn-secondary {
-        background: #6b7280;
-        color: white;
-    }
+/* CARD */
+.card {
+    margin-top: 20px;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 18px;
+    transition: 0.2s;
+}
 
-    .btn-secondary:hover {
-        background: #4b5563;
-    }
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+}
 
-    /* CARD */
-    .card {
-        background: #ffffff;
-        border: 1px solid #e5e7eb;
-        border-radius: 10px;
-        padding: 18px 20px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 12px;
-        transition: 0.2s;
-    }
+/* LINK INSIDE CARD */
+.card a {
+    display: block;
+    text-decoration: none;
+    color: white;
+    font-weight: 600;
+    padding: 18px;
+    background: #111827;
+    border-radius: 8px;
+}
 
-    .card:hover {
-        box-shadow: 0 4px 14px rgba(0,0,0,0.06);
-        transform: translateY(-1px);
-    }
+/* REMOVE DEFAULT H1 */
+h1 {
+    display: none !important;
+}
 
-    .card-title {
-        font-size: 15px;
-        font-weight: 600;
-        color: #111827;
-    }
-
-    /* EMPTY STATE */
-    .empty {
-        text-align: center;
-        padding: 30px;
-        color: #6b7280;
-        background: white;
-        border: 1px solid #e5e7eb;
-        border-radius: 10px;
-    }
-
-    /* HEADER RIGHT SIDE */
-    .actions {
-        display: flex;
-        gap: 8px;
-    }
 </style>
 
 <div class="container">
@@ -104,20 +87,19 @@
     <!-- HEADER -->
     <div class="header">
 
-        <div>
-            <div class="title">Event Report Module</div>
-            <div class="subtitle">Manage and analyze event feedback reports</div>
+        <div class="title">
+            Feedback Report
         </div>
 
-        <div class="actions">
+        <div style="display:flex; gap:8px;">
 
-            <!-- ADD REPORT (REAL DJANGO ADMIN ADD PAGE) -->
-            <a href="{% url 'admin:events_eventreport_add' %}" class="btn btn-primary">
+            <!-- ADD REPORT -->
+            <a href="{% url 'admin:events_eventreport_add' %}" class="btn btn-add">
                 + Add Report
             </a>
 
             <!-- BACK -->
-            <a href="/admin/" class="btn btn-secondary">
+            <a href="{% url 'admin:index' %}" class="btn btn-back">
                 ← Back
             </a>
 
@@ -125,15 +107,12 @@
 
     </div>
 
-    <!-- REPORT TYPE CARD -->
+    <!-- ONLY ONE MODULE CARD -->
     <div class="card">
 
-        <div class="card-title">
-            Feedback Report
-        </div>
-
-        <a href="{{ feedback_report_url }}" class="btn btn-primary">
-            Open
+        <!-- THIS GOES TO STEP 2 (we created in admin.py: feedback_list_view) -->
+        <a href="{% url 'admin:eventreport_feedback_list' %}">
+            Feedback Report →
         </a>
 
     </div>

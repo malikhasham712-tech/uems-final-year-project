@@ -1,6 +1,10 @@
 from django.contrib import admin
-from django.urls import reverse
-from django.utils.html import format_html
+from django.shortcuts import get_object_or_404
+from django.http import HttpResponse
+from django.urls import path
+from django.template.response import TemplateResponse
+
+from openpyxl import Workbook
 
 from .models import (
     Category,
@@ -11,6 +15,7 @@ from .models import (
     EventProposal,
     EventReport
 )
+
 
 # =====================================================
 # CATEGORY
@@ -26,7 +31,6 @@ class CategoryAdmin(admin.ModelAdmin):
 # =====================================================
 @admin.register(Event)
 class EventAdmin(admin.ModelAdmin):
-
     list_display = (
         'name',
         'category',
@@ -35,13 +39,12 @@ class EventAdmin(admin.ModelAdmin):
         'status',
         'organizer'
     )
-
     list_filter = ('status', 'category')
     search_fields = ('name',)
 
 
 # =====================================================
-# EVENT REPORT ADMIN (SAFE DASHBOARD VERSION)
+# EVENT REPORT ADMIN (FINAL FIXED FLOW)
 # =====================================================
 @admin.register(EventReport)
 class EventReportAdmin(admin.ModelAdmin):
@@ -49,65 +52,76 @@ class EventReportAdmin(admin.ModelAdmin):
     list_display = ("name", "event", "created_at")
     readonly_fields = ("name", "event", "created_at")
 
-    # -------------------------------------
-    # LIST PAGE
-    # -------------------------------------
+    # STEP 1 TEMPLATE
+    change_list_template = "admin/event_report_landing.html"
+
+    # STEP 3 TEMPLATE
+    change_form_template = "admin/event_report_change.html"
+
+    # =================================================
+    # STEP 1: LANDING PAGE
+    # =================================================
     def changelist_view(self, request, extra_context=None):
 
+        extra_context = extra_context or {}
+        extra_context["title"] = "Feedback Report"
+
+        return super().changelist_view(request, extra_context=extra_context)
+
+    # =================================================
+    # STEP 2: FEEDBACK LIST PAGE (THIS WAS MISSING ❗)
+    # =================================================
+    def feedback_list_view(self, request):
+
         events = Event.objects.filter(
-            status='completed',
+            status="completed",
             feedbacks__isnull=False
         ).distinct()
 
-        data = []
+        rows = []
 
         for event in events:
             report = self.get_or_create_report(event)
 
-            data.append({
+            rows.append({
                 "event": event,
                 "report": report,
-                "url": reverse(
-                    "admin:events_eventreport_change",
-                    args=[report.id]
-                )
+                "feedback_count": Feedback.objects.filter(event=event).count()
             })
 
-        extra_context = extra_context or {}
-        extra_context["data"] = data
+        return TemplateResponse(request, "admin/event_report_list.html", {
+            "rows": rows
+        })
 
-        return super().changelist_view(request, extra_context=extra_context)
-
-    # -------------------------------------
-    # DETAIL PAGE
-    # -------------------------------------
+    # =================================================
+    # STEP 3: REPORT DETAIL VIEW
+    # =================================================
     def change_view(self, request, object_id, form_url='', extra_context=None):
 
-        report = EventReport.objects.get(id=object_id)
+        report = get_object_or_404(EventReport, pk=object_id)
         event = report.event
 
         feedbacks = Feedback.objects.filter(event=event)
 
         stats = {
-            "excellent": [],
-            "good": [],
-            "average": [],
-            "poor": []
+            "excellent": feedbacks.filter(experience="excellent").count(),
+            "good": feedbacks.filter(experience="good").count(),
+            "average": feedbacks.filter(experience="average").count(),
+            "poor": feedbacks.filter(experience="poor").count(),
         }
 
-        for fb in feedbacks:
-            level = fb.experience
-            if level in stats:
-                stats[level].append(
-                    fb.student.username if fb.student else "Unknown"
-                )
+        events = Event.objects.filter(
+            status="completed",
+            feedbacks__isnull=False
+        ).distinct()
 
         extra_context = extra_context or {}
         extra_context.update({
             "event": event,
+            "report": report,
             "feedbacks": feedbacks,
             "stats": stats,
-            "report": report
+            "events": events,
         })
 
         return super().change_view(
@@ -117,9 +131,66 @@ class EventReportAdmin(admin.ModelAdmin):
             extra_context=extra_context
         )
 
-    # -------------------------------------
+    # =================================================
+    # EXPORT EXCEL
+    # =================================================
+    def export_feedback_excel(self, request, object_id):
+
+        report = get_object_or_404(EventReport, pk=object_id)
+        event = report.event
+
+        feedbacks = Feedback.objects.filter(event=event)
+
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Feedback Report"
+
+        ws.append(["Student", "Experience", "Remarks"])
+
+        for fb in feedbacks:
+            ws.append([
+                fb.student.username if fb.student else "Unknown",
+                fb.get_experience_display(),
+                fb.message
+            ])
+
+        response = HttpResponse(
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+
+        safe_name = event.name.replace(" ", "_")
+        response['Content-Disposition'] = f'attachment; filename="{safe_name}_feedback.xlsx"'
+
+        wb.save(response)
+        return response
+
+    # =================================================
+    # URLS (CRITICAL FIX)
+    # =================================================
+    def get_urls(self):
+        urls = super().get_urls()
+
+        custom_urls = [
+            # STEP 2 URL
+            path(
+                'feedback/',
+                self.admin_site.admin_view(self.feedback_list_view),
+                name="eventreport_feedback_list"
+            ),
+
+            # EXPORT
+            path(
+                '<int:object_id>/export/',
+                self.admin_site.admin_view(self.export_feedback_excel),
+                name="eventreport_export"
+            ),
+        ]
+
+        return custom_urls + urls
+
+    # =================================================
     # AUTO CREATE REPORT
-    # -------------------------------------
+    # =================================================
     def get_or_create_report(self, event):
         report, _ = EventReport.objects.get_or_create(
             event=event,
@@ -129,7 +200,7 @@ class EventReportAdmin(admin.ModelAdmin):
 
 
 # =====================================================
-# HIDDEN MODELS (NOT SHOWN IN ADMIN SIDEBAR)
+# HIDDEN MODELS
 # =====================================================
 class HiddenAdmin(admin.ModelAdmin):
     def has_module_permission(self, request):
