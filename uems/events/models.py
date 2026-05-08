@@ -154,6 +154,39 @@ class EventRegistration(models.Model):
 
 
 # =====================================================
+# ATTENDANCE
+# =====================================================
+class Attendance(models.Model):
+
+    event = models.ForeignKey(
+        Event,
+        on_delete=models.CASCADE,
+        related_name="attendances"
+    )
+
+    student = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="attendances"
+    )
+
+    marked_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-marked_at']
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=['event', 'student'],
+                name='unique_attendance_per_student_event'
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.student.username} - {self.event.name}"
+
+
+# =====================================================
 # ANNOUNCEMENT
 # =====================================================
 class Announcement(models.Model):

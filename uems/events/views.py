@@ -7,12 +7,17 @@ from django.http import HttpResponse
 
 from openpyxl import Workbook
 
+# NEW IMPORTS
+import qrcode
+from io import BytesIO
+
 from .models import (
     Event,
     EventProposal,
     EventRegistration,
     Announcement,
-    Feedback
+    Feedback,
+    Attendance
 )
 
 from .forms import ProposalForm, EventRegistrationForm
@@ -157,6 +162,78 @@ def event_registrations(request, event_id):
         "registrations": regs,
         "total": regs.count(),
         "role": "organizer"
+    })
+
+
+# =====================================================
+# QR CODE GENERATOR
+# =====================================================
+@login_required
+def generate_qr(request, event_id):
+
+    event = get_object_or_404(Event, id=event_id)
+
+    if not is_organizer_or_admin(request.user, event):
+        return redirect("events:dashboard")
+
+    attendance_url = request.build_absolute_uri(
+        f"/events/attendance/{event.id}/"
+    )
+
+    qr = qrcode.make(attendance_url)
+
+    buffer = BytesIO()
+    qr.save(buffer, format='PNG')
+
+    return HttpResponse(buffer.getvalue(), content_type="image/png")
+
+
+# =====================================================
+# MARK ATTENDANCE
+# =====================================================
+@login_required
+def mark_attendance(request, event_id):
+
+    event = get_object_or_404(Event, id=event_id)
+
+    is_registered = EventRegistration.objects.filter(
+        event=event,
+        student=request.user
+    ).exists()
+
+    if not is_registered:
+        return render(request, "events/attendance_result.html", {
+            "success": False,
+            "event": event,
+            "message": "You are not registered in this event. Your attendance is NOT marked."
+        })
+
+    already_marked = Attendance.objects.filter(
+        event=event,
+        student=request.user
+    ).exists()
+
+    if already_marked:
+        return render(request, "events/attendance_result.html", {
+            "success": True,
+            "event": event,
+            "message": "Your attendance has already been marked."
+        })
+
+    Attendance.objects.create(
+        event=event,
+        student=request.user
+    )
+
+    EventRegistration.objects.filter(
+        event=event,
+        student=request.user
+    ).update(status="attended")
+
+    return render(request, "events/attendance_result.html", {
+        "success": True,
+        "event": event,
+        "message": "Your attendance is marked successfully."
     })
 
 

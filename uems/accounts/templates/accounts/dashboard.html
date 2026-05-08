@@ -28,6 +28,7 @@
                     <th>Status</th>
                     <th>Proposal</th>
                     <th>Registrations</th>
+                    <th>Attendance QR</th>
                 </tr>
             </thead>
 
@@ -80,7 +81,7 @@
                     {% endwith %}
                 </td>
 
-                <!-- PROPOSAL COLUMN (FIXED LOGIC) -->
+                <!-- PROPOSAL COLUMN -->
                 <td>
                     {% with proposal=event.proposals.first %}
 
@@ -124,6 +125,41 @@
                     <a href="{% url 'events:event_registrations' event.id %}" class="btn btn-primary btn-sm w-100">
                         View
                     </a>
+                </td>
+
+                <!-- ATTENDANCE QR -->
+                <td>
+
+                    {% if event.status == "announced" %}
+
+                        <div class="d-grid gap-1">
+
+                            <a href="{% url 'events:generate_qr' event.id %}"
+                               target="_blank"
+                               class="btn btn-success btn-sm">
+
+                                Generate QR
+
+                            </a>
+
+                            <button
+                                onclick="window.open('{% url 'events:generate_qr' event.id %}', '_blank'); window.print();"
+                                class="btn btn-outline-dark btn-sm">
+
+                                Print QR
+
+                            </button>
+
+                        </div>
+
+                    {% else %}
+
+                        <button class="btn btn-secondary btn-sm w-100" disabled>
+                            Not Available
+                        </button>
+
+                    {% endif %}
+
                 </td>
 
             </tr>

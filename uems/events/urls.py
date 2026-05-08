@@ -24,6 +24,21 @@ urlpatterns = [
     path('event/<int:event_id>/registrations/', views.event_registrations, name='event_registrations'),
 
     # ======================
+    # QR ATTENDANCE SYSTEM
+    # ======================
+    path(
+        'event/<int:event_id>/generate-qr/',
+        views.generate_qr,
+        name='generate_qr'
+    ),
+
+    path(
+        'attendance/<int:event_id>/',
+        views.mark_attendance,
+        name='mark_attendance'
+    ),
+
+    # ======================
     # PROPOSALS
     # ======================
     path('event/<int:event_id>/proposals/', views.view_proposals, name='view_proposals'),
