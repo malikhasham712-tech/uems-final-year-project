@@ -60,7 +60,7 @@
 
 /* CHART */
 .chart-box {
-    width: 180px;
+    width: 320px;
     margin: auto;
 }
 
@@ -108,41 +108,35 @@
     font-weight: 600;
 }
 
-.excellent { background: #dcfce7; color: #166534; }
-.good { background: #dbeafe; color: #1d4ed8; }
-.average { background: #fef9c3; color: #854d0e; }
-.poor { background: #fee2e2; color: #991b1b; }
+.excellent { background:#dcfce7; color:#166534; }
+.good { background:#dbeafe; color:#1d4ed8; }
+.average { background:#fef9c3; color:#854d0e; }
+.poor { background:#fee2e2; color:#991b1b; }
 
-/* MESSAGE */
 .message {
     max-width: 500px;
     word-break: break-word;
     color: white !important;
 }
 
-/* HIDE DEFAULT TITLE */
-h1 {
-    display: none;
-}
+h1 { display:none; }
 
 </style>
 
 <div class="container">
 
-    <!-- HEADER -->
     <div class="header">
 
         <div class="title">
             {% if event %}
                 {{ event.name }}
             {% else %}
-                Create Event Report
+                Event Report
             {% endif %}
         </div>
 
         <div>
-
-            {% if report and event %}
+            {% if report %}
                 <a href="{% url 'admin:eventreport_export' report.id %}" class="btn btn-export">
                     Export Excel
                 </a>
@@ -151,109 +145,150 @@ h1 {
             <a href="{% url 'admin:events_eventreport_changelist' %}" class="btn btn-back">
                 ← Back
             </a>
-
         </div>
 
     </div>
 
     {% if event %}
 
-    <!-- CHART -->
-    <div class="card">
+        {% if has_feedback %}
 
-        <div class="chart-box">
-            <canvas id="feedbackChart"></canvas>
+        <div class="card">
+            <div class="chart-box">
+                <canvas id="feedbackChart"></canvas>
+            </div>
+
+            <div class="legend">
+                🟢 Excellent &nbsp;&nbsp;
+                🔵 Good &nbsp;&nbsp;
+                🟡 Average &nbsp;&nbsp;
+                🔴 Poor
+            </div>
         </div>
 
-        <div class="legend">
-            🟢 Excellent &nbsp;&nbsp;
-            🔵 Good &nbsp;&nbsp;
-            🟡 Average &nbsp;&nbsp;
-            🔴 Poor
+        <div class="card">
+            <table class="table">
+
+                <thead>
+                    <tr>
+                        <th>Student</th>
+                        <th>Experience</th>
+                        <th>Remarks</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for fb in feedbacks %}
+                    <tr>
+                        <td style="font-weight:600;">
+                            {{ fb.student.username|default:"Unknown" }}
+                        </td>
+
+                        <td>
+                            <span class="badge {{ fb.experience }}">
+                                {{ fb.get_experience_display }}
+                            </span>
+                        </td>
+
+                        <td class="message">
+                            {{ fb.message }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+
+            </table>
         </div>
 
-    </div>
+        {% else %}
 
-    <!-- TABLE -->
-    <div class="card">
+        <div class="card" style="color:white;text-align:center;">
+            ⚠ This event does not have any feedback yet.
+        </div>
 
-        <table class="table">
-
-            <thead>
-                <tr>
-                    <th>Student</th>
-                    <th>Experience</th>
-                    <th>Remarks</th>
-                </tr>
-            </thead>
-
-            <tbody>
-
-                {% for fb in feedbacks %}
-                <tr>
-
-                    <td style="font-weight:600;">
-                        {{ fb.student.username|default:"Unknown" }}
-                    </td>
-
-                    <td>
-                        <span class="badge {{ fb.experience }}">
-                            {{ fb.get_experience_display }}
-                        </span>
-                    </td>
-
-                    <td class="message">
-                        {{ fb.message }}
-                    </td>
-
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="3" style="text-align:center;padding:20px;color:white;">
-                        No feedback available
-                    </td>
-                </tr>
-                {% endfor %}
-
-            </tbody>
-
-        </table>
-
-    </div>
+        {% endif %}
 
     {% else %}
 
-    <!-- ADD PAGE SAFE MESSAGE -->
     <div class="card" style="color:white;text-align:center;">
-        📝 Create a new report by entering name and saving.
+        Event not found.
     </div>
 
     {% endif %}
 
 </div>
 
-{% if event %}
+{% if event and has_feedback %}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
 
 <script>
+const excellent = {{ stats.excellent|default:0 }};
+const good = {{ stats.good|default:0 }};
+const average = {{ stats.average|default:0 }};
+const poor = {{ stats.poor|default:0 }};
+
+const dataValues = [excellent, good, average, poor];
+const total = dataValues.reduce((a, b) => a + b, 0);
+
 new Chart(document.getElementById('feedbackChart'), {
-    type: 'pie',
+    type: 'doughnut',
+
     data: {
         labels: ['Excellent', 'Good', 'Average', 'Poor'],
         datasets: [{
-            data: [
-                {{ stats.excellent|default:0 }},
-                {{ stats.good|default:0 }},
-                {{ stats.average|default:0 }},
-                {{ stats.poor|default:0 }}
+            data: dataValues,
+            backgroundColor: [
+                '#16a34a',
+                '#2563eb',
+                '#eab308',
+                '#dc2626'
             ],
-            backgroundColor: ['#16a34a', '#2563eb', '#eab308', '#dc2626']
+            borderWidth: 2,
+            borderColor: '#111827'
         }]
     },
+
     options: {
+        responsive: true,
+        cutout: '70%',   // donut thickness (smaller = thicker ring)
+
         plugins: {
-            legend: { display: false }
+
+            legend: {
+                display: false
+            },
+
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        const value = context.raw || 0;
+                        const percent = total ? ((value / total) * 100).toFixed(1) : 0;
+
+                        return `${context.label}: ${value} (${percent}%)`;
+                    }
+                }
+            },
+
+            datalabels: {
+                color: '#fff',
+                font: {
+                    weight: 'bold',
+                    size: 10   // 👈 SMALL SIZE FIX
+                },
+                formatter: (value) => {
+                    if (!value || total === 0) return '';
+                    return ((value / total) * 100).toFixed(1) + '%';
+                }
+            }
         }
-    }
+    },
+
+    plugins: [ChartDataLabels]
 });
 </script>
 
