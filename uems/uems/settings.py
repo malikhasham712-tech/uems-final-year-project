@@ -14,8 +14,31 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY
 # ----------------------
 SECRET_KEY = 'django-insecure-l)qdv$kc40ro9&yjd6=$p&_fm6^b^22eii^v(r2ww1au1'
+
 DEBUG = True
-ALLOWED_HOSTS = []
+
+ALLOWED_HOSTS = [
+    "127.0.0.1",
+    "localhost",
+    "192.168.1.10"
+]
+
+
+# ----------------------
+# CSRF FIX (🔥 IMPORTANT FOR MOBILE/LAN)
+# ----------------------
+CSRF_TRUSTED_ORIGINS = [
+    "http://127.0.0.1:8000",
+    "http://localhost:8000",
+    "http://192.168.1.10:8000"
+]
+
+
+# ----------------------
+# SESSION FIX (🔥 MOBILE LOGIN STABILITY)
+# ----------------------
+SESSION_COOKIE_SAMESITE = "Lax"
+CSRF_COOKIE_SAMESITE = "Lax"
 
 
 # ----------------------
