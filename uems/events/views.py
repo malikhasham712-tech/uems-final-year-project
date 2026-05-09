@@ -4,6 +4,7 @@ from django.db.models import Count
 from django.contrib import messages
 from django.contrib.auth.models import User
 from django.http import HttpResponse
+from django.urls import reverse
 
 from openpyxl import Workbook
 
@@ -219,15 +220,17 @@ def generate_qr(request, event_id):
     if not is_organizer_or_admin(request.user, event):
         return redirect("events:dashboard")
 
-    # 🔥 IMPORTANT: use your PC WiFi IP here
-    base_url = "http://192.168.1.10:8000"   # <-- your IP
+    # Generate correct attendance URL automatically
+    attendance_path = reverse(
+        'events:mark_attendance',
+        args=[event.id]
+    )
 
-    attendance_url = f"{base_url}/events/attendance/{event.id}/"
+    base_url = "http://192.168.1.10:8000"
 
-    import qrcode
-    from io import BytesIO
-    import base64
+    attendance_url = f"{base_url}{attendance_path}"
 
+    # Generate QR
     qr = qrcode.make(attendance_url)
 
     buffer = BytesIO()
