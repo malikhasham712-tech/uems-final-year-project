@@ -42,11 +42,11 @@ class EventAdmin(admin.ModelAdmin):
         'organizer',
         'proposal_btn',
         'registration_btn',
+        'attendance_btn',   # ✅ ADDED
         'feedback_btn',
     )
 
     list_filter = ('status', 'category')
-
     search_fields = ('name',)
 
     # -------------------------------------------------
@@ -82,6 +82,23 @@ class EventAdmin(admin.ModelAdmin):
         )
 
     registration_btn.short_description = "Registrations"
+
+    # -------------------------------------------------
+    # ATTENDANCE BUTTON (FIXED + ADDED)
+    # -------------------------------------------------
+    def attendance_btn(self, obj):
+
+        url = reverse(
+            'events:view_attendance',   # ✅ correct URL name from urls.py
+            args=[obj.id]
+        )
+
+        return format_html(
+            '<a class="button" style="background:#333;color:white;padding:4px 8px;border-radius:4px;" href="{}">Attendance</a>',
+            url
+        )
+
+    attendance_btn.short_description = "Attendance"
 
     # -------------------------------------------------
     # FEEDBACK BUTTON

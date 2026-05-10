@@ -1,98 +1,229 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-    <title>{% block title %}Dashboard{% endblock %}</title>
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>
+        {% block title %}Dashboard{% endblock %}
+    </title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
-        body {
-            margin: 0;
-            font-family: 'Segoe UI', sans-serif;
-            background: #f4f6fb;
+
+        *{
+            margin:0;
+            padding:0;
+            box-sizing:border-box;
         }
 
-        .layout {
-            display: flex;
-            min-height: 100vh;
+        body{
+            font-family:'Segoe UI', sans-serif;
+            background:#f4f6fb;
+            overflow-x:hidden;
         }
 
-        .sidebar {
-            width: 240px;
-            background: linear-gradient(180deg, #0d6efd, #0b5ed7);
-            color: white;
-            padding: 25px 15px;
-            display: flex;
-            flex-direction: column;
+        .layout{
+            display:flex;
+            min-height:100vh;
         }
 
-        .sidebar h5 {
-            margin-bottom: 25px;
-            font-weight: 600;
-            text-transform: capitalize;
+        /* =====================================================
+           SIDEBAR
+        ===================================================== */
+
+        .sidebar{
+            width:250px;
+            background:linear-gradient(180deg,#0d6efd,#0b5ed7);
+            color:white;
+            padding:24px 16px;
+            display:flex;
+            flex-direction:column;
+            position:fixed;
+            top:0;
+            left:0;
+            bottom:0;
+            z-index:1000;
         }
 
-        .nav-link {
-            color: white;
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            text-decoration: none;
+        .sidebar-title{
+            font-size:24px;
+            font-weight:700;
+            margin-bottom:35px;
+            text-align:center;
+            letter-spacing:0.5px;
         }
 
-        .nav-link:hover,
-        .nav-link.active {
-            background: rgba(255,255,255,0.2);
+        .sidebar-role{
+            font-size:14px;
+            opacity:0.9;
+            margin-bottom:25px;
+            text-align:center;
+            text-transform:capitalize;
         }
 
-        .main {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
+        .nav-link{
+            color:white;
+            padding:13px 14px;
+            border-radius:10px;
+            margin-bottom:10px;
+            display:flex;
+            align-items:center;
+            gap:12px;
+            text-decoration:none;
+            transition:0.2s ease;
+            font-size:15px;
+            font-weight:500;
         }
 
-        .topbar {
-            height: 75px;
-            background: white;
-            border-bottom: 1px solid #eee;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 25px;
+        .nav-link:hover{
+            background:rgba(255,255,255,0.18);
+            color:white;
+            transform:translateX(3px);
         }
 
-        .welcome {
-            font-size: 16px;
-            font-weight: 700;
-            color: #0d6efd;
+        .nav-link.active{
+            background:rgba(255,255,255,0.22);
+            color:white;
         }
 
-        .subtext {
-            font-size: 13px;
-            color: gray;
+        .nav-link i{
+            width:18px;
+            text-align:center;
         }
 
-        .content {
-            padding: 30px;
+        .logout-btn{
+            margin-top:auto;
         }
 
-        .notif-badge {
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            font-size: 10px;
+        /* =====================================================
+           MAIN AREA
+        ===================================================== */
+
+        .main{
+            flex:1;
+            margin-left:250px;
+            display:flex;
+            flex-direction:column;
+            min-height:100vh;
         }
 
-        .notif-item {
-            white-space: normal;
-            font-size: 13px;
+        /* =====================================================
+           TOPBAR
+        ===================================================== */
+
+        .topbar{
+            height:78px;
+            background:white;
+            border-bottom:1px solid #e9edf5;
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            padding:0 28px;
+            position:sticky;
+            top:0;
+            z-index:999;
         }
+
+        .welcome{
+            font-size:18px;
+            font-weight:700;
+            color:#0d6efd;
+        }
+
+        .subtext{
+            font-size:13px;
+            color:#7c8593;
+            margin-top:2px;
+        }
+
+        .content{
+            padding:30px;
+        }
+
+        /* =====================================================
+           NOTIFICATIONS
+        ===================================================== */
+
+        .notif-badge{
+            position:absolute;
+            top:-4px;
+            right:-5px;
+            font-size:10px;
+        }
+
+        .notif-item{
+            white-space:normal;
+            font-size:13px;
+            line-height:1.5;
+        }
+
+        .dropdown-menu{
+            border:none;
+            border-radius:14px;
+            box-shadow:0 10px 30px rgba(0,0,0,0.08);
+            padding:8px;
+        }
+
+        .dropdown-item{
+            border-radius:8px;
+            padding:10px 12px;
+        }
+
+        /* =====================================================
+           MOBILE RESPONSIVE
+        ===================================================== */
+
+        @media(max-width:992px){
+
+            .sidebar{
+                width:100%;
+                height:auto;
+                position:relative;
+                flex-direction:column;
+            }
+
+            .main{
+                margin-left:0;
+            }
+
+            .topbar{
+                padding:15px;
+                height:auto;
+                flex-direction:column;
+                align-items:flex-start;
+                gap:15px;
+            }
+
+            .content{
+                padding:18px;
+            }
+
+            .sidebar-title{
+                margin-bottom:12px;
+            }
+
+            .sidebar-role{
+                margin-bottom:18px;
+            }
+
+            .nav-link{
+                font-size:14px;
+                padding:12px;
+            }
+
+            .dropdown-menu{
+                width:100% !important;
+            }
+
+        }
+
     </style>
 </head>
 
@@ -100,159 +231,289 @@
 
 <div class="layout">
 
-    <!-- SIDEBAR -->
+    <!-- =====================================================
+         SIDEBAR
+    ====================================================== -->
+
     <div class="sidebar">
 
-        <!-- SAFE ROLE DISPLAY -->
-        <h5>
+        <div class="sidebar-title">
+            UEMS
+        </div>
+
+        <div class="sidebar-role">
+
             {% if request.user.is_superuser %}
-                Admin
+                Admin Panel
+
             {% else %}
                 {{ role|default:"student"|title }}
+
             {% endif %}
-        </h5>
+
+        </div>
 
         <!-- ORGANIZER -->
         {% if role == 'organizer' %}
 
-            <a href="{% url 'events:dashboard' %}" class="nav-link">
-                <i class="fa fa-home"></i> Dashboard
+            <a href="{% url 'events:dashboard' %}"
+               class="nav-link">
+
+                <i class="fa fa-home"></i>
+                Dashboard
+
             </a>
 
-            <a href="{% url 'events:my_events' %}" class="nav-link">
-                <i class="fa fa-calendar"></i> My Events
+            <a href="{% url 'events:my_events' %}"
+               class="nav-link">
+
+                <i class="fa fa-calendar"></i>
+                My Events
+
             </a>
 
         <!-- STUDENT -->
         {% elif role == 'student' %}
 
-            <a href="{% url 'events:my_events' %}" class="nav-link">
-                <i class="fa fa-calendar"></i> My Events
+            <a href="{% url 'events:my_events' %}"
+               class="nav-link">
+
+                <i class="fa fa-calendar"></i>
+                My Events
+
             </a>
 
-            <a href="{% url 'events:available_events' %}" class="nav-link">
-                <i class="fa fa-list"></i> Available Events
+            <a href="{% url 'events:available_events' %}"
+               class="nav-link">
+
+                <i class="fa fa-list"></i>
+                Available Events
+
             </a>
 
         <!-- ADMIN -->
         {% elif request.user.is_superuser %}
 
-            <a href="/admin/" class="nav-link">
-                <i class="fa fa-cog"></i> Admin Panel
+            <a href="/admin/"
+               class="nav-link">
+
+                <i class="fa fa-cog"></i>
+                Admin Panel
+
             </a>
 
-            <a href="{% url 'events:event_report_list' %}" class="nav-link">
-                <i class="fa fa-chart-bar"></i> Reports
+            <a href="{% url 'events:event_report_list' %}"
+               class="nav-link">
+
+                <i class="fa fa-chart-bar"></i>
+                Reports
+
+            </a>
+
+            <a href="{% url 'events:my_events' %}"
+               class="nav-link">
+
+                <i class="fa fa-user-check"></i>
+                Attendance
+
             </a>
 
         {% else %}
 
-            <a href="{% url 'events:my_events' %}" class="nav-link">
-                <i class="fa fa-calendar"></i> My Events
+            <a href="{% url 'events:my_events' %}"
+               class="nav-link">
+
+                <i class="fa fa-calendar"></i>
+                My Events
+
             </a>
 
         {% endif %}
 
-        <div class="mt-auto">
-            <a href="{% url 'logout' %}" class="nav-link text-danger">
-                <i class="fa fa-sign-out-alt"></i> Logout
+        <!-- LOGOUT -->
+        <div class="logout-btn">
+
+            <a href="{% url 'logout' %}"
+               class="nav-link text-white">
+
+                <i class="fa fa-sign-out-alt"></i>
+                Logout
+
             </a>
+
         </div>
 
     </div>
 
-    <!-- MAIN -->
+    <!-- =====================================================
+         MAIN
+    ====================================================== -->
+
     <div class="main">
 
-        <!-- TOPBAR -->
+        <!-- =====================================================
+             TOPBAR
+        ====================================================== -->
+
         <div class="topbar">
 
             <div>
+
                 <div class="welcome">
                     Welcome, {{ request.user.username }}
                 </div>
 
                 <div class="subtext">
+
                     {% if request.user.is_superuser %}
                         Admin
+
                     {% else %}
                         {{ role|default:"student"|title }}
+
                     {% endif %}
-                    • Event Management System
+
+                    • University Event Management System
+
                 </div>
+
             </div>
 
-            <div class="d-flex align-items-center gap-2">
+            <!-- RIGHT BUTTONS -->
+            <div class="d-flex align-items-center gap-2 flex-wrap">
 
-                <!-- NOTIFICATIONS -->
+                <!-- NOTIFICATION -->
                 <div class="dropdown position-relative">
 
-                    <button class="btn btn-light position-relative dropdown-toggle" data-bs-toggle="dropdown">
+                    <button class="btn btn-light border position-relative dropdown-toggle"
+                            data-bs-toggle="dropdown">
+
                         <i class="fa fa-bell"></i>
 
                         {% if notifications %}
                             {% if notifications|length > 0 %}
+
                                 <span class="badge bg-danger notif-badge">
                                     {{ notifications|length }}
                                 </span>
+
                             {% endif %}
                         {% endif %}
+
                     </button>
 
-                    <ul class="dropdown-menu dropdown-menu-end" style="width:340px;">
+                    <ul class="dropdown-menu dropdown-menu-end"
+                        style="width:340px;">
 
-                        <li class="dropdown-header">Notifications</li>
+                        <li class="dropdown-header fw-bold">
+                            Notifications
+                        </li>
 
                         {% if notifications %}
+
                             {% for n in notifications %}
+
                                 <li>
+
                                     <a class="dropdown-item notif-item"
                                        href="{% url 'events:notification_detail' n.id %}">
+
                                         {{ n.message|truncatechars:80 }}
+
                                     </a>
+
                                 </li>
+
                             {% endfor %}
+
                         {% else %}
+
                             <li>
-                                <span class="dropdown-item text-muted">No notifications</span>
+                                <span class="dropdown-item text-muted">
+                                    No notifications
+                                </span>
                             </li>
+
                         {% endif %}
 
-                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
 
                         <li>
-                            <a class="dropdown-item text-center"
+
+                            <a class="dropdown-item text-center fw-semibold"
                                href="{% url 'events:notifications' %}">
+
                                 View All
+
                             </a>
+
                         </li>
 
                     </ul>
 
                 </div>
 
-                <!-- BUTTONS -->
-                <button onclick="history.back()" class="btn btn-outline-secondary btn-sm">
+                <!-- BACK -->
+                <button onclick="history.back()"
+                        class="btn btn-outline-secondary btn-sm">
+
                     Back
+
                 </button>
 
+                <!-- DASHBOARD -->
                 {% if request.user.is_superuser %}
-                    <a href="/admin/" class="btn btn-primary btn-sm">Admin</a>
+
+                    <a href="/admin/"
+                       class="btn btn-primary btn-sm">
+
+                        Admin
+
+                    </a>
+
                 {% elif role == 'organizer' %}
-                    <a href="{% url 'events:dashboard' %}" class="btn btn-primary btn-sm">Dashboard</a>
+
+                    <a href="{% url 'events:dashboard' %}"
+                       class="btn btn-primary btn-sm">
+
+                        Dashboard
+
+                    </a>
+
                 {% else %}
-                    <a href="{% url 'events:available_events' %}" class="btn btn-primary btn-sm">Events</a>
+
+                    <a href="{% url 'events:available_events' %}"
+                       class="btn btn-primary btn-sm">
+
+                        Events
+
+                    </a>
+
                 {% endif %}
 
-                <a href="{% url 'logout' %}" class="btn btn-outline-secondary btn-sm">Logout</a>
+                <!-- LOGOUT -->
+                <a href="{% url 'logout' %}"
+                   class="btn btn-outline-dark btn-sm">
+
+                    Logout
+
+                </a>
 
             </div>
 
         </div>
 
-        <!-- CONTENT -->
+        <!-- =====================================================
+             CONTENT
+        ====================================================== -->
+
         <div class="content">
-            {% block content %}{% endblock %}
+
+            {% block content %}
+            {% endblock %}
+
         </div>
 
     </div>

@@ -30,6 +30,7 @@ from .notification_router import send_notification
 # ROLE HELPER
 # =====================================================
 def get_role(user):
+
     if user.is_superuser:
         return "admin"
 
@@ -40,7 +41,11 @@ def get_role(user):
 
 
 def is_organizer_or_admin(user, event):
-    return user.is_superuser or user == event.organizer
+
+    return (
+        user.is_superuser
+        or user == event.organizer
+    )
 
 
 # =====================================================
@@ -55,9 +60,13 @@ def dashboard(request):
 
         events = Event.objects.filter(
             organizer=request.user
+        ).annotate(
+            total_registrations=Count("registrations"),
+            total_attendance=Count("attendances")
         ).prefetch_related(
             "proposals",
-            "registrations"
+            "registrations",
+            "attendances"
         )
 
         return render(request, "accounts/dashboard.html", {
@@ -77,7 +86,9 @@ def dashboard(request):
 @login_required
 def available_events(request):
 
-    events = Event.objects.filter(status="announced")
+    events = Event.objects.filter(
+        status="announced"
+    )
 
     return render(request, "events/available_events.html", {
         "events": events,
@@ -101,7 +112,8 @@ def my_events(request):
         events = Event.objects.filter(
             organizer=request.user
         ).annotate(
-            total_registrations=Count("registrations")
+            total_registrations=Count("registrations"),
+            total_attendance=Count("attendances")
         )
 
     else:
@@ -116,7 +128,10 @@ def my_events(request):
 @login_required
 def view_event(request, event_id):
 
-    event = get_object_or_404(Event, id=event_id)
+    event = get_object_or_404(
+        Event,
+        id=event_id
+    )
 
     proposal = EventProposal.objects.filter(
         event=event
@@ -150,7 +165,12 @@ def register_event(request, event_id):
     role = get_role(request.user)
 
     if role != "student":
-        messages.error(request, "Only students allowed.")
+
+        messages.error(
+            request,
+            "Only students allowed."
+        )
+
         return redirect("events:available_events")
 
     event = get_object_or_404(
@@ -164,7 +184,11 @@ def register_event(request, event_id):
         student=request.user
     ).exists():
 
-        messages.info(request, "Already registered.")
+        messages.info(
+            request,
+            "Already registered."
+        )
+
         return redirect("events:my_events")
 
     if request.method == "POST":
@@ -174,11 +198,16 @@ def register_event(request, event_id):
         if form.is_valid():
 
             obj = form.save(commit=False)
+
             obj.event = event
             obj.student = request.user
+
             obj.save()
 
-            messages.success(request, "Registered successfully!")
+            messages.success(
+                request,
+                "Registered successfully!"
+            )
 
             return redirect("events:my_events")
 
@@ -192,9 +221,15 @@ def register_event(request, event_id):
 @login_required
 def event_registrations(request, event_id):
 
-    event = get_object_or_404(Event, id=event_id)
+    event = get_object_or_404(
+        Event,
+        id=event_id
+    )
 
-    if not is_organizer_or_admin(request.user, event):
+    if not is_organizer_or_admin(
+        request.user,
+        event
+    ):
         return redirect("events:my_events")
 
     regs = EventRegistration.objects.filter(
@@ -215,14 +250,19 @@ def event_registrations(request, event_id):
 @login_required
 def generate_qr(request, event_id):
 
-    event = get_object_or_404(Event, id=event_id)
+    event = get_object_or_404(
+        Event,
+        id=event_id
+    )
 
-    if not is_organizer_or_admin(request.user, event):
+    if not is_organizer_or_admin(
+        request.user,
+        event
+    ):
         return redirect("events:dashboard")
 
-    # Generate correct attendance URL automatically
     attendance_path = reverse(
-        'events:mark_attendance',
+        "events:mark_attendance",
         args=[event.id]
     )
 
@@ -230,13 +270,15 @@ def generate_qr(request, event_id):
 
     attendance_url = f"{base_url}{attendance_path}"
 
-    # Generate QR
     qr = qrcode.make(attendance_url)
 
     buffer = BytesIO()
+
     qr.save(buffer, format="PNG")
 
-    qr_image = base64.b64encode(buffer.getvalue()).decode()
+    qr_image = base64.b64encode(
+        buffer.getvalue()
+    ).decode()
 
     return render(request, "events/generate_qr.html", {
         "event": event,
@@ -251,9 +293,15 @@ def generate_qr(request, event_id):
 def mark_attendance(request, event_id):
 
     if not request.user.is_authenticated:
-        return redirect(f"/accounts/login/?next=/events/attendance/{event_id}/")
 
-    event = get_object_or_404(Event, id=event_id)
+        return redirect(
+            f"/accounts/login/?next=/events/attendance/{event_id}/"
+        )
+
+    event = get_object_or_404(
+        Event,
+        id=event_id
+    )
 
     is_registered = EventRegistration.objects.filter(
         event=event,
@@ -261,11 +309,16 @@ def mark_attendance(request, event_id):
     ).exists()
 
     if not is_registered:
-        return render(request, "events/attendance_result.html", {
-            "success": False,
-            "event": event,
-            "message": "You are not registered in this event. Your attendance is NOT marked."
-        })
+
+        return render(
+            request,
+            "events/attendance_result.html",
+            {
+                "success": False,
+                "event": event,
+                "message": "You are not registered in this event. Your attendance is NOT marked."
+            }
+        )
 
     already_marked = Attendance.objects.filter(
         event=event,
@@ -273,11 +326,16 @@ def mark_attendance(request, event_id):
     ).exists()
 
     if already_marked:
-        return render(request, "events/attendance_result.html", {
-            "success": True,
-            "event": event,
-            "message": "Your attendance has already been marked."
-        })
+
+        return render(
+            request,
+            "events/attendance_result.html",
+            {
+                "success": True,
+                "event": event,
+                "message": "Your attendance has already been marked."
+            }
+        )
 
     Attendance.objects.create(
         event=event,
@@ -287,12 +345,58 @@ def mark_attendance(request, event_id):
     EventRegistration.objects.filter(
         event=event,
         student=request.user
-    ).update(status="attended")
+    ).update(
+        status="attended"
+    )
 
-    return render(request, "events/attendance_result.html", {
-        "success": True,
+    return render(
+        request,
+        "events/attendance_result.html",
+        {
+            "success": True,
+            "event": event,
+            "message": "Your attendance is marked successfully."
+        }
+    )
+
+
+# =====================================================
+# ATTENDANCE RECORDS
+# =====================================================
+@login_required
+@login_required
+def attendance_records(request, event_id):
+
+    event = get_object_or_404(Event, id=event_id)
+
+    role = get_role(request.user)
+
+    if role != "admin" and request.user != event.organizer:
+        return redirect("events:dashboard")
+
+    registrations = EventRegistration.objects.filter(
+        event=event
+    ).select_related("student")
+
+    attendance_qs = Attendance.objects.filter(
+        event=event
+    )
+
+    # SAFE MAP
+    attendance_map = {
+        a.student_id: a for a in attendance_qs
+    }
+
+    # attach attendance
+    for reg in registrations:
+        reg.attendance = attendance_map.get(reg.student_id)
+
+    return render(request, "events/view_attendance.html", {
         "event": event,
-        "message": "Your attendance is marked successfully."
+        "registrations": registrations,
+        "attendance_map": attendance_map,
+        "total_attendance": attendance_qs.count(),
+        "role": role
     })
 
 
@@ -302,14 +406,22 @@ def mark_attendance(request, event_id):
 @login_required
 def view_proposals(request, event_id):
 
-    event = get_object_or_404(Event, id=event_id)
+    event = get_object_or_404(
+        Event,
+        id=event_id
+    )
 
-    if not is_organizer_or_admin(request.user, event):
+    if not is_organizer_or_admin(
+        request.user,
+        event
+    ):
         return redirect("events:my_events")
 
     return render(request, "events/view_proposals.html", {
         "event": event,
-        "proposals": EventProposal.objects.filter(event=event),
+        "proposals": EventProposal.objects.filter(
+            event=event
+        ),
         "form": ProposalForm(),
         "role": "organizer"
     })
@@ -318,9 +430,15 @@ def view_proposals(request, event_id):
 @login_required
 def submit_proposal(request, event_id):
 
-    event = get_object_or_404(Event, id=event_id)
+    event = get_object_or_404(
+        Event,
+        id=event_id
+    )
 
-    if not is_organizer_or_admin(request.user, event):
+    if not is_organizer_or_admin(
+        request.user,
+        event
+    ):
         return redirect("events:my_events")
 
     if request.method == "POST":
@@ -365,7 +483,9 @@ def send_announcement(request):
     if not request.user.is_superuser:
         return redirect("events:dashboard")
 
-    events = Event.objects.filter(status="announced")
+    events = Event.objects.filter(
+        status="announced"
+    )
 
     if request.method == "POST":
 
@@ -422,11 +542,18 @@ def send_announcement(request):
 @login_required
 def event_announcements(request, event_id):
 
-    event = get_object_or_404(Event, id=event_id)
+    event = get_object_or_404(
+        Event,
+        id=event_id
+    )
 
     role = get_role(request.user)
 
-    if role not in ["student", "organizer", "admin"]:
+    if role not in [
+        "student",
+        "organizer",
+        "admin"
+    ]:
         return redirect("events:dashboard")
 
     announcements = Announcement.objects.filter(
@@ -450,7 +577,11 @@ def notifications(request):
         "-created_at"
     )
 
-    notifs.filter(is_read=False).update(is_read=True)
+    notifs.filter(
+        is_read=False
+    ).update(
+        is_read=True
+    )
 
     return render(request, "events/notifications.html", {
         "notifications": notifs
@@ -489,7 +620,10 @@ def notification_detail(request, notification_id):
 @login_required
 def submit_feedback(request, event_id):
 
-    event = get_object_or_404(Event, id=event_id)
+    event = get_object_or_404(
+        Event,
+        id=event_id
+    )
 
     if event.status != "completed":
 
@@ -542,13 +676,20 @@ def submit_feedback(request, event_id):
 
 @login_required
 def event_feedback(request, event_id):
-    return submit_feedback(request, event_id)
+
+    return submit_feedback(
+        request,
+        event_id
+    )
 
 
 @login_required
 def view_feedbacks(request, event_id):
 
-    event = get_object_or_404(Event, id=event_id)
+    event = get_object_or_404(
+        Event,
+        id=event_id
+    )
 
     if get_role(request.user) not in [
         "organizer",
@@ -598,7 +739,9 @@ def event_report_list(request):
     if not request.user.is_superuser:
         return redirect("events:dashboard")
 
-    events = Event.objects.filter(status="completed")
+    events = Event.objects.filter(
+        status="completed"
+    )
 
     data = [
         {
@@ -616,11 +759,17 @@ def event_report_list(request):
 @login_required
 def event_report(request, event_id):
 
-    event = get_object_or_404(Event, id=event_id)
+    event = get_object_or_404(
+        Event,
+        id=event_id
+    )
 
-    feedbacks = Feedback.objects.filter(event=event)
+    feedbacks = Feedback.objects.filter(
+        event=event
+    )
 
     summary = {
+
         "excellent": feedbacks.filter(
             experience="excellent"
         ).count(),
@@ -648,14 +797,24 @@ def event_report(request, event_id):
 @login_required
 def export_event_report(request, event_id):
 
-    event = get_object_or_404(Event, id=event_id)
+    event = get_object_or_404(
+        Event,
+        id=event_id
+    )
 
-    feedbacks = Feedback.objects.filter(event=event)
+    feedbacks = Feedback.objects.filter(
+        event=event
+    )
 
     wb = Workbook()
+
     ws = wb.active
 
-    ws.append(["Event Report", event.name])
+    ws.append([
+        "Event Report",
+        event.name
+    ])
+
     ws.append([])
 
     ws.append([
