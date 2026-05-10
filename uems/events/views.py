@@ -19,11 +19,37 @@ from .models import (
     EventRegistration,
     Announcement,
     Feedback,
-    Attendance
+    Attendance,
+    Notification,
+    EventStatus,
+    ProposalStatus,
 )
 
 from .forms import ProposalForm, EventRegistrationForm
 from .notification_router import send_notification
+
+
+# =====================================================
+# NOTIFICATION CONTEXT
+# =====================================================
+def notif_context(request):
+
+    if request.user.is_authenticated:
+
+        notifications = request.user.notifications.all().order_by(
+            "-created_at"
+        )
+
+        return {
+
+            "notifications": notifications,
+
+            "unread_notifications": notifications.filter(
+                is_read=False
+            ).count()
+        }
+
+    return {}
 
 
 # =====================================================
@@ -71,7 +97,8 @@ def dashboard(request):
 
         return render(request, "accounts/dashboard.html", {
             "role": role,
-            "events": events
+            "events": events,
+            **notif_context(request)
         })
 
     if role == "student":
@@ -87,12 +114,13 @@ def dashboard(request):
 def available_events(request):
 
     events = Event.objects.filter(
-        status="announced"
+        status=EventStatus.ANNOUNCED
     )
 
     return render(request, "events/available_events.html", {
         "events": events,
-        "role": "student"
+        "role": "student",
+        **notif_context(request)
     })
 
 
@@ -121,7 +149,8 @@ def my_events(request):
 
     return render(request, "events/my_events.html", {
         "events": events,
-        "role": role
+        "role": role,
+        **notif_context(request)
     })
 
 
@@ -133,8 +162,10 @@ def view_event(request, event_id):
         id=event_id
     )
 
+    # ONLY APPROVED PROPOSAL
     proposal = EventProposal.objects.filter(
-        event=event
+        event=event,
+        status=ProposalStatus.ACCEPTED
     ).order_by("-id").first()
 
     is_registered = event.registrations.filter(
@@ -152,7 +183,8 @@ def view_event(request, event_id):
         "is_registered": is_registered,
         "feedback": feedback_obj,
         "feedback_submitted": feedback_obj is not None,
-        "role": get_role(request.user)
+        "role": get_role(request.user),
+        **notif_context(request)
     })
 
 
@@ -176,7 +208,7 @@ def register_event(request, event_id):
     event = get_object_or_404(
         Event,
         id=event_id,
-        status="announced"
+        status=EventStatus.ANNOUNCED
     )
 
     if EventRegistration.objects.filter(
@@ -214,7 +246,8 @@ def register_event(request, event_id):
     return render(request, "events/register_event.html", {
         "form": EventRegistrationForm(),
         "event": event,
-        "role": "student"
+        "role": "student",
+        **notif_context(request)
     })
 
 
@@ -240,7 +273,8 @@ def event_registrations(request, event_id):
         "event": event,
         "registrations": regs,
         "total": regs.count(),
-        "role": "organizer"
+        "role": "organizer",
+        **notif_context(request)
     })
 
 
@@ -283,7 +317,8 @@ def generate_qr(request, event_id):
     return render(request, "events/generate_qr.html", {
         "event": event,
         "qr_image": qr_image,
-        "attendance_url": attendance_url
+        "attendance_url": attendance_url,
+        **notif_context(request)
     })
 
 
@@ -364,7 +399,6 @@ def mark_attendance(request, event_id):
 # ATTENDANCE RECORDS
 # =====================================================
 @login_required
-@login_required
 def attendance_records(request, event_id):
 
     event = get_object_or_404(Event, id=event_id)
@@ -382,12 +416,10 @@ def attendance_records(request, event_id):
         event=event
     )
 
-    # SAFE MAP
     attendance_map = {
         a.student_id: a for a in attendance_qs
     }
 
-    # attach attendance
     for reg in registrations:
         reg.attendance = attendance_map.get(reg.student_id)
 
@@ -396,7 +428,8 @@ def attendance_records(request, event_id):
         "registrations": registrations,
         "attendance_map": attendance_map,
         "total_attendance": attendance_qs.count(),
-        "role": role
+        "role": role,
+        **notif_context(request)
     })
 
 
@@ -421,9 +454,10 @@ def view_proposals(request, event_id):
         "event": event,
         "proposals": EventProposal.objects.filter(
             event=event
-        ),
+        ).order_by("-submitted_at"),
         "form": ProposalForm(),
-        "role": "organizer"
+        "role": "organizer",
+        **notif_context(request)
     })
 
 
@@ -451,15 +485,13 @@ def submit_proposal(request, event_id):
 
             obj.event = event
             obj.organizer = request.user
-            obj.status = "pending"
+            obj.status = ProposalStatus.PENDING
 
             obj.save()
 
-            send_notification(
-                user=request.user,
-                event=event,
-                ntype="general",
-                message=f"📌 Proposal submitted for {event.name}"
+            messages.success(
+                request,
+                "Proposal submitted successfully."
             )
 
             return redirect(
@@ -470,7 +502,8 @@ def submit_proposal(request, event_id):
     return render(request, "events/submit_proposal.html", {
         "form": ProposalForm(),
         "event": event,
-        "role": "organizer"
+        "role": "organizer",
+        **notif_context(request)
     })
 
 
@@ -484,7 +517,7 @@ def send_announcement(request):
         return redirect("events:dashboard")
 
     events = Event.objects.filter(
-        status="announced"
+        status=EventStatus.ANNOUNCED
     )
 
     if request.method == "POST":
@@ -524,7 +557,7 @@ def send_announcement(request):
                 user=user,
                 event=event,
                 ntype="announcement",
-                message=f"📢 {event.name}\nAnnouncement: {message_text}"
+                message=f"{event.name}\nAnnouncement: {message_text}"
             )
 
         messages.success(
@@ -535,7 +568,8 @@ def send_announcement(request):
         return redirect("events:send_announcement")
 
     return render(request, "events/send_announcement.html", {
-        "events": events
+        "events": events,
+        **notif_context(request)
     })
 
 
@@ -549,13 +583,6 @@ def event_announcements(request, event_id):
 
     role = get_role(request.user)
 
-    if role not in [
-        "student",
-        "organizer",
-        "admin"
-    ]:
-        return redirect("events:dashboard")
-
     announcements = Announcement.objects.filter(
         event=event
     ).order_by("-created_at")
@@ -563,7 +590,8 @@ def event_announcements(request, event_id):
     return render(request, "events/event_announcements.html", {
         "event": event,
         "announcements": announcements,
-        "role": role
+        "role": role,
+        **notif_context(request)
     })
 
 
@@ -584,7 +612,8 @@ def notifications(request):
     )
 
     return render(request, "events/notifications.html", {
-        "notifications": notifs
+        "notifications": notifs,
+        **notif_context(request)
     })
 
 
@@ -609,9 +638,14 @@ def notification_detail(request, notification_id):
             event_id=notif.event.id
         )
 
-    return render(request, "events/notification_detail.html", {
-        "notif": notif
-    })
+    if notif.event:
+
+        return redirect(
+            "events:view_event",
+            event_id=notif.event.id
+        )
+
+    return redirect("events:notifications")
 
 
 # =====================================================
@@ -625,7 +659,7 @@ def submit_feedback(request, event_id):
         id=event_id
     )
 
-    if event.status != "completed":
+    if event.status != EventStatus.COMPLETED:
 
         messages.error(
             request,
@@ -670,7 +704,8 @@ def submit_feedback(request, event_id):
 
     return render(request, "events/feedback.html", {
         "event": event,
-        "feedback": existing
+        "feedback": existing,
+        **notif_context(request)
     })
 
 
@@ -703,7 +738,8 @@ def view_feedbacks(request, event_id):
 
     return render(request, "events/view_feedbacks.html", {
         "event": event,
-        "feedbacks": feedbacks
+        "feedbacks": feedbacks,
+        **notif_context(request)
     })
 
 
@@ -740,7 +776,7 @@ def event_report_list(request):
         return redirect("events:dashboard")
 
     events = Event.objects.filter(
-        status="completed"
+        status=EventStatus.COMPLETED
     )
 
     data = [
@@ -752,7 +788,8 @@ def event_report_list(request):
     ]
 
     return render(request, "events/event_report_list.html", {
-        "data": data
+        "data": data,
+        **notif_context(request)
     })
 
 
@@ -790,7 +827,8 @@ def event_report(request, event_id):
     return render(request, "events/event_report.html", {
         "event": event,
         "feedbacks": feedbacks,
-        "summary": summary
+        "summary": summary,
+        **notif_context(request)
     })
 
 

@@ -4,84 +4,421 @@
 
 {% block content %}
 
-<div class="box">
+<style>
 
-    <!-- EVENT TITLE -->
-    <h4 class="text-primary fw-bold mb-4">
-        {{ event.name }}
-    </h4>
+    .event-wrapper{
+        max-width:1000px;
+        margin:auto;
+    }
 
-    <div class="card shadow-sm border-0">
-        <div class="card-body">
+    .event-card{
+        border:none;
+        border-radius:18px;
+        overflow:hidden;
+        background:white;
+        box-shadow:0 8px 25px rgba(0,0,0,0.06);
+    }
 
-            <!-- EVENT INFO -->
-            <h5 class="fw-semibold mb-3">Event Information</h5>
+    .event-header{
+        background:linear-gradient(135deg,#0d6efd,#0b5ed7);
+        padding:30px;
+        color:white;
+    }
 
-            <p>
-                <strong>Date:</strong>
-                {{ event.date|date:"d M Y" }}
-            </p>
+    .event-title{
+        font-size:30px;
+        font-weight:700;
+        margin-bottom:10px;
+    }
 
-            <p>
-                <strong>Venue:</strong>
-                {{ event.venue|default:"Not specified" }}
-            </p>
+    .event-meta{
+        display:flex;
+        flex-wrap:wrap;
+        gap:12px;
+        margin-top:10px;
+    }
 
-            <p class="mt-3">
-                <strong>Description:</strong><br>
-                {{ event.description|default:"No description provided." }}
-            </p>
+    .meta-badge{
+        background:rgba(255,255,255,0.18);
+        padding:8px 14px;
+        border-radius:30px;
+        font-size:14px;
+        font-weight:500;
+    }
 
-            <p class="mt-3">
-                <strong>Status:</strong>
-                <span class="badge bg-info">
-                    {{ event.status }}
-                </span>
-            </p>
+    .event-body{
+        padding:30px;
+    }
 
-            <hr>
+    .section-title{
+        font-size:18px;
+        font-weight:700;
+        color:#0d6efd;
+        margin-bottom:18px;
+    }
 
-            <!-- ACTION BUTTONS -->
-            <div class="d-flex flex-wrap gap-2">
+    .info-grid{
+        display:grid;
+        grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+        gap:18px;
+        margin-bottom:25px;
+    }
 
-                <!-- ANNOUNCEMENTS -->
-                <a href="{% url 'events:event_announcements' event.id %}"
-                   class="btn btn-primary btn-sm">
-                    View Announcements
-                </a>
+    .info-box{
+        background:#f8faff;
+        border:1px solid #e7eefc;
+        border-radius:14px;
+        padding:18px;
+    }
 
-                <!-- REGISTRATIONS (ONLY ORGANIZER) -->
-                {% if role == "organizer" %}
-                    <a href="{% url 'events:event_registrations' event.id %}"
-                       class="btn btn-secondary btn-sm">
-                        View Registrations
-                    </a>
+    .info-label{
+        font-size:13px;
+        color:#6c757d;
+        margin-bottom:6px;
+        font-weight:600;
+        text-transform:uppercase;
+        letter-spacing:0.3px;
+    }
 
-                    <a href="{% url 'events:view_feedbacks' event.id %}"
-                       class="btn btn-dark btn-sm">
-                        View Feedbacks
-                    </a>
-                {% endif %}
+    .info-value{
+        font-size:16px;
+        font-weight:600;
+        color:#212529;
+    }
 
-                <!-- FEEDBACK SECTION (STUDENT / PARTICIPANT) -->
-                {% if role != "organizer" %}
+    .description-box{
+        background:#f8f9fb;
+        border-radius:14px;
+        padding:22px;
+        line-height:1.8;
+        border:1px solid #eceff5;
+    }
 
-                    {% if feedback_submitted %}
-                        <button class="btn btn-success btn-sm" disabled>
-                            Feedback Submitted
-                        </button>
-                    {% else %}
-                        <a href="{% url 'events:event_feedback' event.id %}"
-                           class="btn btn-outline-success btn-sm">
-                            Submit Feedback
-                        </a>
-                    {% endif %}
+    .action-section{
+        margin-top:30px;
+    }
 
-                {% endif %}
+    .action-title{
+        font-size:17px;
+        font-weight:700;
+        margin-bottom:16px;
+        color:#212529;
+    }
+
+    .action-buttons{
+        display:flex;
+        flex-wrap:wrap;
+        gap:12px;
+    }
+
+    .action-buttons .btn{
+        border-radius:10px;
+        padding:10px 18px;
+        font-weight:600;
+    }
+
+    .proposal-box{
+        margin-top:28px;
+        border:1px solid #edf0f7;
+        border-radius:16px;
+        padding:22px;
+        background:#fbfcff;
+    }
+
+    .proposal-title{
+        font-size:17px;
+        font-weight:700;
+        margin-bottom:15px;
+        color:#0d6efd;
+    }
+
+    .proposal-status{
+        display:inline-block;
+        padding:6px 12px;
+        border-radius:20px;
+        font-size:13px;
+        font-weight:600;
+        margin-bottom:15px;
+    }
+
+    .status-approved{
+        background:#d1f7df;
+        color:#198754;
+    }
+
+    .status-pending{
+        background:#fff3cd;
+        color:#856404;
+    }
+
+    .status-rejected{
+        background:#fde2e1;
+        color:#dc3545;
+    }
+
+    @media(max-width:768px){
+
+        .event-header{
+            padding:24px;
+        }
+
+        .event-body{
+            padding:22px;
+        }
+
+        .event-title{
+            font-size:24px;
+        }
+
+        .action-buttons{
+            flex-direction:column;
+        }
+
+        .action-buttons .btn{
+            width:100%;
+        }
+
+    }
+
+</style>
+
+<div class="event-wrapper">
+
+    <div class="event-card">
+
+        <!-- HEADER -->
+        <div class="event-header">
+
+            <div class="event-title">
+                {{ event.name }}
+            </div>
+
+            <div class="event-meta">
+
+                <div class="meta-badge">
+                    <i class="fa fa-calendar"></i>
+                    {{ event.date|date:"d M Y" }}
+                </div>
+
+                <div class="meta-badge">
+                    <i class="fa fa-location-dot"></i>
+                    {{ event.venue|default:"Venue Not Specified" }}
+                </div>
+
+                <div class="meta-badge">
+                    <i class="fa fa-circle-info"></i>
+                    {{ event.status|title }}
+                </div>
 
             </div>
 
         </div>
+
+        <!-- BODY -->
+        <div class="event-body">
+
+            <!-- INFO -->
+            <div class="section-title">
+                Event Information
+            </div>
+
+            <div class="info-grid">
+
+                <div class="info-box">
+
+                    <div class="info-label">
+                        Event Date
+                    </div>
+
+                    <div class="info-value">
+                        {{ event.date|date:"d F Y" }}
+                    </div>
+
+                </div>
+
+                <div class="info-box">
+
+                    <div class="info-label">
+                        Venue
+                    </div>
+
+                    <div class="info-value">
+                        {{ event.venue|default:"Not Specified" }}
+                    </div>
+
+                </div>
+
+                <div class="info-box">
+
+                    <div class="info-label">
+                        Status
+                    </div>
+
+                    <div class="info-value">
+                        {{ event.status|title }}
+                    </div>
+
+                </div>
+
+                {% if event.category %}
+                <div class="info-box">
+
+                    <div class="info-label">
+                        Category
+                    </div>
+
+                    <div class="info-value">
+                        {{ event.category }}
+                    </div>
+
+                </div>
+                {% endif %}
+
+            </div>
+
+            <!-- DESCRIPTION -->
+            <div class="section-title">
+                Description
+            </div>
+
+            <div class="description-box">
+
+                {{ event.description|default:"No description provided for this event." }}
+
+            </div>
+
+            <!-- PROPOSAL -->
+            {% if proposal %}
+
+            <div class="proposal-box">
+
+                <div class="proposal-title">
+                    Latest Proposal
+                </div>
+
+                <div>
+
+                    <span class="proposal-status
+                        {% if proposal.status == 'approved' %}
+                            status-approved
+                        {% elif proposal.status == 'rejected' %}
+                            status-rejected
+                        {% else %}
+                            status-pending
+                        {% endif %}
+                    ">
+
+                        {{ proposal.status|title }}
+
+                    </span>
+
+                </div>
+
+                {% if proposal.description %}
+                    <p class="mb-0">
+                        {{ proposal.description }}
+                    </p>
+                {% endif %}
+
+            </div>
+
+            {% endif %}
+
+            <!-- ACTIONS -->
+            <div class="action-section">
+
+                <div class="action-title">
+                    Actions
+                </div>
+
+                <div class="action-buttons">
+
+                    <!-- ANNOUNCEMENTS -->
+                    <a href="{% url 'events:event_announcements' event.id %}"
+                       class="btn btn-primary">
+
+                        <i class="fa fa-bullhorn"></i>
+                        Announcements
+
+                    </a>
+
+                    <!-- ORGANIZER ACTIONS -->
+                    {% if role == "organizer" %}
+
+                        <a href="{% url 'events:event_registrations' event.id %}"
+                           class="btn btn-outline-primary">
+
+                            <i class="fa fa-users"></i>
+                            Registrations
+
+                        </a>
+
+                        <a href="{% url 'events:view_proposals' event.id %}"
+                           class="btn btn-outline-dark">
+
+                            <i class="fa fa-file-lines"></i>
+                            Proposals
+
+                        </a>
+
+                        <a href="{% url 'events:view_feedbacks' event.id %}"
+                           class="btn btn-dark">
+
+                            <i class="fa fa-comments"></i>
+                            Feedbacks
+
+                        </a>
+
+                        <a href="{% url 'events:view_attendance' event.id %}"
+                           class="btn btn-outline-success">
+
+                            <i class="fa fa-check-circle"></i>
+                            Attendance
+
+                        </a>
+
+                        <a href="{% url 'events:generate_qr' event.id %}"
+                           class="btn btn-success">
+
+                            <i class="fa fa-qrcode"></i>
+                            Attendance QR
+
+                        </a>
+
+                    {% endif %}
+
+                    <!-- STUDENT ACTIONS -->
+                    {% if role != "organizer" %}
+
+                        {% if feedback_submitted %}
+
+                            <button class="btn btn-success" disabled>
+
+                                <i class="fa fa-check"></i>
+                                Feedback Submitted
+
+                            </button>
+
+                        {% elif event.status == "completed" %}
+
+                            <a href="{% url 'events:event_feedback' event.id %}"
+                               class="btn btn-outline-success">
+
+                                <i class="fa fa-star"></i>
+                                Submit Feedback
+
+                            </a>
+
+                        {% endif %}
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+        </div>
+
     </div>
 
 </div>

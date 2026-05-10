@@ -164,6 +164,10 @@
             line-height:1.5;
         }
 
+        .notif-unread{
+            background:#eef4ff;
+        }
+
         .dropdown-menu{
             border:none;
             border-radius:14px;
@@ -390,20 +394,18 @@
 
                         <i class="fa fa-bell"></i>
 
-                        {% if notifications %}
-                            {% if notifications|length > 0 %}
+                        {% if unread_notifications and unread_notifications > 0 %}
 
-                                <span class="badge bg-danger notif-badge">
-                                    {{ notifications|length }}
-                                </span>
+                            <span class="badge bg-danger notif-badge">
+                                {{ unread_notifications }}
+                            </span>
 
-                            {% endif %}
                         {% endif %}
 
                     </button>
 
                     <ul class="dropdown-menu dropdown-menu-end"
-                        style="width:340px;">
+                        style="width:340px; max-height:420px; overflow-y:auto;">
 
                         <li class="dropdown-header fw-bold">
                             Notifications
@@ -415,10 +417,16 @@
 
                                 <li>
 
-                                    <a class="dropdown-item notif-item"
+                                    <a class="dropdown-item notif-item {% if not n.is_read %}notif-unread{% endif %}"
                                        href="{% url 'events:notification_detail' n.id %}">
 
-                                        {{ n.message|truncatechars:80 }}
+                                        <div class="fw-semibold">
+                                            {{ n.message|truncatechars:80 }}
+                                        </div>
+
+                                        <small class="text-muted">
+                                            {{ n.created_at|timesince }} ago
+                                        </small>
 
                                     </a>
 
