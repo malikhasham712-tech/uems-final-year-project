@@ -131,9 +131,7 @@ class EventAdmin(admin.ModelAdmin):
                 url
             )
 
-        return format_html(
-            '<span style="color:#999;">No Proposal</span>'
-        )
+        return "No Proposal"
 
     proposal_btn.short_description = "Proposal"
 
@@ -204,28 +202,49 @@ class EventProposalAdmin(admin.ModelAdmin):
     )
 
     list_filter = ('status',)
-    search_fields = ('event__name', 'organizer__username')
 
-    actions = ['approve_proposals', 'reject_proposals']
+    search_fields = (
+        'event__name',
+        'organizer__username'
+    )
 
+    actions = [
+        'approve_proposals',
+        'reject_proposals'
+    ]
+
+    # -------------------------------------------------
+    # HIDE FROM SIDEBAR
+    # -------------------------------------------------
     def has_module_permission(self, request):
         return False
 
+    # -------------------------------------------------
+    # PERMISSIONS
+    # -------------------------------------------------
     def has_add_permission(self, request):
         return False
 
     def has_delete_permission(self, request, obj=None):
         return False
 
+    # -------------------------------------------------
+    # READONLY FIELDS
+    # -------------------------------------------------
     def get_readonly_fields(self, request, obj=None):
+
         if obj:
             return [
                 field.name
                 for field in obj._meta.fields
                 if field.name != "status"
             ]
+
         return []
 
+    # -------------------------------------------------
+    # APPROVE
+    # -------------------------------------------------
     @admin.action(description="Approve selected proposals")
     def approve_proposals(self, request, queryset):
 
@@ -235,6 +254,7 @@ class EventProposalAdmin(admin.ModelAdmin):
             proposal.save()
 
             if proposal.organizer:
+
                 Notification.objects.create(
                     user=proposal.organizer,
                     event=proposal.event,
@@ -242,6 +262,9 @@ class EventProposalAdmin(admin.ModelAdmin):
                     message=f"Your proposal for '{proposal.event.name}' has been approved."
                 )
 
+    # -------------------------------------------------
+    # REJECT
+    # -------------------------------------------------
     @admin.action(description="Reject selected proposals")
     def reject_proposals(self, request, queryset):
 
@@ -251,6 +274,7 @@ class EventProposalAdmin(admin.ModelAdmin):
             proposal.save()
 
             if proposal.organizer:
+
                 Notification.objects.create(
                     user=proposal.organizer,
                     event=proposal.event,
@@ -265,18 +289,48 @@ class EventProposalAdmin(admin.ModelAdmin):
 @admin.register(EventReport)
 class EventReportAdmin(admin.ModelAdmin):
 
-    list_display = ("name", "event", "created_at")
-    exclude = ("event", "created_at")
+    list_display = (
+        "name",
+        "event",
+        "created_at"
+    )
+
+    exclude = (
+        "event",
+        "created_at"
+    )
+
     change_list_template = "admin/event_report_landing.html"
 
+    # -------------------------------------------------
+    # SAVE
+    # -------------------------------------------------
     def save_model(self, request, obj, form, change):
-        super().save_model(request, obj, form, change)
 
+        super().save_model(
+            request,
+            obj,
+            form,
+            change
+        )
+
+    # -------------------------------------------------
+    # CHANGE LIST TITLE
+    # -------------------------------------------------
     def changelist_view(self, request, extra_context=None):
-        extra_context = extra_context or {}
-        extra_context["title"] = "Feedback Reports"
-        return super().changelist_view(request, extra_context=extra_context)
 
+        extra_context = extra_context or {}
+
+        extra_context["title"] = "Feedback Reports"
+
+        return super().changelist_view(
+            request,
+            extra_context=extra_context
+        )
+
+    # -------------------------------------------------
+    # FEEDBACK LIST PAGE
+    # -------------------------------------------------
     def feedback_list_view(self, request):
 
         events = Event.objects.filter(
@@ -287,11 +341,15 @@ class EventReportAdmin(admin.ModelAdmin):
 
         for event in events:
 
-            feedback_count = Feedback.objects.filter(event=event).count()
+            feedback_count = Feedback.objects.filter(
+                event=event
+            ).count()
 
             report, _ = EventReport.objects.get_or_create(
                 event=event,
-                defaults={"name": f"{event.name} Report"}
+                defaults={
+                    "name": f"{event.name} Report"
+                }
             )
 
             rows.append({
@@ -303,24 +361,56 @@ class EventReportAdmin(admin.ModelAdmin):
         return TemplateResponse(
             request,
             "admin/event_report_list.html",
-            {"rows": rows}
+            {
+                "rows": rows
+            }
         )
 
-    def change_view(self, request, object_id, form_url='', extra_context=None):
+    # -------------------------------------------------
+    # DETAIL VIEW
+    # -------------------------------------------------
+    def change_view(
+        self,
+        request,
+        object_id,
+        form_url='',
+        extra_context=None
+    ):
 
-        report = get_object_or_404(EventReport, pk=object_id)
+        report = get_object_or_404(
+            EventReport,
+            pk=object_id
+        )
+
         event = report.event
-        feedbacks = Feedback.objects.filter(event=event)
+
+        feedbacks = Feedback.objects.filter(
+            event=event
+        )
 
         stats = {
-            "excellent": feedbacks.filter(experience="excellent").count(),
-            "good": feedbacks.filter(experience="good").count(),
-            "average": feedbacks.filter(experience="average").count(),
-            "poor": feedbacks.filter(experience="poor").count(),
+
+            "excellent": feedbacks.filter(
+                experience="excellent"
+            ).count(),
+
+            "good": feedbacks.filter(
+                experience="good"
+            ).count(),
+
+            "average": feedbacks.filter(
+                experience="average"
+            ).count(),
+
+            "poor": feedbacks.filter(
+                experience="poor"
+            ).count(),
         }
 
         extra_context = extra_context or {}
+
         extra_context.update({
+
             "event": event,
             "report": report,
             "feedbacks": feedbacks,
@@ -328,21 +418,41 @@ class EventReportAdmin(admin.ModelAdmin):
             "has_feedback": feedbacks.exists(),
         })
 
-        return TemplateResponse(request, "admin/event_report_change.html", extra_context)
+        return TemplateResponse(
+            request,
+            "admin/event_report_change.html",
+            extra_context
+        )
 
+    # -------------------------------------------------
+    # EXPORT EXCEL
+    # -------------------------------------------------
     def export_feedback_excel(self, request, object_id):
 
-        report = get_object_or_404(EventReport, pk=object_id)
+        report = get_object_or_404(
+            EventReport,
+            pk=object_id
+        )
+
         event = report.event
-        feedbacks = Feedback.objects.filter(event=event)
+
+        feedbacks = Feedback.objects.filter(
+            event=event
+        )
 
         wb = Workbook()
+
         ws = wb.active
         ws.title = "Feedback Report"
 
-        ws.append(["Student", "Experience", "Remarks"])
+        ws.append([
+            "Student",
+            "Experience",
+            "Remarks"
+        ])
 
         for fb in feedbacks:
+
             ws.append([
                 fb.student.username if fb.student else "Unknown",
                 fb.get_experience_display(),
@@ -353,24 +463,40 @@ class EventReportAdmin(admin.ModelAdmin):
             content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         )
 
-        name = (report.name or "report").replace(" ", "_")
-        response['Content-Disposition'] = f'attachment; filename="{name}.xlsx"'
+        name = (
+            report.name or "report"
+        ).replace(" ", "_")
+
+        response[
+            'Content-Disposition'
+        ] = f'attachment; filename="{name}.xlsx"'
 
         wb.save(response)
+
         return response
 
+    # -------------------------------------------------
+    # CUSTOM URLS
+    # -------------------------------------------------
     def get_urls(self):
+
         urls = super().get_urls()
 
         custom_urls = [
+
             path(
                 'feedback/',
-                self.admin_site.admin_view(self.feedback_list_view),
+                self.admin_site.admin_view(
+                    self.feedback_list_view
+                ),
                 name="eventreport_feedback_list"
             ),
+
             path(
                 '<int:object_id>/export/',
-                self.admin_site.admin_view(self.export_feedback_excel),
+                self.admin_site.admin_view(
+                    self.export_feedback_excel
+                ),
                 name="eventreport_export"
             ),
         ]
@@ -382,6 +508,7 @@ class EventReportAdmin(admin.ModelAdmin):
 # HIDDEN MODELS
 # =====================================================
 class HiddenAdmin(admin.ModelAdmin):
+
     def has_module_permission(self, request):
         return False
 
