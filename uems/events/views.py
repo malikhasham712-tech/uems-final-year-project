@@ -42,7 +42,7 @@ def notif_context(request):
 
         return {
 
-            "notifications": notifications,
+            "notifications": notifications[:10],
 
             "unread_notifications": notifications.filter(
                 is_read=False
@@ -162,7 +162,6 @@ def view_event(request, event_id):
         id=event_id
     )
 
-    # ONLY APPROVED PROPOSAL
     proposal = EventProposal.objects.filter(
         event=event,
         status=ProposalStatus.ACCEPTED
@@ -300,7 +299,7 @@ def generate_qr(request, event_id):
         args=[event.id]
     )
 
-    base_url = "http://192.168.1.10:8000"
+    base_url = request.build_absolute_uri("/")[:-1]
 
     attendance_url = f"{base_url}{attendance_path}"
 
@@ -401,7 +400,10 @@ def mark_attendance(request, event_id):
 @login_required
 def attendance_records(request, event_id):
 
-    event = get_object_or_404(Event, id=event_id)
+    event = get_object_or_404(
+        Event,
+        id=event_id
+    )
 
     role = get_role(request.user)
 
@@ -605,11 +607,7 @@ def notifications(request):
         "-created_at"
     )
 
-    notifs.filter(
-        is_read=False
-    ).update(
-        is_read=True
-    )
+    notifs.update(is_read=True)
 
     return render(request, "events/notifications.html", {
         "notifications": notifs,
@@ -828,6 +826,8 @@ def event_report(request, event_id):
         "event": event,
         "feedbacks": feedbacks,
         "summary": summary,
+        "has_feedback": feedbacks.exists(),
+        "stats": summary,
         **notif_context(request)
     })
 

@@ -5,6 +5,7 @@ from django.urls import path, reverse
 from django.template.response import TemplateResponse
 from django.utils.html import format_html
 from django.contrib.auth.models import User
+from django.db.models import Count
 
 from openpyxl import Workbook
 
@@ -20,6 +21,44 @@ from .models import (
     EventStatus,
     ProposalStatus,
 )
+
+# =====================================================
+# MODULE LANDING PAGE
+# =====================================================
+def event_report_module(request):
+    return TemplateResponse(
+        request,
+        "admin/event_report_module.html",
+        {}
+    )
+
+
+# =====================================================
+# ATTENDANCE LIST (ALL EVENTS PAGE)
+# =====================================================
+def attendance_event_list(request):
+
+    events = Event.objects.filter(
+        status__in=[EventStatus.ANNOUNCED, EventStatus.COMPLETED]
+    ).order_by("-date")
+
+    rows = []
+
+    for event in events:
+        total = EventRegistration.objects.filter(event=event).count()
+        present = EventRegistration.objects.filter(event=event, status="present").count()
+
+        rows.append({
+            "event": event,
+            "total_registrations": total,
+            "total_attendance": present,
+        })
+
+    return TemplateResponse(
+        request,
+        "admin/attendance_report_list.html",
+        {"rows": rows}
+    )
 
 
 # =====================================================
@@ -53,9 +92,6 @@ class EventAdmin(admin.ModelAdmin):
     list_filter = ('status', 'category')
     search_fields = ('name',)
 
-    # -------------------------------------------------
-    # SAVE MODEL
-    # -------------------------------------------------
     def save_model(self, request, obj, form, change):
 
         old_obj = None
@@ -66,32 +102,15 @@ class EventAdmin(admin.ModelAdmin):
 
         super().save_model(request, obj, form, change)
 
-        # ORGANIZER ASSIGNED
-        if obj.organizer:
+        if obj.organizer and (is_new or (old_obj and old_obj.organizer != obj.organizer)):
+            Notification.objects.create(
+                user=obj.organizer,
+                event=obj,
+                notification_type='event_assigned',
+                message=f"You are assigned as Organizer for '{obj.name}'."
+            )
 
-            if is_new:
-                Notification.objects.create(
-                    user=obj.organizer,
-                    event=obj,
-                    notification_type='event_assigned',
-                    message=f"You are assigned as Organizer for '{obj.name}'."
-                )
-
-            elif old_obj and old_obj.organizer != obj.organizer:
-                Notification.objects.create(
-                    user=obj.organizer,
-                    event=obj,
-                    notification_type='event_assigned',
-                    message=f"You are assigned as Organizer for '{obj.name}'."
-                )
-
-        # EVENT ANNOUNCED
-        if (
-            old_obj
-            and old_obj.status != EventStatus.ANNOUNCED
-            and obj.status == EventStatus.ANNOUNCED
-        ):
-
+        if old_obj and old_obj.status != EventStatus.ANNOUNCED and obj.status == EventStatus.ANNOUNCED:
             users = User.objects.filter(is_active=True)
 
             for user in users:
@@ -102,89 +121,26 @@ class EventAdmin(admin.ModelAdmin):
                     message=f"Event Announced: {obj.name}"
                 )
 
-            if obj.organizer:
-                Notification.objects.create(
-                    user=obj.organizer,
-                    event=obj,
-                    notification_type='event_announced',
-                    message=f"Your event '{obj.name}' is now announced."
-                )
-
-    # -------------------------------------------------
-    # PROPOSAL BUTTON
-    # -------------------------------------------------
     def proposal_btn(self, obj):
-
-        proposal = EventProposal.objects.filter(
-            event=obj
-        ).order_by("-id").first()
+        proposal = EventProposal.objects.filter(event=obj).order_by("-id").first()
 
         if proposal:
-
-            url = reverse(
-                'admin:events_eventproposal_change',
-                args=[proposal.id]
-            )
-
-            return format_html(
-                '<a class="button" href="{}">Proposal</a>',
-                url
-            )
+            url = reverse('admin:events_eventproposal_change', args=[proposal.id])
+            return format_html('<a class="button" href="{}">Proposal</a>', url)
 
         return "No Proposal"
 
-    proposal_btn.short_description = "Proposal"
-
-    # -------------------------------------------------
-    # REGISTRATION BUTTON
-    # -------------------------------------------------
     def registration_btn(self, obj):
+        url = reverse('events:event_registrations', args=[obj.id])
+        return format_html('<a class="button" href="{}">Registrations</a>', url)
 
-        url = reverse(
-            'events:event_registrations',
-            args=[obj.id]
-        )
-
-        return format_html(
-            '<a class="button" href="{}">Registrations</a>',
-            url
-        )
-
-    registration_btn.short_description = "Registrations"
-
-    # -------------------------------------------------
-    # ATTENDANCE BUTTON
-    # -------------------------------------------------
     def attendance_btn(self, obj):
+        url = reverse('admin:attendance_report_detail', args=[obj.id])
+        return format_html('<a class="button" href="{}">Attendance</a>', url)
 
-        url = reverse(
-            'events:view_attendance',
-            args=[obj.id]
-        )
-
-        return format_html(
-            '<a class="button" style="background:#333;color:white;padding:4px 8px;border-radius:4px;" href="{}">Attendance</a>',
-            url
-        )
-
-    attendance_btn.short_description = "Attendance"
-
-    # -------------------------------------------------
-    # FEEDBACK BUTTON
-    # -------------------------------------------------
     def feedback_btn(self, obj):
-
-        url = reverse(
-            'events:view_feedbacks',
-            args=[obj.id]
-        )
-
-        return format_html(
-            '<a class="button" href="{}">Feedback</a>',
-            url
-        )
-
-    feedback_btn.short_description = "Feedback"
+        url = reverse('events:view_feedbacks', args=[obj.id])
+        return format_html('<a class="button" href="{}">Feedback</a>', url)
 
 
 # =====================================================
@@ -192,95 +148,31 @@ class EventAdmin(admin.ModelAdmin):
 # =====================================================
 @admin.register(EventProposal)
 class EventProposalAdmin(admin.ModelAdmin):
-
-    list_display = (
-        'event',
-        'organizer',
-        'proposed_venue',
-        'status',
-        'submitted_at',
-    )
-
+    list_display = ('event', 'organizer', 'proposed_venue', 'status', 'submitted_at')
     list_filter = ('status',)
+    search_fields = ('event__name', 'organizer__username')
 
-    search_fields = (
-        'event__name',
-        'organizer__username'
-    )
-
-    actions = [
-        'approve_proposals',
-        'reject_proposals'
-    ]
-
-    # -------------------------------------------------
-    # HIDE FROM SIDEBAR
-    # -------------------------------------------------
     def has_module_permission(self, request):
         return False
 
-    # -------------------------------------------------
-    # PERMISSIONS
-    # -------------------------------------------------
     def has_add_permission(self, request):
         return False
 
     def has_delete_permission(self, request, obj=None):
         return False
 
-    # -------------------------------------------------
-    # READONLY FIELDS
-    # -------------------------------------------------
     def get_readonly_fields(self, request, obj=None):
-
         if obj:
-            return [
-                field.name
-                for field in obj._meta.fields
-                if field.name != "status"
-            ]
-
+            return [f.name for f in obj._meta.fields if f.name != "status"]
         return []
 
-    # -------------------------------------------------
-    # APPROVE
-    # -------------------------------------------------
     @admin.action(description="Approve selected proposals")
     def approve_proposals(self, request, queryset):
+        queryset.update(status=ProposalStatus.ACCEPTED)
 
-        for proposal in queryset:
-
-            proposal.status = ProposalStatus.ACCEPTED
-            proposal.save()
-
-            if proposal.organizer:
-
-                Notification.objects.create(
-                    user=proposal.organizer,
-                    event=proposal.event,
-                    notification_type='general',
-                    message=f"Your proposal for '{proposal.event.name}' has been approved."
-                )
-
-    # -------------------------------------------------
-    # REJECT
-    # -------------------------------------------------
     @admin.action(description="Reject selected proposals")
     def reject_proposals(self, request, queryset):
-
-        for proposal in queryset:
-
-            proposal.status = ProposalStatus.REJECTED
-            proposal.save()
-
-            if proposal.organizer:
-
-                Notification.objects.create(
-                    user=proposal.organizer,
-                    event=proposal.event,
-                    notification_type='general',
-                    message=f"Your proposal for '{proposal.event.name}' has been rejected."
-                )
+        queryset.update(status=ProposalStatus.REJECTED)
 
 
 # =====================================================
@@ -289,67 +181,26 @@ class EventProposalAdmin(admin.ModelAdmin):
 @admin.register(EventReport)
 class EventReportAdmin(admin.ModelAdmin):
 
-    list_display = (
-        "name",
-        "event",
-        "created_at"
-    )
+    list_display = ("name", "event", "created_at")
+    exclude = ("event", "created_at")
 
-    exclude = (
-        "event",
-        "created_at"
-    )
-
-    change_list_template = "admin/event_report_landing.html"
-
-    # -------------------------------------------------
-    # SAVE
-    # -------------------------------------------------
-    def save_model(self, request, obj, form, change):
-
-        super().save_model(
-            request,
-            obj,
-            form,
-            change
-        )
-
-    # -------------------------------------------------
-    # CHANGE LIST TITLE
-    # -------------------------------------------------
     def changelist_view(self, request, extra_context=None):
-
         extra_context = extra_context or {}
+        extra_context["title"] = "Event Reports"
+        return super().changelist_view(request, extra_context)
 
-        extra_context["title"] = "Feedback Reports"
-
-        return super().changelist_view(
-            request,
-            extra_context=extra_context
-        )
-
-    # -------------------------------------------------
-    # FEEDBACK LIST PAGE
-    # -------------------------------------------------
     def feedback_list_view(self, request):
 
-        events = Event.objects.filter(
-            status=EventStatus.COMPLETED
-        ).order_by("-date")
+        events = Event.objects.filter(status=EventStatus.COMPLETED)
 
         rows = []
 
         for event in events:
-
-            feedback_count = Feedback.objects.filter(
-                event=event
-            ).count()
+            feedback_count = Feedback.objects.filter(event=event).count()
 
             report, _ = EventReport.objects.get_or_create(
                 event=event,
-                defaults={
-                    "name": f"{event.name} Report"
-                }
+                defaults={"name": f"{event.name} Report"}
             )
 
             rows.append({
@@ -361,56 +212,25 @@ class EventReportAdmin(admin.ModelAdmin):
         return TemplateResponse(
             request,
             "admin/event_report_list.html",
-            {
-                "rows": rows
-            }
+            {"rows": rows}
         )
 
-    # -------------------------------------------------
-    # DETAIL VIEW
-    # -------------------------------------------------
-    def change_view(
-        self,
-        request,
-        object_id,
-        form_url='',
-        extra_context=None
-    ):
+    def change_view(self, request, object_id, form_url='', extra_context=None):
 
-        report = get_object_or_404(
-            EventReport,
-            pk=object_id
-        )
-
+        report = get_object_or_404(EventReport, pk=object_id)
         event = report.event
 
-        feedbacks = Feedback.objects.filter(
-            event=event
-        )
+        feedbacks = Feedback.objects.filter(event=event)
 
         stats = {
-
-            "excellent": feedbacks.filter(
-                experience="excellent"
-            ).count(),
-
-            "good": feedbacks.filter(
-                experience="good"
-            ).count(),
-
-            "average": feedbacks.filter(
-                experience="average"
-            ).count(),
-
-            "poor": feedbacks.filter(
-                experience="poor"
-            ).count(),
+            "excellent": feedbacks.filter(experience="excellent").count(),
+            "good": feedbacks.filter(experience="good").count(),
+            "average": feedbacks.filter(experience="average").count(),
+            "poor": feedbacks.filter(experience="poor").count(),
         }
 
         extra_context = extra_context or {}
-
         extra_context.update({
-
             "event": event,
             "report": report,
             "feedbacks": feedbacks,
@@ -424,35 +244,18 @@ class EventReportAdmin(admin.ModelAdmin):
             extra_context
         )
 
-    # -------------------------------------------------
-    # EXPORT EXCEL
-    # -------------------------------------------------
     def export_feedback_excel(self, request, object_id):
 
-        report = get_object_or_404(
-            EventReport,
-            pk=object_id
-        )
-
-        event = report.event
-
-        feedbacks = Feedback.objects.filter(
-            event=event
-        )
+        report = get_object_or_404(EventReport, pk=object_id)
+        feedbacks = Feedback.objects.filter(event=report.event)
 
         wb = Workbook()
-
         ws = wb.active
         ws.title = "Feedback Report"
 
-        ws.append([
-            "Student",
-            "Experience",
-            "Remarks"
-        ])
+        ws.append(["Student", "Experience", "Remarks"])
 
         for fb in feedbacks:
-
             ws.append([
                 fb.student.username if fb.student else "Unknown",
                 fb.get_experience_display(),
@@ -463,41 +266,65 @@ class EventReportAdmin(admin.ModelAdmin):
             content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         )
 
-        name = (
-            report.name or "report"
-        ).replace(" ", "_")
-
-        response[
-            'Content-Disposition'
-        ] = f'attachment; filename="{name}.xlsx"'
+        filename = (report.name or "report").replace(" ", "_")
+        response['Content-Disposition'] = f'attachment; filename="{filename}.xlsx"'
 
         wb.save(response)
-
         return response
 
-    # -------------------------------------------------
-    # CUSTOM URLS
-    # -------------------------------------------------
+    def attendance_report_detail(self, request, event_id):
+
+        event = get_object_or_404(Event, pk=event_id)
+
+        attendances = EventRegistration.objects.filter(event=event)
+
+        total = attendances.count()
+        present = attendances.filter(status="present").count()
+        absent = total - present
+        percentage = (present / total * 100) if total else 0
+
+        return TemplateResponse(request, "admin/attendance_report_change.html", {
+            "event": event,
+            "attendances": attendances,
+            "total_students": total,
+            "present": present,
+            "absent": absent,
+            "percentage": round(percentage, 2),
+        })
+
     def get_urls(self):
 
         urls = super().get_urls()
 
         custom_urls = [
+            path(
+                '',
+                self.admin_site.admin_view(event_report_module),
+                name="event_report_module"
+            ),
 
             path(
                 'feedback/',
-                self.admin_site.admin_view(
-                    self.feedback_list_view
-                ),
+                self.admin_site.admin_view(self.feedback_list_view),
                 name="eventreport_feedback_list"
             ),
 
             path(
-                '<int:object_id>/export/',
-                self.admin_site.admin_view(
-                    self.export_feedback_excel
-                ),
+                'attendance/',
+                self.admin_site.admin_view(attendance_event_list),
+                name="attendance_report_list"
+            ),
+
+            path(
+                'export/<int:object_id>/',
+                self.admin_site.admin_view(self.export_feedback_excel),
                 name="eventreport_export"
+            ),
+
+            path(
+                'attendance/<int:event_id>/',
+                self.admin_site.admin_view(self.attendance_report_detail),
+                name="attendance_report_detail"
             ),
         ]
 
@@ -508,7 +335,6 @@ class EventReportAdmin(admin.ModelAdmin):
 # HIDDEN MODELS
 # =====================================================
 class HiddenAdmin(admin.ModelAdmin):
-
     def has_module_permission(self, request):
         return False
 

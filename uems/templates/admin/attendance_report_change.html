@@ -1,0 +1,164 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+
+<style>
+
+.container {
+    padding: 20px;
+    max-width: 1100px;
+}
+
+.header {
+    background: #111827;
+    padding: 16px;
+    border-radius: 10px;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+}
+
+.title {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.card {
+    background: #1f2937;
+    padding: 16px;
+    border-radius: 10px;
+    color: white;
+    text-align: center;
+}
+
+.card h2 {
+    margin: 0;
+    font-size: 22px;
+}
+
+.card span {
+    font-size: 13px;
+    color: #9ca3af;
+}
+
+.table {
+    width: 100%;
+    margin-top: 20px;
+    border-collapse: collapse;
+    background: #111827;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.table th, .table td {
+    padding: 12px;
+    border-bottom: 1px solid #374151;
+    color: white;
+    text-align: left;
+}
+
+.present {
+    color: #22c55e;
+    font-weight: bold;
+}
+
+.absent {
+    color: #ef4444;
+    font-weight: bold;
+}
+
+.btn-back {
+    background: #374151;
+    padding: 8px 12px;
+    border-radius: 6px;
+    color: white;
+    text-decoration: none;
+}
+
+</style>
+
+<div class="container">
+
+    <div class="header">
+        <div class="title">Attendance Report - {{ event.name }}</div>
+        <a href="{% url 'admin:attendance_report_list' %}" class="btn-back">← Back</a>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats">
+
+        <div class="card">
+            <h2>{{ total_students }}</h2>
+            <span>Total Students</span>
+        </div>
+
+        <div class="card">
+            <h2 style="color:#22c55e;">{{ present }}</h2>
+            <span>Present</span>
+        </div>
+
+        <div class="card">
+            <h2 style="color:#ef4444;">{{ absent }}</h2>
+            <span>Absent</span>
+        </div>
+
+        <div class="card">
+            <h2>{{ percentage }}%</h2>
+            <span>Attendance Rate</span>
+        </div>
+
+    </div>
+
+    <!-- TABLE -->
+    <table class="table">
+
+        <thead>
+            <tr>
+                <th>Student</th>
+                <th>Reg No</th>
+                <th>Status</th>
+                <th>QR Time</th>
+            </tr>
+        </thead>
+
+        <tbody>
+
+            {% for a in attendances %}
+
+            <tr>
+                <td>{{ a.student.username }}</td>
+                <td>{{ a.student_reg_no }}</td>
+
+                <td>
+                    {% if a.status == "present" %}
+                        <span class="present">Present</span>
+                    {% else %}
+                        <span class="absent">Absent</span>
+                    {% endif %}
+                </td>
+
+                <td>
+                    {% if a.marked_at %}
+                        {{ a.marked_at }}
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+            </tr>
+
+            {% endfor %}
+
+        </tbody>
+
+    </table>
+
+</div>
+
+{% endblock %}
