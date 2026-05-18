@@ -3,7 +3,6 @@
 {% block content %}
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
 
 <style>
 
@@ -72,7 +71,7 @@
 
 .report-grid{
     display:grid;
-    grid-template-columns:340px 1fr;
+    grid-template-columns:320px 1fr;
     gap:18px;
     margin-bottom:20px;
 }
@@ -129,31 +128,31 @@
 .summary-grid{
     display:grid;
     grid-template-columns:repeat(2,1fr);
-    gap:14px;
+    gap:10px;
 }
 
 .summary-box{
-    border-radius:12px;
-    padding:16px;
+    border-radius:10px;
+    padding:12px 10px;
     text-align:center;
     color:white;
 }
 
 .summary-count{
-    font-size:28px;
+    font-size:22px;
     font-weight:700;
     line-height:1;
-    margin-bottom:8px;
+    margin-bottom:6px;
 }
 
 .summary-label{
-    font-size:14px;
+    font-size:13px;
     font-weight:600;
 }
 
 .summary-percent{
-    margin-top:6px;
-    font-size:12px;
+    margin-top:4px;
+    font-size:11px;
     opacity:0.9;
 }
 
@@ -269,6 +268,7 @@
 }
 
 /* REMOVE DJANGO TITLE */
+
 h1{
     display:none;
 }
@@ -304,7 +304,7 @@ h1{
                 </a>
             {% endif %}
 
-            <a href="{% url 'admin:events_eventreport_changelist' %}"
+            <a href="{% url 'admin:eventreport_feedback_list' %}"
                class="btn btn-back">
 
                 ← Back
@@ -326,6 +326,7 @@ h1{
         <div class="report-grid">
 
             <!-- CHART CARD -->
+
             <div class="card">
 
                 <div class="chart-title">
@@ -339,6 +340,7 @@ h1{
             </div>
 
             <!-- SUMMARY CARD -->
+
             <div class="card">
 
                 <div class="summary-title">
@@ -501,10 +503,10 @@ h1{
 
 <script>
 
-const excellent = {{ stats.excellent|default:0 }};
-const good = {{ stats.good|default:0 }};
-const average = {{ stats.average|default:0 }};
-const poor = {{ stats.poor|default:0 }};
+const excellent = Number("{{ stats.excellent|default:0 }}");
+const good = Number("{{ stats.good|default:0 }}");
+const average = Number("{{ stats.average|default:0 }}");
+const poor = Number("{{ stats.poor|default:0 }}");
 
 const values = [
     excellent,
@@ -512,8 +514,6 @@ const values = [
     average,
     poor
 ];
-
-const total = values.reduce((a,b)=>a+b,0);
 
 new Chart(document.getElementById('feedbackChart'), {
 
@@ -537,7 +537,7 @@ new Chart(document.getElementById('feedbackChart'), {
                 '#dc2626'
             ],
 
-            borderWidth:3,
+            borderWidth:2,
             borderColor:'#111827',
             hoverOffset:8
         }]
@@ -547,12 +547,7 @@ new Chart(document.getElementById('feedbackChart'), {
 
         responsive:true,
         maintainAspectRatio:false,
-        cutout:'62%',
-
-        animation:{
-            animateRotate:true,
-            duration:1000
-        },
+        cutout:'68%',
 
         plugins:{
 
@@ -561,7 +556,7 @@ new Chart(document.getElementById('feedbackChart'), {
 
                 labels:{
                     color:'white',
-                    padding:18,
+                    padding:16,
                     boxWidth:14,
                     font:{
                         size:12,
@@ -576,43 +571,23 @@ new Chart(document.getElementById('feedbackChart'), {
 
                         const value = context.raw || 0;
 
+                        const total = context.chart.data.datasets[0].data.reduce(
+                            (a,b)=>a+b,
+                            0
+                        );
+
                         const percent = total
                             ? ((value / total) * 100).toFixed(1)
                             : 0;
 
-                        return `${context.label}: ${value} (${percent}%)`;
+                        return `${context.label}: ${percent}%`;
                     }
-                }
-            },
-
-            datalabels:{
-
-                color:'#fff',
-
-                font:{
-                    weight:'bold',
-                    size:11
-                },
-
-                formatter:(value)=>{
-
-                    if(total === 0){
-                        return '';
-                    }
-
-                    const percent = ((value / total) * 100).toFixed(1);
-
-                    return value > 0
-                        ? `${percent}%`
-                        : '0%';
                 }
             }
 
         }
 
-    },
-
-    plugins:[ChartDataLabels]
+    }
 
 });
 

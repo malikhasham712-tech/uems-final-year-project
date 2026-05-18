@@ -299,7 +299,7 @@ def generate_qr(request, event_id):
         args=[event.id]
     )
 
-    base_url = request.build_absolute_uri("/")[:-1]
+    base_url = "http://192.168.1.10:8000"
 
     attendance_url = f"{base_url}{attendance_path}"
 
@@ -371,16 +371,21 @@ def mark_attendance(request, event_id):
             }
         )
 
+    registration = EventRegistration.objects.filter(
+        event=event,
+        student=request.user
+    ).first()
+
+    if not registration:
+        return render(request, "events/attendance_result.html", {
+            "success": False,
+            "event": event,
+            "message": "You are not registered"
+        })
+
     Attendance.objects.create(
         event=event,
-        student=request.user
-    )
-
-    EventRegistration.objects.filter(
-        event=event,
-        student=request.user
-    ).update(
-        status="attended"
+        student=registration.student
     )
 
     return render(
@@ -802,7 +807,12 @@ def event_report(request, event_id):
     feedbacks = Feedback.objects.filter(
         event=event
     )
+    registrations = EventRegistration.objects.filter(event=event)
 
+    attendance_set = set(
+        Attendance.objects.filter(event=event)
+        .values_list("student__id", flat=True)
+    )
     summary = {
 
         "excellent": feedbacks.filter(
@@ -822,12 +832,23 @@ def event_report(request, event_id):
         ).count(),
     }
 
-    return render(request, "events/event_report.html", {
+    data = []
+
+    for reg in registrations:
+        data.append({
+            "student": reg.student,
+            "name": reg.student.username,
+            "reg_no": reg.student.id,
+            "status": "Present" if reg.student_id in attendance_set else "Absent"
+        })
+
+    return render(request, "admin/attendance_report_change.html", {
         "event": event,
         "feedbacks": feedbacks,
         "summary": summary,
         "has_feedback": feedbacks.exists(),
         "stats": summary,
+        "data": data,
         **notif_context(request)
     })
 

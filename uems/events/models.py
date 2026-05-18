@@ -25,10 +25,10 @@ class ExperienceLevel(models.TextChoices):
     POOR = "poor", "Poor"
 
 
+# ✅ FIXED: removed ATTENDED (attendance is handled by Attendance model)
 class RegistrationStatus(models.TextChoices):
     REGISTERED = "registered", "Registered"
     CANCELLED = "cancelled", "Cancelled"
-    ATTENDED = "attended", "Attended"
 
 
 # =====================================================
@@ -154,7 +154,7 @@ class EventRegistration(models.Model):
 
 
 # =====================================================
-# ATTENDANCE
+# ATTENDANCE (QR SYSTEM SOURCE OF TRUTH)
 # =====================================================
 class Attendance(models.Model):
 
