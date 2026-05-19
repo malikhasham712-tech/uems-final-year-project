@@ -337,12 +337,12 @@ def mark_attendance(request, event_id):
         id=event_id
     )
 
-    is_registered = EventRegistration.objects.filter(
+    registration = EventRegistration.objects.filter(
         event=event,
         student=request.user
-    ).exists()
+    ).first()
 
-    if not is_registered:
+    if not registration:
 
         return render(
             request,
