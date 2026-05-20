@@ -283,15 +283,9 @@ def event_registrations(request, event_id):
 @login_required
 def generate_qr(request, event_id):
 
-    event = get_object_or_404(
-        Event,
-        id=event_id
-    )
+    event = get_object_or_404(Event, id=event_id)
 
-    if not is_organizer_or_admin(
-        request.user,
-        event
-    ):
+    if not is_organizer_or_admin(request.user, event):
         return redirect("events:dashboard")
 
     attendance_path = reverse(
@@ -299,19 +293,16 @@ def generate_qr(request, event_id):
         args=[event.id]
     )
 
-    base_url = "http://192.168.1.10:8000"
+    base_url = request.build_absolute_uri("/")[:-1]
 
     attendance_url = f"{base_url}{attendance_path}"
 
     qr = qrcode.make(attendance_url)
 
     buffer = BytesIO()
-
     qr.save(buffer, format="PNG")
 
-    qr_image = base64.b64encode(
-        buffer.getvalue()
-    ).decode()
+    qr_image = base64.b64encode(buffer.getvalue()).decode()
 
     return render(request, "events/generate_qr.html", {
         "event": event,
