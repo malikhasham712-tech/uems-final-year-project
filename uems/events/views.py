@@ -293,6 +293,7 @@ def generate_qr(request, event_id):
         args=[event.id]
     )
 
+    # 🔥 AUTO BASE URL (NO IP ISSUE EVER)
     base_url = request.build_absolute_uri("/")[:-1]
 
     attendance_url = f"{base_url}{attendance_path}"
@@ -311,83 +312,60 @@ def generate_qr(request, event_id):
         **notif_context(request)
     })
 
-
 # =====================================================
 # MARK ATTENDANCE
 # =====================================================
+@login_required
 def mark_attendance(request, event_id):
 
-    if not request.user.is_authenticated:
+    event = get_object_or_404(Event, id=event_id)
 
-        return redirect(
-            f"/accounts/login/?next=/events/attendance/{event_id}/"
-        )
+    user = request.user
 
-    event = get_object_or_404(
-        Event,
-        id=event_id
-    )
-
-    registration = EventRegistration.objects.filter(
+    # =========================
+    # STEP 1: CHECK REGISTRATION
+    # =========================
+    is_registered = EventRegistration.objects.filter(
         event=event,
-        student=request.user
-    ).first()
-
-    if not registration:
-
-        return render(
-            request,
-            "events/attendance_result.html",
-            {
-                "success": False,
-                "event": event,
-                "message": "You are not registered in this event. Your attendance is NOT marked."
-            }
-        )
-
-    already_marked = Attendance.objects.filter(
-        event=event,
-        student=request.user
+        student=user
     ).exists()
 
-    if already_marked:
-
-        return render(
-            request,
-            "events/attendance_result.html",
-            {
-                "success": True,
-                "event": event,
-                "message": "Your attendance has already been marked."
-            }
-        )
-
-    registration = EventRegistration.objects.filter(
-        event=event,
-        student=request.user
-    ).first()
-
-    if not registration:
+    if not is_registered:
         return render(request, "events/attendance_result.html", {
             "success": False,
             "event": event,
-            "message": "You are not registered"
+            "message": "❌ Sorry, you are not registered in this event. Attendance not marked."
         })
 
-    Attendance.objects.create(
+    # =========================
+    # STEP 2: CHECK DUPLICATE
+    # =========================
+    already_marked = Attendance.objects.filter(
         event=event,
-        student=registration.student
-    )
+        student=user
+    ).exists()
 
-    return render(
-        request,
-        "events/attendance_result.html",
-        {
+    if already_marked:
+        return render(request, "events/attendance_result.html", {
             "success": True,
             "event": event,
-            "message": "Your attendance is marked successfully."
-        }
+            "message": "ℹ Your attendance is already marked."
+        })
+
+    # =========================
+    # STEP 3: MARK ATTENDANCE
+    # =========================
+    Attendance.objects.create(
+        event=event,
+        student=user,
+        status="present"
     )
+
+    return render(request, "events/attendance_result.html", {
+        "success": True,
+        "event": event,
+        "message": "✅ Your attendance is marked successfully."
+    })
 
 
 # =====================================================
