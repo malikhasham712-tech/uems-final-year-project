@@ -1,3 +1,5 @@
+from urllib import request
+
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
@@ -105,7 +107,10 @@ def login_view(request):
 
             login(request, user)
 
-            # ✅ FIX: MUST return redirect
+            next_url = request.GET.get('next')
+
+            if next_url:
+                return redirect(next_url)
             return redirect('events:my_events')
 
         else:

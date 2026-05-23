@@ -367,6 +367,14 @@ def attendance_records(request, event_id):
 
     event = get_object_or_404(Event, id=event_id)
 
+    # 🔥 DEBUG START (ADD THIS)
+    print("EVENT ID:", event.id)
+
+    attendance_qs = Attendance.objects.filter(event=event)
+
+    print("ATTENDANCE ROWS:", list(attendance_qs.values()))
+    # 🔥 DEBUG END
+
     role = get_role(request.user)
 
     if role != "admin" and request.user != event.organizer:
@@ -374,7 +382,7 @@ def attendance_records(request, event_id):
 
     registrations = EventRegistration.objects.filter(
         event=event
-)   .exclude(student_id=event.organizer_id).select_related("student")
+    ).exclude(student_id=event.organizer_id).select_related("student")
 
     attendance_set = set(
         Attendance.objects.filter(event=event)
@@ -781,10 +789,15 @@ def event_report(request, event_id):
     # =========================
     # STATS
     # =========================
-    total_students = registrations.count()
-    present = len(attendance_map)
-    absent = total_students - present
+    registered_ids = set(registrations.values_list("student_id", flat=True))
+    attended_ids = set(attendance_map.keys())
 
+    present_ids = registered_ids & attended_ids
+    absent_ids = registered_ids - attended_ids
+
+    total_students = len(registered_ids)
+    present = len(present_ids)
+    absent = len(absent_ids)
     percentage = round((present / total_students) * 100, 2) if total_students else 0
 
     # =========================
@@ -793,7 +806,6 @@ def event_report(request, event_id):
     data = []
 
     for reg in registrations:
-
         att = attendance_map.get(reg.student_id)
 
         data.append({

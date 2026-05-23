@@ -25,7 +25,6 @@ class ExperienceLevel(models.TextChoices):
     POOR = "poor", "Poor"
 
 
-# ✅ FIXED: removed ATTENDED (attendance is handled by Attendance model)
 class RegistrationStatus(models.TextChoices):
     REGISTERED = "registered", "Registered"
     CANCELLED = "cancelled", "Cancelled"
@@ -82,17 +81,8 @@ class Event(models.Model):
 # EVENT PROPOSAL
 # =====================================================
 class EventProposal(models.Model):
-    event = models.ForeignKey(
-        Event,
-        on_delete=models.CASCADE,
-        related_name="proposals"
-    )
-
-    organizer = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name="proposals"
-    )
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="proposals")
+    organizer = models.ForeignKey(User, on_delete=models.CASCADE, related_name="proposals")
 
     proposed_venue = models.CharField(max_length=200)
     details = models.TextField(blank=True)
@@ -117,12 +107,7 @@ class EventProposal(models.Model):
 # REGISTRATION
 # =====================================================
 class EventRegistration(models.Model):
-    event = models.ForeignKey(
-        Event,
-        on_delete=models.CASCADE,
-        related_name="registrations"
-    )
-
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="registrations")
     student = models.ForeignKey(User, on_delete=models.CASCADE)
 
     student_name = models.CharField(max_length=100)
@@ -154,27 +139,15 @@ class EventRegistration(models.Model):
 
 
 # =====================================================
-# ATTENDANCE (QR SYSTEM SOURCE OF TRUTH)
+# ATTENDANCE
 # =====================================================
 class Attendance(models.Model):
-
-    event = models.ForeignKey(
-        Event,
-        on_delete=models.CASCADE,
-        related_name="attendances"
-    )
-
-    student = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name="attendances"
-    )
-
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="attendances")
+    student = models.ForeignKey(User, on_delete=models.CASCADE, related_name="attendances")
     marked_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ['-marked_at']
-
         constraints = [
             models.UniqueConstraint(
                 fields=['event', 'student'],
@@ -190,64 +163,24 @@ class Attendance(models.Model):
 # ANNOUNCEMENT
 # =====================================================
 class Announcement(models.Model):
-    event = models.ForeignKey(
-        Event,
-        on_delete=models.CASCADE,
-        related_name='announcements'
-    )
-
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='announcements')
     message = models.TextField()
 
-    created_by = models.ForeignKey(
-        User,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="created_announcements"
-    )
-
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ['-created_at']
-
-    def __str__(self):
-        return f"Announcement - {self.event.name}"
 
 
 # =====================================================
 # NOTIFICATION
 # =====================================================
 class Notification(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, null=True, blank=True)
 
-    NOTIF_TYPES = [
-        ('event_assigned', 'Event Assigned'),
-        ('event_announced', 'Event Announced'),
-        ('event_completed', 'Event Completed'),
-        ('announcement', 'Announcement'),
-        ('feedback', 'Feedback'),
-        ('general', 'General'),
-    ]
-
-    user = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='notifications'
-    )
-
-    event = models.ForeignKey(
-        Event,
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True
-    )
-
-    notification_type = models.CharField(
-        max_length=50,
-        choices=NOTIF_TYPES,
-        default='general'
-    )
-
+    notification_type = models.CharField(max_length=50)
     message = models.TextField()
     is_read = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -255,35 +188,16 @@ class Notification(models.Model):
     class Meta:
         ordering = ['-created_at']
 
-    def __str__(self):
-        return f"{self.user.username} - {self.notification_type}"
-
 
 # =====================================================
 # FEEDBACK
 # =====================================================
 class Feedback(models.Model):
-
-    student = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name="feedbacks"
-    )
-
-    event = models.ForeignKey(
-        Event,
-        on_delete=models.CASCADE,
-        related_name="feedbacks"
-    )
+    student = models.ForeignKey(User, on_delete=models.CASCADE, related_name="feedbacks")
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="feedbacks")
 
     rating = models.IntegerField(null=True, blank=True)
-
-    experience = models.CharField(
-        max_length=20,
-        choices=ExperienceLevel.choices,
-        default=ExperienceLevel.GOOD
-    )
-
+    experience = models.CharField(max_length=20, choices=ExperienceLevel.choices)
     message = models.TextField()
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -297,29 +211,14 @@ class Feedback(models.Model):
             )
         ]
 
-    def __str__(self):
-        return f"{self.student.username} - {self.event.name}"
-
 
 # =====================================================
-# EVENT REPORT (MANUAL SYSTEM - FINAL)
+# EVENT REPORT
 # =====================================================
 class EventReport(models.Model):
-
-    event = models.ForeignKey(
-        Event,
-        on_delete=models.CASCADE,
-        related_name="reports",
-        null=True,
-        blank=True
-    )
-
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="reports")
     name = models.CharField(max_length=200)
-
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ['-created_at']
-
-    def __str__(self):
-        return self.name
