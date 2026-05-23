@@ -4,52 +4,64 @@
 
 {% block content %}
 
-<div class="row justify-content-center">
-    <div class="col-md-6">
+<div class="container d-flex justify-content-center align-items-center" style="min-height:80vh;">
 
-        <div class="card p-4">
-            <h3 class="text-center mb-3">Create Account</h3>
+    <div class="col-12 col-sm-10 col-md-7 col-lg-5">
+
+        <div class="card border-0 shadow-lg p-4 rounded-4">
+
+            <div class="text-center mb-4">
+                <h3 class="fw-bold text-primary">Create Account</h3>
+                <p class="text-muted small mb-0">Join University Event System</p>
+            </div>
+
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-success py-2">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
 
             <form method="POST">
                 {% csrf_token %}
 
                 <div class="mb-3">
-                    <label>Username</label>
+                    <label class="form-label">Username</label>
                     {{ form.username }}
                 </div>
 
                 <div class="mb-3">
-                    <label>Email</label>
+                    <label class="form-label">Email</label>
                     {{ form.email }}
                 </div>
 
                 <div class="mb-3">
-                    <label>Password</label>
+                    <label class="form-label">Password</label>
                     {{ form.password }}
                 </div>
 
                 <div class="mb-3">
-                    <label>Role</label>
+                    <label class="form-label">Role</label>
                     {{ form.role }}
                 </div>
 
-                <button class="btn btn-primary w-100">Register</button>
+                <button class="btn btn-primary w-100 py-2 fw-semibold">
+                    Register
+                </button>
             </form>
 
-            {% if messages %}
-                {% for message in messages %}
-                    <div class="alert alert-success mt-3">{{ message }}</div>
-                {% endfor %}
-            {% endif %}
-
-            <p class="text-center mt-3">
-                Already have an account?
-                <a href="{% url 'login' %}">Login</a>
-            </p>
+            <div class="text-center mt-3">
+                <small class="text-muted">
+                    Already have an account?
+                    <a href="{% url 'login' %}" class="text-primary fw-semibold">Login</a>
+                </small>
+            </div>
 
         </div>
 
     </div>
+
 </div>
 
 {% endblock %}

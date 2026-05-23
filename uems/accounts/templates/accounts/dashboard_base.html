@@ -9,6 +9,8 @@
         {% block title %}Dashboard{% endblock %}
     </title>
 
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
           rel="stylesheet">
 
@@ -23,20 +25,22 @@
             box-sizing:border-box;
         }
 
+        html, body {
+            overflow-x: hidden;
+        }
+
         body{
             font-family:'Segoe UI', sans-serif;
             background:#f4f6fb;
-            overflow-x:hidden;
         }
 
         .layout{
             display:flex;
             min-height:100vh;
+            overflow-x:hidden;
         }
 
-        /* =====================================================
-           SIDEBAR
-        ===================================================== */
+        /* ================= SIDEBAR ================= */
 
         .sidebar{
             width:250px;
@@ -50,6 +54,7 @@
             left:0;
             bottom:0;
             z-index:1000;
+            overflow-y:auto;
         }
 
         .sidebar-title{
@@ -57,7 +62,6 @@
             font-weight:700;
             margin-bottom:35px;
             text-align:center;
-            letter-spacing:0.5px;
         }
 
         .sidebar-role{
@@ -84,27 +88,18 @@
 
         .nav-link:hover{
             background:rgba(255,255,255,0.18);
-            color:white;
             transform:translateX(3px);
         }
 
         .nav-link.active{
             background:rgba(255,255,255,0.22);
-            color:white;
-        }
-
-        .nav-link i{
-            width:18px;
-            text-align:center;
         }
 
         .logout-btn{
             margin-top:auto;
         }
 
-        /* =====================================================
-           MAIN AREA
-        ===================================================== */
+        /* ================= MAIN ================= */
 
         .main{
             flex:1;
@@ -114,21 +109,21 @@
             min-height:100vh;
         }
 
-        /* =====================================================
-           TOPBAR
-        ===================================================== */
+        /* ================= TOPBAR ================= */
 
         .topbar{
-            height:78px;
+            min-height:78px;
             background:white;
             border-bottom:1px solid #e9edf5;
             display:flex;
             justify-content:space-between;
             align-items:center;
-            padding:0 28px;
+            padding:12px 28px;
             position:sticky;
             top:0;
             z-index:999;
+            flex-wrap:wrap;
+            gap:10px;
         }
 
         .welcome{
@@ -140,16 +135,13 @@
         .subtext{
             font-size:13px;
             color:#7c8593;
-            margin-top:2px;
         }
 
         .content{
             padding:30px;
         }
 
-        /* =====================================================
-           NOTIFICATIONS
-        ===================================================== */
+        /* ================= NOTIFICATIONS ================= */
 
         .notif-badge{
             position:absolute;
@@ -161,7 +153,6 @@
         .notif-item{
             white-space:normal;
             font-size:13px;
-            line-height:1.5;
         }
 
         .notif-unread{
@@ -173,24 +164,23 @@
             border-radius:14px;
             box-shadow:0 10px 30px rgba(0,0,0,0.08);
             padding:8px;
+            max-width:95vw;
         }
 
-        .dropdown-item{
-            border-radius:8px;
-            padding:10px 12px;
-        }
-
-        /* =====================================================
-           MOBILE RESPONSIVE
-        ===================================================== */
+        /* ================= MOBILE FIX ================= */
 
         @media(max-width:992px){
 
+            .layout{
+                flex-direction:column;
+            }
+
             .sidebar{
+                position:relative;
                 width:100%;
                 height:auto;
-                position:relative;
                 flex-direction:column;
+                padding:15px;
             }
 
             .main{
@@ -198,15 +188,13 @@
             }
 
             .topbar{
-                padding:15px;
-                height:auto;
                 flex-direction:column;
                 align-items:flex-start;
-                gap:15px;
+                padding:12px 15px;
             }
 
             .content{
-                padding:18px;
+                padding:15px;
             }
 
             .sidebar-title{
@@ -214,18 +202,17 @@
             }
 
             .sidebar-role{
-                margin-bottom:18px;
+                margin-bottom:12px;
             }
 
             .nav-link{
                 font-size:14px;
-                padding:12px;
+                padding:10px;
             }
 
-            .dropdown-menu{
-                width:100% !important;
+            .welcome{
+                font-size:16px;
             }
-
         }
 
     </style>
@@ -235,293 +222,112 @@
 
 <div class="layout">
 
-    <!-- =====================================================
-         SIDEBAR
-    ====================================================== -->
-
+    <!-- SIDEBAR -->
     <div class="sidebar">
 
-        <div class="sidebar-title">
-            UEMS
-        </div>
+        <div class="sidebar-title">UEMS</div>
 
         <div class="sidebar-role">
 
             {% if request.user.is_superuser %}
                 Admin Panel
-
             {% else %}
                 {{ role|default:"student"|title }}
-
             {% endif %}
 
         </div>
 
-        <!-- ORGANIZER -->
         {% if role == 'organizer' %}
 
-            <a href="{% url 'events:dashboard' %}"
-               class="nav-link">
-
-                <i class="fa fa-home"></i>
-                Dashboard
-
+            <a href="{% url 'events:dashboard' %}" class="nav-link">
+                <i class="fa fa-home"></i> Dashboard
             </a>
 
-            <a href="{% url 'events:my_events' %}"
-               class="nav-link">
-
-                <i class="fa fa-calendar"></i>
-                My Events
-
+            <a href="{% url 'events:my_events' %}" class="nav-link">
+                <i class="fa fa-calendar"></i> My Events
             </a>
 
-        <!-- STUDENT -->
         {% elif role == 'student' %}
 
-            <a href="{% url 'events:my_events' %}"
-               class="nav-link">
-
-                <i class="fa fa-calendar"></i>
-                My Events
-
+            <a href="{% url 'events:my_events' %}" class="nav-link">
+                <i class="fa fa-calendar"></i> My Events
             </a>
 
-            <a href="{% url 'events:available_events' %}"
-               class="nav-link">
-
-                <i class="fa fa-list"></i>
-                Available Events
-
+            <a href="{% url 'events:available_events' %}" class="nav-link">
+                <i class="fa fa-list"></i> Available Events
             </a>
 
-        <!-- ADMIN -->
         {% elif request.user.is_superuser %}
 
-            <a href="/admin/"
-               class="nav-link">
-
-                <i class="fa fa-cog"></i>
-                Admin Panel
-
+            <a href="/admin/" class="nav-link">
+                <i class="fa fa-cog"></i> Admin Panel
             </a>
 
-            <a href="{% url 'events:event_report_list' %}"
-               class="nav-link">
-
-                <i class="fa fa-chart-bar"></i>
-                Reports
-
+            <a href="{% url 'events:event_report_list' %}" class="nav-link">
+                <i class="fa fa-chart-bar"></i> Reports
             </a>
 
-            <a href="{% url 'events:my_events' %}"
-               class="nav-link">
-
-                <i class="fa fa-user-check"></i>
-                Attendance
-
+            <a href="{% url 'events:my_events' %}" class="nav-link">
+                <i class="fa fa-user-check"></i> Attendance
             </a>
 
         {% else %}
 
-            <a href="{% url 'events:my_events' %}"
-               class="nav-link">
-
-                <i class="fa fa-calendar"></i>
-                My Events
-
+            <a href="{% url 'events:my_events' %}" class="nav-link">
+                <i class="fa fa-calendar"></i> My Events
             </a>
 
         {% endif %}
 
-        <!-- LOGOUT -->
         <div class="logout-btn">
-
-            <a href="{% url 'logout' %}"
-               class="nav-link text-white">
-
-                <i class="fa fa-sign-out-alt"></i>
-                Logout
-
+            <a href="{% url 'logout' %}" class="nav-link">
+                <i class="fa fa-sign-out-alt"></i> Logout
             </a>
-
         </div>
 
     </div>
 
-    <!-- =====================================================
-         MAIN
-    ====================================================== -->
-
+    <!-- MAIN -->
     <div class="main">
 
-        <!-- =====================================================
-             TOPBAR
-        ====================================================== -->
-
+        <!-- TOPBAR -->
         <div class="topbar">
 
             <div>
-
                 <div class="welcome">
                     Welcome, {{ request.user.username }}
                 </div>
 
                 <div class="subtext">
-
-                    {% if request.user.is_superuser %}
-                        Admin
-
-                    {% else %}
-                        {{ role|default:"student"|title }}
-
-                    {% endif %}
-
-                    • University Event Management System
-
+                    {{ role|default:"student"|title }} • UEMS
                 </div>
-
             </div>
 
-            <!-- RIGHT BUTTONS -->
-            <div class="d-flex align-items-center gap-2 flex-wrap">
+            <div class="d-flex gap-2 flex-wrap">
 
-                <!-- NOTIFICATION -->
-                <div class="dropdown position-relative">
-
-                    <button class="btn btn-light border position-relative dropdown-toggle"
-                            data-bs-toggle="dropdown">
-
-                        <i class="fa fa-bell"></i>
-
-                        {% if unread_notifications and unread_notifications > 0 %}
-
-                            <span class="badge bg-danger notif-badge">
-                                {{ unread_notifications }}
-                            </span>
-
-                        {% endif %}
-
-                    </button>
-
-                    <ul class="dropdown-menu dropdown-menu-end"
-                        style="width:340px; max-height:420px; overflow-y:auto;">
-
-                        <li class="dropdown-header fw-bold">
-                            Notifications
-                        </li>
-
-                        {% if notifications %}
-
-                            {% for n in notifications %}
-
-                                <li>
-
-                                    <a class="dropdown-item notif-item {% if not n.is_read %}notif-unread{% endif %}"
-                                       href="{% url 'events:notification_detail' n.id %}">
-
-                                        <div class="fw-semibold">
-                                            {{ n.message|truncatechars:80 }}
-                                        </div>
-
-                                        <small class="text-muted">
-                                            {{ n.created_at|timesince }} ago
-                                        </small>
-
-                                    </a>
-
-                                </li>
-
-                            {% endfor %}
-
-                        {% else %}
-
-                            <li>
-                                <span class="dropdown-item text-muted">
-                                    No notifications
-                                </span>
-                            </li>
-
-                        {% endif %}
-
-                        <li>
-                            <hr class="dropdown-divider">
-                        </li>
-
-                        <li>
-
-                            <a class="dropdown-item text-center fw-semibold"
-                               href="{% url 'events:notifications' %}">
-
-                                View All
-
-                            </a>
-
-                        </li>
-
-                    </ul>
-
-                </div>
-
-                <!-- BACK -->
-                <button onclick="history.back()"
-                        class="btn btn-outline-secondary btn-sm">
-
+                <button onclick="history.back()" class="btn btn-outline-secondary btn-sm">
                     Back
-
                 </button>
 
-                <!-- DASHBOARD -->
                 {% if request.user.is_superuser %}
-
-                    <a href="/admin/"
-                       class="btn btn-primary btn-sm">
-
-                        Admin
-
-                    </a>
-
+                    <a href="/admin/" class="btn btn-primary btn-sm">Admin</a>
                 {% elif role == 'organizer' %}
-
-                    <a href="{% url 'events:dashboard' %}"
-                       class="btn btn-primary btn-sm">
-
-                        Dashboard
-
-                    </a>
-
+                    <a href="{% url 'events:dashboard' %}" class="btn btn-primary btn-sm">Dashboard</a>
                 {% else %}
-
-                    <a href="{% url 'events:available_events' %}"
-                       class="btn btn-primary btn-sm">
-
-                        Events
-
-                    </a>
-
+                    <a href="{% url 'events:available_events' %}" class="btn btn-primary btn-sm">Events</a>
                 {% endif %}
 
-                <!-- LOGOUT -->
-                <a href="{% url 'logout' %}"
-                   class="btn btn-outline-dark btn-sm">
-
+                <a href="{% url 'logout' %}" class="btn btn-outline-dark btn-sm">
                     Logout
-
                 </a>
 
             </div>
 
         </div>
 
-        <!-- =====================================================
-             CONTENT
-        ====================================================== -->
-
+        <!-- CONTENT -->
         <div class="content">
-
-            {% block content %}
-            {% endblock %}
-
+            {% block content %}{% endblock %}
         </div>
 
     </div>
