@@ -319,12 +319,9 @@ def generate_qr(request, event_id):
 def mark_attendance(request, event_id):
 
     event = get_object_or_404(Event, id=event_id)
-
     user = request.user
 
-    # =========================
     # STEP 1: CHECK REGISTRATION
-    # =========================
     is_registered = EventRegistration.objects.filter(
         event=event,
         student=user
@@ -334,12 +331,10 @@ def mark_attendance(request, event_id):
         return render(request, "events/attendance_result.html", {
             "success": False,
             "event": event,
-            "message": "❌ Sorry, you are not registered in this event. Attendance not marked."
+            "message": "❌ You are not registered for this event."
         })
 
-    # =========================
     # STEP 2: CHECK DUPLICATE
-    # =========================
     already_marked = Attendance.objects.filter(
         event=event,
         student=user
@@ -349,24 +344,20 @@ def mark_attendance(request, event_id):
         return render(request, "events/attendance_result.html", {
             "success": True,
             "event": event,
-            "message": "ℹ Your attendance is already marked."
+            "message": "ℹ Already marked attendance."
         })
 
-    # =========================
-    # STEP 3: MARK ATTENDANCE
-    # =========================
+    # STEP 3: SAVE
     Attendance.objects.create(
         event=event,
-        student=user,
-        status="present"
+        student=user
     )
 
     return render(request, "events/attendance_result.html", {
         "success": True,
         "event": event,
-        "message": "✅ Your attendance is marked successfully."
+        "message": "✅ Attendance marked successfully!"
     })
-
 
 # =====================================================
 # ATTENDANCE RECORDS
@@ -374,10 +365,7 @@ def mark_attendance(request, event_id):
 @login_required
 def attendance_records(request, event_id):
 
-    event = get_object_or_404(
-        Event,
-        id=event_id
-    )
+    event = get_object_or_404(Event, id=event_id)
 
     role = get_role(request.user)
 
@@ -386,28 +374,23 @@ def attendance_records(request, event_id):
 
     registrations = EventRegistration.objects.filter(
         event=event
-    ).select_related("student")
+)   .exclude(student_id=event.organizer_id).select_related("student")
 
-    attendance_qs = Attendance.objects.filter(
-        event=event
+    attendance_set = set(
+        Attendance.objects.filter(event=event)
+        .values_list("student_id", flat=True)
     )
 
-    attendance_map = {
-        a.student_id: a for a in attendance_qs
-    }
-
     for reg in registrations:
-        reg.attendance = attendance_map.get(reg.student_id)
+        reg.status = "Present" if reg.student.id in attendance_set else "Absent"
 
     return render(request, "events/view_attendance.html", {
         "event": event,
         "registrations": registrations,
-        "attendance_map": attendance_map,
-        "total_attendance": attendance_qs.count(),
+        "total_attendance": len(attendance_set),
         "role": role,
         **notif_context(request)
     })
-
 
 # =====================================================
 # PROPOSALS
@@ -768,136 +751,143 @@ def event_report_list(request):
 @login_required
 def event_report(request, event_id):
 
-    event = get_object_or_404(
-        Event,
-        id=event_id
-    )
+    event = get_object_or_404(Event, id=event_id)
 
-    feedbacks = Feedback.objects.filter(
+    feedbacks = Feedback.objects.filter(event=event)
+
+    registrations = EventRegistration.objects.filter(
         event=event
-    )
-    registrations = EventRegistration.objects.filter(event=event)
+    ).select_related("student")
 
-    attendance_set = set(
-        Attendance.objects.filter(event=event)
-        .values_list("student__id", flat=True)
-    )
-    summary = {
+    attendance_qs = Attendance.objects.filter(event=event)
 
-        "excellent": feedbacks.filter(
-            experience="excellent"
-        ).count(),
-
-        "good": feedbacks.filter(
-            experience="good"
-        ).count(),
-
-        "average": feedbacks.filter(
-            experience="average"
-        ).count(),
-
-        "poor": feedbacks.filter(
-            experience="poor"
-        ).count(),
+    # =========================
+    # SINGLE SOURCE OF TRUTH
+    # =========================
+    attendance_map = {
+        a.student_id: a for a in attendance_qs
     }
 
+    # =========================
+    # FEEDBACK SUMMARY
+    # =========================
+    summary = {
+        "excellent": feedbacks.filter(experience="excellent").count(),
+        "good": feedbacks.filter(experience="good").count(),
+        "average": feedbacks.filter(experience="average").count(),
+        "poor": feedbacks.filter(experience="poor").count(),
+    }
+
+    # =========================
+    # STATS
+    # =========================
+    total_students = registrations.count()
+    present = len(attendance_map)
+    absent = total_students - present
+
+    percentage = round((present / total_students) * 100, 2) if total_students else 0
+
+    # =========================
+    # TABLE DATA
+    # =========================
     data = []
 
     for reg in registrations:
+
+        att = attendance_map.get(reg.student_id)
+
         data.append({
-            "student": reg.student,
             "name": reg.student.username,
-            "reg_no": reg.student.id,
-            "status": "Present" if reg.student_id in attendance_set else "Absent"
+            "reg_no": reg.student_id,
+            "status": "present" if att else "absent",
+            "marked_at": att.marked_at if att else None
         })
 
     return render(request, "admin/attendance_report_change.html", {
         "event": event,
-        "feedbacks": feedbacks,
-        "summary": summary,
-        "has_feedback": feedbacks.exists(),
-        "stats": summary,
         "data": data,
+
+        "total_students": total_students,
+        "present": present,
+        "absent": absent,
+        "percentage": percentage,
+
+        "summary": summary,
+
         **notif_context(request)
     })
-
 
 @login_required
 def export_event_report(request, event_id):
 
-    event = get_object_or_404(
-        Event,
-        id=event_id
-    )
-
-    feedbacks = Feedback.objects.filter(
-        event=event
-    )
+    event = get_object_or_404(Event, id=event_id)
+    mode = request.GET.get("mode", "attendance")
 
     wb = Workbook()
-
     ws = wb.active
 
-    ws.append([
-        "Event Report",
-        event.name
-    ])
+    # =========================
+    # ATTENDANCE EXPORT
+    # =========================
+    if mode == "attendance":
 
-    ws.append([])
+        registrations = EventRegistration.objects.filter(
+            event=event
+        ).select_related("student")
 
-    ws.append([
-        "Student",
-        "Experience",
-        "Message"
-    ])
+        attendance_map = {
+            a.student_id: a for a in Attendance.objects.filter(event=event)
+        }
 
-    for fb in feedbacks:
+        ws.title = "Attendance Report"
 
-        ws.append([
-            fb.student.username,
-            fb.experience,
-            fb.message
-        ])
+        ws.append(["Event Attendance Report", event.name])
+        ws.append([])
+        ws.append(["Student", "Status"])
 
-    ws.append([])
-    ws.append(["Summary"])
+        for reg in registrations:
 
-    ws.append([
-        "Excellent",
-        feedbacks.filter(
-            experience="excellent"
-        ).count()
-    ])
+            status = "Present" if reg.student_id in attendance_map else "Absent"
 
-    ws.append([
-        "Good",
-        feedbacks.filter(
-            experience="good"
-        ).count()
-    ])
+            ws.append([
+                reg.student.username,
+                status
+            ])
 
-    ws.append([
-        "Average",
-        feedbacks.filter(
-            experience="average"
-        ).count()
-    ])
+    # =========================
+    # FEEDBACK EXPORT
+    # =========================
+    else:
 
-    ws.append([
-        "Poor",
-        feedbacks.filter(
-            experience="poor"
-        ).count()
-    ])
+        feedbacks = Feedback.objects.filter(event=event)
+
+        ws.title = "Feedback Report"
+
+        ws.append(["Event Feedback Report", event.name])
+        ws.append([])
+        ws.append(["Student", "Experience", "Message"])
+
+        for fb in feedbacks:
+            ws.append([
+                fb.student.username,
+                fb.experience,
+                fb.message
+            ])
+
+        ws.append([])
+        ws.append(["Summary"])
+        ws.append(["Excellent", feedbacks.filter(experience="excellent").count()])
+        ws.append(["Good", feedbacks.filter(experience="good").count()])
+        ws.append(["Average", feedbacks.filter(experience="average").count()])
+        ws.append(["Poor", feedbacks.filter(experience="poor").count()])
 
     response = HttpResponse(
         content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
 
-    response[
-        "Content-Disposition"
-    ] = f'attachment; filename=report_{event.id}.xlsx'
+    response["Content-Disposition"] = (
+        f'attachment; filename={mode}_report_{event.id}.xlsx'
+    )
 
     wb.save(response)
-
     return response

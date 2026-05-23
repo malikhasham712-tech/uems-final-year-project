@@ -16,11 +16,21 @@
     color: white;
     display: flex;
     justify-content: space-between;
+    align-items: center;
 }
 
 .title {
     font-size: 18px;
     font-weight: bold;
+}
+
+.export-btn {
+    background: #16a34a;
+    padding: 8px 12px;
+    border-radius: 6px;
+    color: white;
+    text-decoration: none;
+    font-size: 13px;
 }
 
 .stats {
@@ -86,9 +96,17 @@
 
 <div class="container">
 
+    <!-- HEADER -->
     <div class="header">
-        <div class="title">Attendance Report - {{ event.name }}</div>
-        <a href="{% url 'admin:attendance_report_list' %}" class="btn-back">← Back</a>
+        <div class="title">
+            Attendance Report - {{ event.name }}
+        </div>
+
+        <!-- EXPORT BUTTON (ATTENDANCE ONLY) -->
+        <a href="/reports/{{ event.id }}/export/?mode=attendance"
+            class="export-btn">
+              Export Attendance
+        </a>
     </div>
 
     <!-- STATS -->
@@ -124,20 +142,20 @@
                 <th>Student</th>
                 <th>Reg No</th>
                 <th>Status</th>
-                <th>QR Time</th>
+                <th>Time</th>
             </tr>
         </thead>
 
         <tbody>
 
-            {% for a in attendances %}
+            {% for row in data %}
 
             <tr>
-                <td>{{ a.student.username }}</td>
-                <td>{{ a.student_reg_no }}</td>
+                <td>{{ row.name }}</td>
+                <td>{{ row.reg_no }}</td>
 
                 <td>
-                    {% if a.status == "present" %}
+                    {% if row.status == "present" %}
                         <span class="present">Present</span>
                     {% else %}
                         <span class="absent">Absent</span>
@@ -145,8 +163,8 @@
                 </td>
 
                 <td>
-                    {% if a.marked_at %}
-                        {{ a.marked_at }}
+                    {% if row.marked_at %}
+                        {{ row.marked_at|date:"d M Y, H:i" }}
                     {% else %}
                         -
                     {% endif %}
