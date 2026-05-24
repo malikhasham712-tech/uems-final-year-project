@@ -13,6 +13,7 @@ from .models import (
     Category,
     Event,
     EventRegistration,
+    Attendance,
     Announcement,
     Feedback,
     EventProposal,
@@ -49,10 +50,8 @@ def attendance_event_list(request):
 
         total = EventRegistration.objects.filter(event=event).count()
 
-        present = EventRegistration.objects.filter(
-            event=event,
-            status="present"
-        ).count()
+        # Count actual attendance records, not EventRegistration status
+        present = Attendance.objects.filter(event=event).count()
 
         rows.append({
             "event": event,
@@ -423,31 +422,51 @@ class EventReportAdmin(admin.ModelAdmin):
             pk=event_id
         )
 
-        attendances = EventRegistration.objects.filter(
+        # Get all registrations and attendance records
+        registrations = EventRegistration.objects.filter(
             event=event
-        )
+        ).select_related("student")
 
-        total = attendances.count()
+        attendance_qs = Attendance.objects.filter(event=event)
+        
+        # Create attendance map for quick lookup
+        attendance_map = {
+            a.student_id: a for a in attendance_qs
+        }
 
-        present = attendances.filter(
-            status="present"
-        ).count()
+        # Build data with correct status
+        data = []
+        present_count = 0
+        
+        for reg in registrations:
+            att = attendance_map.get(reg.student_id)
+            is_present = att is not None
+            
+            if is_present:
+                present_count += 1
+                
+            data.append({
+                "name": reg.student.username,
+                "reg_no": reg.student_id,
+                "status": "present" if is_present else "absent",
+                "marked_at": att.marked_at if att else None
+            })
 
-        absent = total - present
-
+        total_students = len(data)
+        absent_count = total_students - present_count
         percentage = (
-            (present / total) * 100
-        ) if total else 0
+            (present_count / total_students) * 100
+        ) if total_students else 0
 
         return TemplateResponse(
             request,
             "admin/attendance_report_change.html",
             {
                 "event": event,
-                "attendances": attendances,
-                "total_students": total,
-                "present": present,
-                "absent": absent,
+                "data": data,
+                "total_students": total_students,
+                "present": present_count,
+                "absent": absent_count,
                 "percentage": round(percentage, 2),
             }
         )
