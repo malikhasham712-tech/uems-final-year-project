@@ -13,25 +13,30 @@
         {% for n in notifications %}
 
             <a href="{% url 'events:notification_detail' n.id %}"
-               class="d-block mb-3 p-3 border rounded text-decoration-none bg-white shadow-sm">
+               class="d-block mb-3 p-3 border rounded text-decoration-none shadow-sm
+               {% if not n.is_read %} bg-light border-primary {% else %} bg-white {% endif %}">
 
-                <!-- EVENT NAME -->
-                <strong class="text-dark">
-                    {% if n.event %}
-                        {{ n.event.name }}
-                    {% else %}
-                        System Notification
+                <!-- TOP ROW -->
+                <div class="d-flex justify-content-between align-items-center mb-1">
+
+                    <strong class="text-dark">
+                        {% if n.event %}
+                            {{ n.event.name }}
+                        {% else %}
+                            System Notification
+                        {% endif %}
+                    </strong>
+
+                    {% if not n.is_read %}
+                        <span class="badge bg-danger">New</span>
                     {% endif %}
-                </strong>
 
-                <br>
+                </div>
 
                 <!-- MESSAGE -->
-                <span class="text-dark">
+                <div class="text-dark mb-1">
                     {{ n.message }}
-                </span>
-
-                <br>
+                </div>
 
                 <!-- TYPE -->
                 <small class="text-muted">

@@ -8,7 +8,7 @@
 
 {% if role == 'organizer' %}
 
-    <div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
         <h4 class="fw-bold text-primary mb-0">
             Organizer Dashboard
         </h4>
@@ -18,9 +18,9 @@
 
     <div class="table-responsive">
 
-        <table class="table table-hover admin-table">
+        <table class="table table-hover admin-table align-middle text-center">
 
-            <thead>
+            <thead class="table-light">
                 <tr>
                     <th>Event</th>
                     <th>Venue</th>
@@ -38,17 +38,15 @@
             <tr>
 
                 <!-- EVENT -->
-                <td class="text-start fw-semibold">
+                <td class="text-start fw-semibold text-wrap">
                     <a href="{% url 'events:view_event' event.id %}"
                        class="text-decoration-none text-dark">
-
                         {{ event.name }}
-
                     </a>
                 </td>
 
                 <!-- VENUE -->
-                <td class="text-muted">
+                <td class="text-muted text-wrap">
                     {{ event.venue|default:"TBD" }}
                 </td>
 
@@ -63,28 +61,19 @@
 
                 <!-- STATUS -->
                 <td>
-
                     {% with status=event.status|lower %}
 
                         {% if status == "announced" %}
-                            <span class="badge bg-primary">
-                                Announced
-                            </span>
+                            <span class="badge bg-primary">Announced</span>
 
                         {% elif status == "accepted" %}
-                            <span class="badge bg-info text-dark">
-                                Accepted
-                            </span>
+                            <span class="badge bg-info text-dark">Accepted</span>
 
                         {% elif status == "pending" %}
-                            <span class="badge bg-secondary">
-                                Pending
-                            </span>
+                            <span class="badge bg-secondary">Pending</span>
 
                         {% elif status == "completed" %}
-                            <span class="badge bg-dark">
-                                Completed
-                            </span>
+                            <span class="badge bg-dark">Completed</span>
 
                         {% else %}
                             <span class="badge bg-secondary">
@@ -94,100 +83,71 @@
                         {% endif %}
 
                     {% endwith %}
-
                 </td>
 
                 <!-- PROPOSAL -->
                 <td>
-
                     {% with proposal=event.proposals.first %}
 
-                        <div class="d-grid gap-1">
+                        <div class="d-flex flex-column gap-1">
 
                             {% if proposal %}
 
                                 {% if proposal.status == "pending" %}
-
-                                    <button class="btn btn-outline-secondary btn-sm" disabled>
-                                        Pending
-                                    </button>
+                                    <button class="btn btn-outline-secondary btn-sm" disabled>Pending</button>
 
                                 {% elif proposal.status == "accepted" %}
-
-                                    <button class="btn btn-success btn-sm" disabled>
-                                        Accepted
-                                    </button>
+                                    <button class="btn btn-success btn-sm" disabled>Accepted</button>
 
                                 {% elif proposal.status == "rejected" %}
-
                                     <a href="{% url 'events:submit_proposal' event.id %}"
                                        class="btn btn-danger btn-sm">
-
                                         Resubmit
-
                                     </a>
-
                                 {% endif %}
 
                             {% else %}
-
                                 <a href="{% url 'events:submit_proposal' event.id %}"
                                    class="btn btn-primary btn-sm">
-
                                     Submit
-
                                 </a>
-
                             {% endif %}
 
                             <a href="{% url 'events:view_proposals' event.id %}"
                                class="btn btn-outline-secondary btn-sm">
-
                                 View
-
                             </a>
 
                         </div>
 
                     {% endwith %}
-
                 </td>
 
                 <!-- REGISTRATIONS -->
                 <td>
-
                     <a href="{% url 'events:event_registrations' event.id %}"
                        class="btn btn-primary btn-sm w-100">
-
                         View
-
                     </a>
-
                 </td>
 
                 <!-- ATTENDANCE QR -->
                 <td>
-
                     {% if event.status == "announced" %}
 
                         <a href="{% url 'events:generate_qr' event.id %}"
                            target="_blank"
                            class="btn btn-success btn-sm w-100">
-
                             Generate QR
-
                         </a>
 
                     {% else %}
 
                         <button class="btn btn-secondary btn-sm w-100" disabled>
-
                             Not Available
-
                         </button>
 
                     {% endif %}
-
                 </td>
 
             </tr>
@@ -202,9 +162,7 @@
     {% else %}
 
         <div class="text-center py-5 text-muted">
-
             No events assigned yet.
-
         </div>
 
     {% endif %}
@@ -212,26 +170,22 @@
 
 {% elif role == 'student' %}
 
-    <div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
 
         <h4 class="fw-bold text-primary mb-0">
-
             Student Dashboard
-
         </h4>
 
     </div>
 
-    <div class="text-center py-5">
+    <div class="text-center py-5 px-3">
 
         <p class="text-muted mb-4">
-
             Explore available events and register easily.
-
         </p>
 
         <a href="{% url 'events:available_events' %}"
-           class="btn btn-primary btn-lg">
+           class="btn btn-primary btn-lg w-100 w-md-auto">
 
             Available Events
 
@@ -242,9 +196,7 @@
 {% else %}
 
     <div class="text-center py-5 text-muted">
-
         No data available for this role.
-
     </div>
 
 {% endif %}

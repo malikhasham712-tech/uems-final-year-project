@@ -5,7 +5,7 @@
 {% block content %}
 
 <div class="d-flex justify-content-center">
-    <div class="box" style="max-width: 600px; width:100%;">
+    <div class="box" style="max-width:600px; width:100%;">
 
         <h4 class="text-primary fw-bold text-center mb-4">
             Feedback - {{ event.name }}
@@ -13,60 +13,49 @@
 
         {% with status=event.status|lower %}
 
-        <!-- ❌ EVENT NOT COMPLETED -->
+        <!-- EVENT NOT COMPLETED -->
         {% if status != "completed" %}
             <div class="alert alert-warning text-center">
                 Feedback will be available after the event is completed.
             </div>
 
-        <!-- ❌ NOT REGISTERED -->
+        <!-- NOT REGISTERED -->
         {% elif is_registered == False %}
             <div class="alert alert-danger text-center">
                 You must be registered in this event to submit feedback.
             </div>
 
-        <!-- ❌ ALREADY SUBMITTED -->
+        <!-- ALREADY SUBMITTED -->
         {% elif already_submitted %}
             <div class="alert alert-success text-center">
                 You have already submitted your feedback. Thank you!
             </div>
 
-        <!-- ✅ FORM -->
+        <!-- FORM -->
         {% else %}
 
         <form method="POST">
             {% csrf_token %}
 
-            <!-- ⭐ STAR RATING -->
+            <!-- STAR RATING -->
             <div class="mb-4 text-center">
+
                 <label class="form-label fw-semibold d-block mb-2">
                     Rating
                 </label>
 
                 <div class="star-rating">
-                    <input type="radio" name="rating" id="star5" value="5">
-                    <label for="star5">★</label>
-
-                    <input type="radio" name="rating" id="star4" value="4">
-                    <label for="star4">★</label>
-
-                    <input type="radio" name="rating" id="star3" value="3">
-                    <label for="star3">★</label>
-
-                    <input type="radio" name="rating" id="star2" value="2">
-                    <label for="star2">★</label>
-
-                    <input type="radio" name="rating" id="star1" value="1">
-                    <label for="star1">★</label>
+                    {% for i in "54321" %}
+                        <input type="radio" name="rating" id="star{{ i }}" value="{{ i }}">
+                        <label for="star{{ i }}">★</label>
+                    {% endfor %}
                 </div>
+
             </div>
 
             <!-- EXPERIENCE -->
-            <div class="mb-4">
-                <label class="form-label fw-semibold">
-                    Experience
-                </label>
-
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Experience</label>
                 <select name="experience" class="form-select" required>
                     <option value="excellent">Excellent</option>
                     <option value="good">Good</option>
@@ -76,11 +65,8 @@
             </div>
 
             <!-- MESSAGE -->
-            <div class="mb-4">
-                <label class="form-label fw-semibold">
-                    Remarks
-                </label>
-
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Remarks</label>
                 <textarea name="message"
                           class="form-control"
                           rows="4"
@@ -88,23 +74,20 @@
                           required></textarea>
             </div>
 
-            <!-- SUBMIT -->
-            <div class="text-center">
-                <button type="submit" class="btn btn-primary px-4">
-                    Submit Feedback
-                </button>
-            </div>
+            <!-- BUTTON -->
+            <button type="submit" class="btn btn-primary w-100">
+                Submit Feedback
+            </button>
 
         </form>
 
         {% endif %}
-
         {% endwith %}
 
     </div>
 </div>
 
-<!-- ⭐ STAR RATING CSS -->
+<!-- STAR CSS -->
 <style>
 .star-rating {
     direction: rtl;
@@ -120,13 +103,21 @@
     font-size: 30px;
     color: #ccc;
     cursor: pointer;
-    transition: 0.3s;
+    transition: 0.2s ease-in-out;
 }
 
+/* hover + selection fix */
 .star-rating input:checked ~ label,
 .star-rating label:hover,
 .star-rating label:hover ~ label {
     color: #ffc107;
+}
+
+/* mobile tweak */
+@media (max-width: 768px) {
+    .star-rating label {
+        font-size: 26px;
+    }
 }
 </style>
 

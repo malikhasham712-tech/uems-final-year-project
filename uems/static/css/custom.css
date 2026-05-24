@@ -1,5 +1,5 @@
 /* =========================================
-   UEMS GLOBAL DESIGN SYSTEM (PRODUCTION SAFE FIXED)
+   UEMS GLOBAL DESIGN SYSTEM (PRODUCTION FINAL)
 ========================================= */
 
 * {
@@ -31,16 +31,6 @@ body {
 }
 
 /* =========================================
-   GLOBAL CONTAINERS (SAFE FIX)
-========================================= */
-
-/* ❌ removed forced width:100% (BREAKS BOOTSTRAP GRID)
-.container {
-    width: 100%;
-}
-*/
-
-/* =========================================
    CARDS
 ========================================= */
 
@@ -70,40 +60,72 @@ img {
 }
 
 /* =========================================
-   TABLES (PRODUCTION SAFE)
+   TABLE SYSTEM (PRODUCTION STANDARD)
 ========================================= */
 
+/* Outer wrapper */
 .table-responsive {
+    width: 100%;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
-    border-radius: 12px;
+    border-radius: 14px;
+    background: #fff;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.04);
 }
 
-table {
+/* Base table */
+.admin-table {
     width: 100%;
+    margin-bottom: 0;
+    background: #fff;
+    border-collapse: separate;
+    border-spacing: 0;
+    min-width: 700px;
 }
 
-table th {
-    white-space: nowrap;
-}
-
-table td {
+/* Cells */
+.admin-table th,
+.admin-table td {
+    padding: 14px;
     vertical-align: middle;
+    white-space: nowrap;
+    color: #212529;
+}
+
+/* Sticky header FIX (IMPORTANT) */
+.admin-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: #f8f9fa;
+    font-weight: 600;
+    border-bottom: 1px solid #dee2e6;
+}
+
+/* Header rounding */
+.admin-table thead th:first-child {
+    border-top-left-radius: 12px;
+}
+
+.admin-table thead th:last-child {
+    border-top-right-radius: 12px;
+}
+
+/* Hover */
+.admin-table tbody tr:hover {
+    background: #f8fbff;
+}
+
+/* Buttons inside table */
+.admin-table .btn-sm {
+    padding: 6px 12px;
+    font-size: 13px;
 }
 
 /* =========================================
-   FORMS (SAFE FIX - DO NOT BREAK BOOTSTRAP)
+   FORMS (SAFE)
 ========================================= */
 
-/* ❌ DO NOT force all inputs full width globally
-input,
-select,
-textarea {
-    width: 100%;
-}
-*/
-
-/* Only improve default height consistency */
 input,
 select,
 textarea {
@@ -119,7 +141,7 @@ footer {
 }
 
 /* =========================================
-   MOBILE RESPONSIVE SYSTEM (SAFE)
+   MOBILE RESPONSIVE SYSTEM
 ========================================= */
 
 @media (max-width: 768px) {
@@ -143,7 +165,6 @@ footer {
     h4 { font-size: 18px; }
     h5 { font-size: 16px; }
 
-    /* SAFE TEXT CONTROL ONLY */
     p,
     td,
     th,
@@ -176,30 +197,31 @@ footer {
         width: 220px !important;
         height: auto !important;
     }
+
+    /* MOBILE TABLE CONTROL */
+    .table-responsive {
+        border-radius: 12px;
+    }
+
+    .admin-table {
+        min-width: 650px;
+    }
+
+    .admin-table th,
+    .admin-table td {
+        padding: 10px;
+        font-size: 13px;
+    }
+
+    .admin-table .btn-sm {
+        padding: 6px 10px;
+    }
 }
 
 /* =========================================
-   MOBILE TABLE FIX (SAFE)
+   FLEX SAFETY FIX
 ========================================= */
 
-@media (max-width: 768px) {
-
-    .table-responsive {
-        border-radius: 12px;
-        overflow-x: auto;
-    }
-
-    table th,
-    table td {
-        white-space: nowrap;
-        vertical-align: middle;
-    }
-
-    .btn-sm {
-        padding: 6px 10px;
-    }
-
-    .text-end.d-flex {
-        align-items: stretch !important;
-    }
+.text-end.d-flex {
+    align-items: stretch !important;
 }

@@ -27,12 +27,15 @@
 
         html, body {
             overflow-x: hidden;
+            height: 100%;
         }
 
         body{
             font-family:'Segoe UI', sans-serif;
             background:#f4f6fb;
         }
+
+        /* ================= LAYOUT ================= */
 
         .layout{
             display:flex;
@@ -59,30 +62,31 @@
 
         .sidebar-title{
             font-size:24px;
-            font-weight:700;
-            margin-bottom:35px;
+            font-weight:800;
+            margin-bottom:25px;
             text-align:center;
+            letter-spacing:1px;
         }
 
         .sidebar-role{
-            font-size:14px;
+            font-size:13px;
             opacity:0.9;
-            margin-bottom:25px;
+            margin-bottom:20px;
             text-align:center;
             text-transform:capitalize;
         }
 
         .nav-link{
             color:white;
-            padding:13px 14px;
+            padding:12px 14px;
             border-radius:10px;
-            margin-bottom:10px;
+            margin-bottom:8px;
             display:flex;
             align-items:center;
-            gap:12px;
+            gap:10px;
             text-decoration:none;
             transition:0.2s ease;
-            font-size:15px;
+            font-size:14px;
             font-weight:500;
         }
 
@@ -107,18 +111,19 @@
             display:flex;
             flex-direction:column;
             min-height:100vh;
+            width: calc(100% - 250px);
         }
 
         /* ================= TOPBAR ================= */
 
         .topbar{
-            min-height:78px;
+            min-height:75px;
             background:white;
             border-bottom:1px solid #e9edf5;
             display:flex;
             justify-content:space-between;
             align-items:center;
-            padding:12px 28px;
+            padding:12px 24px;
             position:sticky;
             top:0;
             z-index:999;
@@ -128,7 +133,7 @@
 
         .welcome{
             font-size:18px;
-            font-weight:700;
+            font-weight:800;
             color:#0d6efd;
         }
 
@@ -138,36 +143,17 @@
         }
 
         .content{
-            padding:30px;
+            padding:24px;
+            flex:1;
         }
 
-        /* ================= NOTIFICATIONS ================= */
+        /* ================= BUTTON FIX ================= */
 
-        .notif-badge{
-            position:absolute;
-            top:-4px;
-            right:-5px;
-            font-size:10px;
+        .topbar .btn{
+            white-space:nowrap;
         }
 
-        .notif-item{
-            white-space:normal;
-            font-size:13px;
-        }
-
-        .notif-unread{
-            background:#eef4ff;
-        }
-
-        .dropdown-menu{
-            border:none;
-            border-radius:14px;
-            box-shadow:0 10px 30px rgba(0,0,0,0.08);
-            padding:8px;
-            max-width:95vw;
-        }
-
-        /* ================= MOBILE FIX ================= */
+        /* ================= MOBILE ================= */
 
         @media(max-width:992px){
 
@@ -185,6 +171,7 @@
 
             .main{
                 margin-left:0;
+                width:100%;
             }
 
             .topbar{
@@ -198,11 +185,11 @@
             }
 
             .sidebar-title{
-                margin-bottom:12px;
+                margin-bottom:10px;
             }
 
             .sidebar-role{
-                margin-bottom:12px;
+                margin-bottom:10px;
             }
 
             .nav-link{
@@ -212,6 +199,11 @@
 
             .welcome{
                 font-size:16px;
+            }
+
+            .topbar .d-flex{
+                width:100%;
+                justify-content:flex-start;
             }
         }
 

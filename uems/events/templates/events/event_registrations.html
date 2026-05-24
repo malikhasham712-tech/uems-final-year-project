@@ -8,7 +8,7 @@
 
     <!-- HEADER -->
     <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-        <h4 class="text-primary mb-0">
+        <h4 class="text-primary mb-0 fw-bold">
             Registrations for {{ event.name }}
         </h4>
     </div>
@@ -17,9 +17,9 @@
 
         <div class="table-responsive">
 
-            <table class="table table-hover admin-table align-middle">
+            <table class="table table-hover admin-table align-middle text-center">
 
-                <thead class="table-light"></thead>
+                <thead class="table-light">
                     <tr>
                         <th>Name</th>
                         <th>Reg No</th>
@@ -34,12 +34,31 @@
 
                 {% for r in registrations %}
                     <tr>
-                        <td class="fw-semibold">{{ r.student_name }}</td>
-                        <td>{{ r.registration_no }}</td>
-                        <td>{{ r.department }}</td>
-                        <td>{{ r.email }}</td>
-                        <td>{{ r.contact_no }}</td>
-                        <td>{{ r.created_at|date:"d M Y H:i" }}</td>
+
+                        <td class="fw-semibold text-wrap">
+                            {{ r.student_name }}
+                        </td>
+
+                        <td>
+                            {{ r.registration_no }}
+                        </td>
+
+                        <td>
+                            {{ r.department }}
+                        </td>
+
+                        <td class="text-break">
+                            {{ r.email }}
+                        </td>
+
+                        <td>
+                            {{ r.contact_no }}
+                        </td>
+
+                        <td>
+                            {{ r.created_at|date:"d M Y H:i" }}
+                        </td>
+
                     </tr>
                 {% endfor %}
 
@@ -51,8 +70,8 @@
 
     {% else %}
 
-        <div class="text-muted text-center py-4">
-            No registrations yet.
+        <div class="text-center py-5">
+            <p class="text-muted mb-0">No registrations yet.</p>
         </div>
 
     {% endif %}

@@ -45,11 +45,17 @@
             </p>
         </div>
 
-        <!-- 🔥 ANNOUNCEMENT SPECIAL REDIRECT -->
+        <!-- BACK BUTTON -->
+        <a href="{% url 'events:notifications' %}"
+           class="btn btn-outline-secondary btn-sm">
+            ← Back
+        </a>
+
+        <!-- ANNOUNCEMENT REDIRECT -->
         {% if notif.notification_type == "announcement" and notif.event %}
 
             <a href="{% url 'events:event_announcements' notif.event.id %}"
-               class="btn btn-primary">
+               class="btn btn-primary btn-sm ms-2">
                 View Announcement
             </a>
 

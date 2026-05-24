@@ -4,71 +4,52 @@
 
 {% block content %}
 
-<div class="container py-5">
+<div class="d-flex justify-content-center">
 
-    <div class="row justify-content-center">
+    <div class="box text-center" style="max-width: 650px; width: 100%;">
 
-        <div class="col-md-7">
+        <!-- STATUS ICON -->
+        <div class="mb-4">
 
-            <div class="card shadow-sm border-0">
+            {% if success %}
+                <div class="display-1 text-success">✓</div>
+            {% else %}
+                <div class="display-1 text-danger">✕</div>
+            {% endif %}
 
-                <div class="card-body text-center p-5">
+        </div>
 
-                    {% if success %}
+        <!-- TITLE -->
+        <h3 class="fw-bold mb-3 {% if success %}text-success{% else %}text-danger{% endif %}">
+            {% if success %}
+                Attendance Successful
+            {% else %}
+                Attendance Failed
+            {% endif %}
+        </h3>
 
-                        <div class="mb-4">
-                            <div class="display-1 text-success">
-                                ✓
-                            </div>
-                        </div>
+        <!-- EVENT NAME -->
+        <h5 class="fw-semibold mb-3 text-dark">
+            {{ event.name }}
+        </h5>
 
-                        <h2 class="fw-bold text-success mb-3">
-                            Attendance Successful
-                        </h2>
+        <!-- MESSAGE -->
+        <p class="text-muted fs-6 mb-4">
+            {{ message }}
+        </p>
 
-                    {% else %}
+        <!-- ACTION BUTTONS -->
+        <div class="d-grid gap-2">
 
-                        <div class="mb-4">
-                            <div class="display-1 text-danger">
-                                ✕
-                            </div>
-                        </div>
+            <a href="{% url 'events:my_events' %}"
+               class="btn btn-primary btn-lg">
+                Go To My Events
+            </a>
 
-                        <h2 class="fw-bold text-danger mb-3">
-                            Attendance Failed
-                        </h2>
-
-                    {% endif %}
-
-                    <h4 class="fw-semibold mb-3">
-                        {{ event.name }}
-                    </h4>
-
-                    <p class="text-muted fs-5 mb-4">
-                        {{ message }}
-                    </p>
-
-                    <div class="d-grid gap-2">
-
-                        <a href="{% url 'events:my_events' %}"
-                           class="btn btn-primary btn-lg">
-
-                            Go To My Events
-
-                        </a>
-
-                        <a href="{% url 'events:dashboard' %}"
-                           class="btn btn-outline-secondary">
-
-                            Back To Dashboard
-
-                        </a>
-
-                    </div>
-
-                </div>
-
-            </div>
+            <a href="{% url 'events:dashboard' %}"
+               class="btn btn-outline-secondary">
+                Back To Dashboard
+            </a>
 
         </div>
 

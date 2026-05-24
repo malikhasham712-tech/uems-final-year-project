@@ -6,9 +6,12 @@
 
 <div class="box">
 
-    <h4 class="text-primary mb-3">
-        {{ event.name }} - Announcements
-    </h4>
+    <!-- HEADER -->
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+        <h4 class="text-primary fw-bold mb-0">
+            {{ event.name }} - Announcements
+        </h4>
+    </div>
 
     <hr>
 
@@ -16,17 +19,21 @@
 
         {% for a in announcements %}
 
-            <div class="card mb-3 p-3">
+            <div class="card mb-3 shadow-sm border-0">
 
-                <!-- MESSAGE -->
-                <p class="mb-1">
-                    {{ a.message }}
-                </p>
+                <div class="card-body">
 
-                <!-- DATE -->
-                <small class="text-muted">
-                    {{ a.created_at }}
-                </small>
+                    <!-- MESSAGE -->
+                    <p class="mb-2 text-dark">
+                        {{ a.message }}
+                    </p>
+
+                    <!-- DATE -->
+                    <small class="text-muted">
+                        {{ a.created_at|date:"d M Y, h:i A" }}
+                    </small>
+
+                </div>
 
             </div>
 
@@ -34,7 +41,9 @@
 
     {% else %}
 
-        <p class="text-muted">No announcements available.</p>
+        <div class="text-center py-4">
+            <p class="text-muted mb-0">No announcements available.</p>
+        </div>
 
     {% endif %}
 

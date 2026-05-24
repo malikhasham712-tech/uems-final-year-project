@@ -14,14 +14,17 @@
     </div>
 
     <!-- HEADER -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="text-primary fw-bold mb-0">Event Proposals</h4>
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-4">
+        <h4 class="text-primary fw-bold mb-0">
+            Event Proposals
+        </h4>
     </div>
 
     {% if proposals %}
 
     <div class="table-responsive">
-        <table class="table table-hover admin-table">
+
+        <table class="table table-hover align-middle admin-table">
 
             <thead>
                 <tr>
@@ -34,11 +37,14 @@
             </thead>
 
             <tbody>
+
                 {% for proposal in proposals %}
                 <tr>
 
                     <!-- TITLE -->
-                    <td>{{ proposal.title }}</td>
+                    <td class="fw-semibold">
+                        {{ proposal.title }}
+                    </td>
 
                     <!-- ORGANIZER -->
                     <td>
@@ -52,31 +58,50 @@
 
                     <!-- STATUS -->
                     <td>
+
                         {% if proposal.status == 'approved' %}
-                            <span class="badge bg-primary px-3 py-2">Approved</span>
+                            <span class="badge bg-primary px-3 py-2">
+                                Approved
+                            </span>
+
                         {% elif proposal.status == 'pending' %}
-                            <span class="badge bg-warning text-dark px-3 py-2">Pending</span>
+                            <span class="badge bg-warning text-dark px-3 py-2">
+                                Pending
+                            </span>
+
                         {% else %}
-                            <span class="badge bg-danger px-3 py-2">Rejected</span>
+                            <span class="badge bg-danger px-3 py-2">
+                                Rejected
+                            </span>
+
                         {% endif %}
+
                     </td>
 
                     <!-- ACTION -->
                     <td class="text-center">
-                        <span class="text-muted small">No Detail</span>
+                        <span class="text-muted small">
+                            No Detail
+                        </span>
                     </td>
 
                 </tr>
                 {% endfor %}
+
             </tbody>
 
         </table>
+
     </div>
 
     {% else %}
 
     <div class="text-center py-5">
-        <h6 class="text-muted">No event proposals submitted yet</h6>
+
+        <h6 class="text-muted">
+            No event proposals submitted yet
+        </h6>
+
     </div>
 
     {% endif %}

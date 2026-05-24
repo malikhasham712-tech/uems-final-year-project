@@ -11,72 +11,129 @@
         body{
             background:#f4f6fb;
             font-family:'Segoe UI', sans-serif;
+            margin:0;
+            padding:0;
         }
 
+        /* CENTER WRAPPER */
+        .qr-wrapper{
+            min-height:100vh;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            padding:20px;
+        }
+
+        /* CARD */
         .qr-card{
+            width:100%;
             max-width:700px;
-            margin:auto;
-            margin-top:50px;
             background:white;
             border-radius:16px;
-            padding:40px;
+            padding:32px;
             box-shadow:0 4px 18px rgba(0,0,0,0.08);
+            text-align:center;
         }
 
+        /* QR IMAGE RESPONSIVE */
         .qr-image{
-            width:320px;
-            height:320px;
+            width:100%;
+            max-width:320px;
+            height:auto;
             object-fit:contain;
+            margin-bottom:20px;
         }
 
-        @media print {
+        /* HEADER */
+        .header-title{
+            font-weight:700;
+            color:#0d6efd;
+            margin-bottom:10px;
+        }
 
-            .no-print{
-                display:none !important;
+        .subtitle{
+            color:#6c757d;
+            margin-bottom:20px;
+        }
+
+        /* MOBILE FIX */
+        @media(max-width:768px){
+
+            .qr-card{
+                padding:20px;
+                border-radius:12px;
             }
+
+            .header-title{
+                font-size:20px;
+            }
+
+            .qr-image{
+                max-width:240px;
+            }
+        }
+
+        /* PRINT MODE */
+        @media print {
 
             body{
                 background:white;
             }
 
+            .no-print{
+                display:none !important;
+            }
+
             .qr-card{
                 box-shadow:none;
-                margin-top:0;
+                border:none;
+                margin:0;
+                padding:0;
+            }
+
+            @page {
+                margin: 0;
             }
         }
 
     </style>
 </head>
+
 <body>
 
-<div class="container">
+<div class="qr-wrapper">
 
-    <div class="qr-card text-center">
+    <div class="qr-card">
 
-        <div class="d-flex justify-content-between align-items-center mb-4 no-print">
+        <!-- HEADER -->
+        <div class="d-flex justify-content-between align-items-center mb-3 no-print">
 
-            <h3 class="fw-bold text-primary mb-0">
+            <h4 class="fw-bold text-primary mb-0">
                 Attendance QR
-            </h3>
+            </h4>
 
-            <button onclick="window.print()" class="btn btn-dark">
-                Print QR
+            <button onclick="window.print()" class="btn btn-dark btn-sm">
+                Print
             </button>
 
         </div>
 
-        <h2 class="fw-bold mb-2">
+        <!-- EVENT NAME -->
+        <div class="header-title">
             {{ event.name }}
-        </h2>
+        </div>
 
-        <p class="text-muted mb-4">
+        <!-- SUBTITLE -->
+        <div class="subtitle">
             Scan this QR code to mark attendance
-        </p>
+        </div>
 
+        <!-- QR IMAGE -->
         <img src="data:image/png;base64,{{ qr_image }}"
-             class="qr-image mb-4">
+             class="qr-image">
 
-        <div class="text-muted">
+        <!-- EVENT ID -->
+        <div class="text-muted small">
             Event ID: {{ event.id }}
         </div>
 

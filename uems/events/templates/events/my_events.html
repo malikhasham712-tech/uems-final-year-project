@@ -14,129 +14,127 @@
 
     {% if events %}
 
-        <div class="table-responsive">
+    <div class="table-responsive">
 
-            <table class="table table-hover align-middle text-center admin-table">
+        <table class="table table-hover align-middle text-center admin-table">
 
-                <thead class="table-light">
-                    <tr>
-                        <th>Event</th>
-                        <th>Date</th>
-                        <th>Status</th>
-                        <th>Announcements</th>
-                        <th>Attendance</th>
-                        <th>Feedback</th>
-                    </tr>
-                </thead>
-
-                <tbody>
-
-                {% for event in events %}
+            <thead class="table-light">
                 <tr>
+                    <th>Event</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>Announcements</th>
+                    <th>Attendance</th>
+                    <th>Feedback</th>
+                </tr>
+            </thead>
 
-                    <!-- EVENT NAME -->
-                    <td class="fw-semibold text-wrap">
-                        {{ event.name }}
-                    </td>
+            <tbody>
 
-                    <!-- DATE -->
-                    <td>
-                        {% if event.date %}
-                            {{ event.date|date:"d M Y" }}
-                        {% else %}
-                            <span class="text-muted">-</span>
-                        {% endif %}
-                    </td>
+            {% for event in events %}
+            <tr>
 
-                    <!-- STATUS -->
-                    <td>
+                <!-- EVENT NAME -->
+                <td class="fw-semibold text-wrap">
+                    {{ event.name }}
+                </td>
 
-                        {% if event.status|lower == "completed" %}
-                            <span class="badge bg-success px-3 py-2">Completed</span>
+                <!-- DATE -->
+                <td>
+                    {% if event.date %}
+                        {{ event.date|date:"d M Y" }}
+                    {% else %}
+                        <span class="text-muted">-</span>
+                    {% endif %}
+                </td>
 
-                        {% elif event.status|lower == "announced" %}
-                            <span class="badge bg-primary px-3 py-2">Announced</span>
+                <!-- STATUS -->
+                <td>
+                    {% if event.status|lower == "completed" %}
+                        <span class="badge bg-success px-3 py-2">Completed</span>
 
-                        {% else %}
-                            <span class="badge bg-secondary px-3 py-2">
-                                {{ event.status }}
-                            </span>
-                        {% endif %}
+                    {% elif event.status|lower == "announced" %}
+                        <span class="badge bg-primary px-3 py-2">Announced</span>
 
-                    </td>
+                    {% else %}
+                        <span class="badge bg-secondary px-3 py-2">
+                            {{ event.status|title }}
+                        </span>
+                    {% endif %}
+                </td>
 
-                    <!-- ANNOUNCEMENTS -->
-                    <td>
-                        <a href="{% url 'events:event_announcements' event.id %}"
-                           class="btn btn-sm btn-outline-primary px-3 w-100 w-md-auto">
+                <!-- ANNOUNCEMENTS -->
+                <td>
+                    <a href="{% url 'events:event_announcements' event.id %}"
+                       class="btn btn-sm btn-outline-primary w-100 w-md-auto">
+                        View
+                    </a>
+                </td>
+
+                <!-- ATTENDANCE -->
+                <td>
+
+                    {% if role == "organizer" %}
+
+                        <a href="{% url 'events:view_attendance' event.id %}"
+                           class="btn btn-sm btn-dark w-100 w-md-auto">
                             View
                         </a>
-                    </td>
 
-                    <!-- ATTENDANCE -->
-                    <td>
+                        <div class="small text-muted mt-1">
+                            {{ event.total_attendance|default:0 }} Present
+                        </div>
 
-                        {% if role == "organizer" %}
+                    {% elif role == "student" %}
 
-                            <a href="{% url 'events:view_attendance' event.id %}"
-                               class="btn btn-sm btn-dark px-3 w-100 w-md-auto">
-                                View
-                            </a>
-
-                            <div class="small text-muted mt-1">
-                                {{ event.total_attendance|default:0 }} Present
-                            </div>
-
-                        {% elif role == "student" %}
-
-                            {% if event.registration_status == "attended" %}
-                                <span class="badge bg-success px-3 py-2">Present</span>
-                            {% else %}
-                                <span class="badge bg-secondary px-3 py-2">Pending</span>
-                            {% endif %}
-
+                        {% if event.registration_status == "attended" %}
+                            <span class="badge bg-success px-3 py-2">Present</span>
                         {% else %}
-                            <span class="text-muted">-</span>
+                            <span class="badge bg-secondary px-3 py-2">Pending</span>
                         {% endif %}
 
-                    </td>
+                    {% else %}
+                        <span class="text-muted">-</span>
+                    {% endif %}
 
-                    <!-- FEEDBACK -->
-                    <td>
+                </td>
 
-                        {% if role == "student" and event.status|lower == "completed" %}
-                            <a href="{% url 'events:event_feedback' event.id %}"
-                               class="btn btn-sm btn-success px-3 w-100 w-md-auto">
-                                Submit
-                            </a>
+                <!-- FEEDBACK -->
+                <td>
 
-                        {% elif role == "organizer" %}
-                            <a href="{% url 'events:view_feedbacks' event.id %}"
-                               class="btn btn-sm btn-primary px-3 w-100 w-md-auto">
-                                View
-                            </a>
+                    {% if role == "student" and event.status|lower == "completed" %}
+                        <a href="{% url 'events:event_feedback' event.id %}"
+                           class="btn btn-sm btn-success w-100 w-md-auto">
+                            Submit
+                        </a>
 
-                        {% else %}
-                            <span class="text-muted small">Not Available</span>
-                        {% endif %}
+                    {% elif role == "organizer" %}
+                        <a href="{% url 'events:view_feedbacks' event.id %}"
+                           class="btn btn-sm btn-primary w-100 w-md-auto">
+                            View
+                        </a>
 
-                    </td>
+                    {% else %}
+                        <span class="text-muted small">Not Available</span>
+                    {% endif %}
 
-                </tr>
-                {% endfor %}
+                </td>
 
-                </tbody>
+            </tr>
+            {% endfor %}
 
-            </table>
+            </tbody>
 
-        </div>
+        </table>
+
+    </div>
 
     {% else %}
 
-        <div class="text-center py-5 px-3">
-            <i class="fa fa-calendar-times fa-2x text-muted mb-3"></i>
-            <p class="text-muted mb-0">No events found.</p>
-        </div>
+    <div class="text-center py-5 px-3">
+        <i class="fa fa-calendar-times fa-2x text-muted mb-3"></i>
+        <p class="text-muted mb-0">No events found.</p>
+    </div>
 
     {% endif %}
 

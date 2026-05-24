@@ -12,9 +12,9 @@
 
     {% if feedbacks %}
 
-        <div class="table-responsive">
+    <div class="table-responsive">
 
-        <table class="table table-hover text-center align-middle">
+        <table class="table table-hover align-middle text-center admin-table">
 
             <thead class="table-light">
                 <tr>
@@ -26,16 +26,17 @@
             </thead>
 
             <tbody>
+
             {% for f in feedbacks %}
                 <tr>
 
                     <!-- Student -->
-                    <td>
+                    <td data-label="Student">
                         {{ f.student.username }}
                     </td>
 
                     <!-- Rating -->
-                    <td>
+                    <td data-label="Rating">
                         {% if f.rating %}
                             ⭐ {{ f.rating }}/5
                         {% else %}
@@ -44,28 +45,29 @@
                     </td>
 
                     <!-- Experience -->
-                    <td>
+                    <td data-label="Experience">
                         {{ f.experience|default:"-" }}
                     </td>
 
                     <!-- Message -->
-                    <td>
+                    <td data-label="Message" style="white-space:normal; text-align:left;">
                         {{ f.message }}
                     </td>
 
                 </tr>
             {% endfor %}
+
             </tbody>
 
         </table>
 
-        </div>
+    </div>
 
     {% else %}
 
-        <div class="text-center py-4">
-            <p class="text-muted">No feedback submitted yet.</p>
-        </div>
+    <div class="text-center py-4">
+        <p class="text-muted">No feedback submitted yet.</p>
+    </div>
 
     {% endif %}
 

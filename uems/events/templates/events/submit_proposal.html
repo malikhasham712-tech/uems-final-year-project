@@ -1,80 +1,56 @@
 {% extends "accounts/dashboard_base.html" %}
-{% load static %}
 
 {% block title %}Submit Proposal{% endblock %}
 
 {% block content %}
 
-<div class="container mt-4" style="max-width: 780px;">
+<div class="d-flex justify-content-center">
+
+<div class="box" style="max-width:780px; width:100%;">
 
     <div class="card shadow-sm border-0">
 
-        <!-- HEADER -->
         <div class="card-header bg-primary text-white">
             <h6 class="mb-0">Submit Proposal — {{ event.name }}</h6>
         </div>
 
-        <!-- BODY -->
         <div class="card-body">
 
             <form method="POST">
                 {% csrf_token %}
 
-                <!-- VENUE -->
                 <div class="mb-3">
-                    <label class="form-label fw-semibold">Venue</label>
-                    <input type="text"
-                           name="proposed_venue"
-                           class="form-control form-control-sm"
-                           placeholder="Enter venue"
-                           required>
+                    <label class="form-label">Venue</label>
+                    <input type="text" name="proposed_venue" class="form-control" required>
                 </div>
 
-                <!-- DESCRIPTION -->
                 <div class="mb-3">
-                    <label class="form-label fw-semibold">Description</label>
-                    <textarea name="details"
-                              class="form-control form-control-sm"
-                              rows="2"
-                              style="resize: none;"
-                              placeholder="Short description..."
-                              required></textarea>
+                    <label class="form-label">Description</label>
+                    <textarea name="details" class="form-control" rows="3" required></textarea>
                 </div>
 
-                <!-- REQUIREMENTS -->
                 <div class="mb-3">
-                    <label class="form-label fw-semibold">Requirements</label>
-                    <textarea name="requirements"
-                              class="form-control form-control-sm"
-                              rows="2"
-                              style="resize: none;"
-                              placeholder="Projector, sound system, seating..."
-                              required></textarea>
-
-                    <small class="text-muted">
-                        Keep it short and relevant.
-                    </small>
+                    <label class="form-label">Requirements</label>
+                    <textarea name="requirements" class="form-control" rows="3" required></textarea>
                 </div>
 
-                <!-- BUTTONS -->
-                <div class="d-flex justify-content-between mt-4">
-
-                    <a href="javascript:history.back()"
-                       class="btn btn-outline-secondary btn-sm">
-                        ← Back
+                <div class="d-flex justify-content-between gap-2 flex-wrap">
+                    <a href="javascript:history.back()" class="btn btn-outline-secondary w-100 w-md-auto">
+                        Back
                     </a>
 
-                    <button type="submit"
-                            class="btn btn-success btn-sm px-4">
+                    <button type="submit" class="btn btn-success w-100 w-md-auto">
                         Submit Proposal
                     </button>
-
                 </div>
 
             </form>
 
         </div>
+
     </div>
+
+</div>
 
 </div>
 

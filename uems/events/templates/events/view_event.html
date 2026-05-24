@@ -9,6 +9,7 @@
     .event-wrapper{
         max-width:1000px;
         margin:auto;
+        width:100%;
     }
 
     .event-card{
@@ -29,6 +30,7 @@
         font-size:30px;
         font-weight:700;
         margin-bottom:10px;
+        word-break:break-word;
     }
 
     .event-meta{
@@ -44,6 +46,9 @@
         border-radius:30px;
         font-size:14px;
         font-weight:500;
+        display:flex;
+        align-items:center;
+        gap:8px;
     }
 
     .event-body{
@@ -69,6 +74,7 @@
         border:1px solid #e7eefc;
         border-radius:14px;
         padding:18px;
+        min-width:0;
     }
 
     .info-label{
@@ -84,6 +90,7 @@
         font-size:16px;
         font-weight:600;
         color:#212529;
+        word-break:break-word;
     }
 
     .description-box{
@@ -92,6 +99,7 @@
         padding:22px;
         line-height:1.8;
         border:1px solid #eceff5;
+        overflow-wrap:break-word;
     }
 
     .action-section{
@@ -159,15 +167,31 @@
     @media(max-width:768px){
 
         .event-header{
-            padding:24px;
+            padding:22px 18px;
         }
 
         .event-body{
-            padding:22px;
+            padding:20px 16px;
         }
 
         .event-title{
             font-size:24px;
+            line-height:1.4;
+        }
+
+        .event-meta{
+            flex-direction:column;
+            align-items:flex-start;
+        }
+
+        .meta-badge{
+            width:100%;
+            border-radius:12px;
+        }
+
+        .info-grid{
+            grid-template-columns:1fr;
+            gap:14px;
         }
 
         .action-buttons{
@@ -176,6 +200,14 @@
 
         .action-buttons .btn{
             width:100%;
+        }
+
+        .description-box{
+            padding:18px;
+        }
+
+        .proposal-box{
+            padding:18px;
         }
 
     }
