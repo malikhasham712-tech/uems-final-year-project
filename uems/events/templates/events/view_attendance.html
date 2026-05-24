@@ -16,7 +16,7 @@
         </span>
     </div>
 
-    {% if registrations %}
+    {% if data %}
 
     <div class="table-responsive">
 
@@ -26,8 +26,6 @@
                 <tr>
                     <th>Student</th>
                     <th>Reg No</th>
-                    <th>Department</th>
-                    <th>Email</th>
                     <th>Status</th>
                     <th>Marked At</th>
                 </tr>
@@ -35,29 +33,27 @@
 
             <tbody>
 
-            {% for reg in registrations %}
+            {% for row in data %}
 
                 <tr>
 
-                    <td data-label="Student" class="fw-semibold">
-                        {{ reg.student_name }}
+                    <td class="fw-semibold">
+                        {{ row.name }}
                     </td>
 
-                    <td data-label="Reg No">{{ reg.registration_no }}</td>
-                    <td data-label="Department">{{ reg.department }}</td>
-                    <td data-label="Email">{{ reg.email }}</td>
+                    <td>{{ row.reg_no }}</td>
 
-                    <td data-label="Status">
-                        {% if reg.attendance %}
+                    <td>
+                        {% if row.status == "Present" %}
                             <span class="badge bg-success">Present</span>
                         {% else %}
                             <span class="badge bg-danger">Absent</span>
                         {% endif %}
                     </td>
 
-                    <td data-label="Marked At">
-                        {% if reg.attendance %}
-                            {{ reg.attendance.marked_at|date:"d M Y, H:i" }}
+                    <td>
+                        {% if row.marked_at %}
+                            {{ row.marked_at|date:"d M Y, H:i" }}
                         {% else %}
                             <span class="text-muted">-</span>
                         {% endif %}

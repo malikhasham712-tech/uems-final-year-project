@@ -9,6 +9,7 @@
     max-width: 1100px;
 }
 
+/* HEADER */
 .header {
     background: #111827;
     padding: 16px;
@@ -33,6 +34,7 @@
     font-size: 13px;
 }
 
+/* STATS */
 .stats {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -58,22 +60,33 @@
     color: #9ca3af;
 }
 
-.table {
-    width: 100%;
+/* TABLE FIX (IMPORTANT) */
+.table-wrap {
     margin-top: 20px;
-    border-collapse: collapse;
     background: #111827;
     border-radius: 10px;
     overflow: hidden;
 }
 
-.table th, .table td {
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
     padding: 12px;
     border-bottom: 1px solid #374151;
-    color: white;
+    color: #ffffff !important;
     text-align: left;
 }
 
+/* FORCE READABILITY (IMPORTANT FIX) */
+th {
+    background: #0f172a;
+    color: #ffffff !important;
+}
+
+/* STATUS */
 .present {
     color: #22c55e;
     font-weight: bold;
@@ -82,14 +95,6 @@
 .absent {
     color: #ef4444;
     font-weight: bold;
-}
-
-.btn-back {
-    background: #374151;
-    padding: 8px 12px;
-    border-radius: 6px;
-    color: white;
-    text-decoration: none;
 }
 
 </style>
@@ -102,80 +107,83 @@
             Attendance Report - {{ event.name }}
         </div>
 
-        <!-- EXPORT BUTTON (ATTENDANCE ONLY) -->
         <a href="/reports/{{ event.id }}/export/?mode=attendance"
-            class="export-btn">
-              Export Attendance
+           class="export-btn">
+            Export Attendance
         </a>
     </div>
 
-    <!-- STATS -->
+    <!-- STATS (SAFE FALLBACKS) -->
     <div class="stats">
 
         <div class="card">
-            <h2>{{ total_students }}</h2>
+            <h2>{{ total_students|default:0 }}</h2>
             <span>Total Students</span>
         </div>
 
         <div class="card">
-            <h2 style="color:#22c55e;">{{ present }}</h2>
+            <h2 style="color:#22c55e;">{{ present|default:0 }}</h2>
             <span>Present</span>
         </div>
 
         <div class="card">
-            <h2 style="color:#ef4444;">{{ absent }}</h2>
+            <h2 style="color:#ef4444;">{{ absent|default:0 }}</h2>
             <span>Absent</span>
         </div>
 
         <div class="card">
-            <h2>{{ percentage }}%</h2>
+            <h2>{{ percentage|default:0 }}%</h2>
             <span>Attendance Rate</span>
         </div>
 
     </div>
 
     <!-- TABLE -->
-    <table class="table">
+    <div class="table-wrap">
 
-        <thead>
-            <tr>
-                <th>Student</th>
-                <th>Reg No</th>
-                <th>Status</th>
-                <th>Time</th>
-            </tr>
-        </thead>
+        <table>
 
-        <tbody>
+            <thead>
+                <tr>
+                    <th>Student</th>
+                    <th>Reg No</th>
+                    <th>Status</th>
+                    <th>Time</th>
+                </tr>
+            </thead>
 
-            {% for row in data %}
+            <tbody>
 
-            <tr>
-                <td>{{ row.name }}</td>
-                <td>{{ row.reg_no }}</td>
+                {% for row in data %}
 
-                <td>
-                    {% if row.status == "present" %}
-                        <span class="present">Present</span>
-                    {% else %}
-                        <span class="absent">Absent</span>
-                    {% endif %}
-                </td>
+                <tr>
+                    <td>{{ row.name }}</td>
+                    <td>{{ row.reg_no }}</td>
 
-                <td>
-                    {% if row.marked_at %}
-                        {{ row.marked_at|date:"d M Y, H:i" }}
-                    {% else %}
-                        -
-                    {% endif %}
-                </td>
-            </tr>
+                    <td>
+                        {% if row.status == "present" %}
+                            <span class="present">Present</span>
+                        {% else %}
+                            <span class="absent">Absent</span>
+                        {% endif %}
+                    </td>
 
-            {% endfor %}
+                    <td>
+                        {% if row.marked_at %}
+                            {{ row.marked_at|date:"d M Y, H:i" }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                </tr>
 
-        </tbody>
+                {% endfor %}
 
-    </table>
+            </tbody>
+
+        </table>
+
+    </div>
 
 </div>
 

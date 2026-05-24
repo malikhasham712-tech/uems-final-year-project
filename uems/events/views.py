@@ -321,42 +321,37 @@ def mark_attendance(request, event_id):
     event = get_object_or_404(Event, id=event_id)
     user = request.user
 
-    # STEP 1: CHECK REGISTRATION
-    is_registered = EventRegistration.objects.filter(
+    # STEP 1: CHECK REGISTRATION (STRICT)
+    registration_exists = EventRegistration.objects.filter(
         event=event,
-        student=user
+        student_id=user.id
     ).exists()
 
-    if not is_registered:
+    if not registration_exists:
         return render(request, "events/attendance_result.html", {
             "success": False,
             "event": event,
             "message": "❌ You are not registered for this event."
         })
 
-    # STEP 2: CHECK DUPLICATE
-    already_marked = Attendance.objects.filter(
-        event=event,
-        student=user
-    ).exists()
-
-    if already_marked:
-        return render(request, "events/attendance_result.html", {
-            "success": True,
-            "event": event,
-            "message": "ℹ Already marked attendance."
-        })
-
-    # STEP 3: SAVE
-    Attendance.objects.create(
+    # STEP 2: CREATE OR GET ATTENDANCE (NO DUPLICATE ISSUES)
+    attendance, created = Attendance.objects.get_or_create(
         event=event,
         student=user
     )
 
+    if created:
+        return render(request, "events/attendance_result.html", {
+            "success": True,
+            "event": event,
+            "message": "✅ Attendance marked successfully!"
+        })
+
+    # STEP 3: ALREADY EXISTS
     return render(request, "events/attendance_result.html", {
         "success": True,
         "event": event,
-        "message": "✅ Attendance marked successfully!"
+        "message": "Attendance already marked."
     })
 
 # =====================================================
@@ -367,35 +362,47 @@ def attendance_records(request, event_id):
 
     event = get_object_or_404(Event, id=event_id)
 
-    # 🔥 DEBUG START (ADD THIS)
-    print("EVENT ID:", event.id)
-
-    attendance_qs = Attendance.objects.filter(event=event)
-
-    print("ATTENDANCE ROWS:", list(attendance_qs.values()))
-    # 🔥 DEBUG END
-
     role = get_role(request.user)
 
     if role != "admin" and request.user != event.organizer:
         return redirect("events:dashboard")
 
+    # Get registrations
     registrations = EventRegistration.objects.filter(
         event=event
-    ).exclude(student_id=event.organizer_id).select_related("student")
+    ).select_related("student")
 
-    attendance_set = set(
-        Attendance.objects.filter(event=event)
-        .values_list("student_id", flat=True)
-    )
+    # Attendance lookup (FAST + CLEAN)
+    attendance_map = {
+        a.student_id: a.marked_at
+        for a in Attendance.objects.filter(event=event)
+    }
+
+    # Build unified data structure (THIS IS FINAL STANDARD)
+    data = []
 
     for reg in registrations:
-        reg.status = "Present" if reg.student.id in attendance_set else "Absent"
+        data.append({
+            "name": reg.student.username,
+            "reg_no": reg.registration_no if hasattr(reg, "registration_no") else reg.student_id,
+            "department": getattr(reg, "department", "-"),
+            "email": reg.student.email,
+            "status": "present" if reg.student_id in attendance_map else "absent",
+            "marked_at": attendance_map.get(reg.student_id)
+        })
+
+    present_count = sum(1 for d in data if d["status"] == "present")
+    absent_count = len(data) - present_count
+
+    percentage = round((present_count / len(data)) * 100, 2) if data else 0
 
     return render(request, "events/view_attendance.html", {
         "event": event,
-        "registrations": registrations,
-        "total_attendance": len(attendance_set),
+        "data": data,
+        "total_students": len(data),
+        "present": present_count,
+        "absent": absent_count,
+        "percentage": percentage,
         "role": role,
         **notif_context(request)
     })

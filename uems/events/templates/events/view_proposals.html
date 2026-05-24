@@ -56,12 +56,12 @@
                         {{ proposal.submitted_at|date:"d M Y" }}
                     </td>
 
-                    <!-- STATUS -->
+                    <!-- STATUS (FIXED) -->
                     <td>
 
-                        {% if proposal.status == 'approved' %}
-                            <span class="badge bg-primary px-3 py-2">
-                                Approved
+                        {% if proposal.status == 'accepted' %}
+                            <span class="badge bg-success px-3 py-2">
+                                Accepted
                             </span>
 
                         {% elif proposal.status == 'pending' %}
@@ -69,11 +69,15 @@
                                 Pending
                             </span>
 
-                        {% else %}
+                        {% elif proposal.status == 'rejected' %}
                             <span class="badge bg-danger px-3 py-2">
                                 Rejected
                             </span>
 
+                        {% else %}
+                            <span class="badge bg-secondary px-3 py-2">
+                                Unknown
+                            </span>
                         {% endif %}
 
                     </td>
