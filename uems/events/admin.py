@@ -171,7 +171,7 @@ class EventAdmin(admin.ModelAdmin):
     def attendance_btn(self, obj):
 
         url = reverse(
-            'admin:attendance_report_detail',
+            'events:view_attendance',
             args=[obj.id]
         )
 
