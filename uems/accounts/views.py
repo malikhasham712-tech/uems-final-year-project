@@ -1,3 +1,4 @@
+import profile
 from urllib import request
 
 from django.shortcuts import render, redirect, get_object_or_404
@@ -97,28 +98,27 @@ def login_view(request):
 
             try:
                 profile = user.profile
-            except Profile.DoesNotExist:
+            except:
                 messages.error(request, 'Profile missing. Contact admin.')
                 return redirect('login')
 
             if not profile.email_verified:
-                messages.error(request, 'Please verify your email before login.')
+                messages.error(request, 'Please verify your email.')
                 return redirect('login')
 
             login(request, user)
 
-            next_url = request.GET.get('next')
+            if profile.role == 'organizer':
+                return redirect('events:dashboard')
+            else:
+                return redirect('events:dashboard')
 
-            if next_url:
-                return redirect(next_url)
-            return redirect('events:my_events')
+        # 🔥 IMPORTANT: RETURN HERE WAS MISSING
+        messages.error(request, 'Invalid username or password.')
+        return redirect('login')
 
-        else:
-            messages.error(request, 'Invalid username or password.')
-
+    # GET request always returns page
     return render(request, 'accounts/login.html')
-
-
 # ----------------------
 # LOGOUT
 # ----------------------
