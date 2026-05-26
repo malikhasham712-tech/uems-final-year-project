@@ -83,10 +83,11 @@
                     </td>
 
                     <!-- ACTION -->
-                    <td class="text-center">
-                        <span class="text-muted small">
-                            No Detail
-                        </span>
+                    <td class="text-start">
+                        <div class="small text-muted">
+                            <div><strong>Venue:</strong> {{ proposal.proposed_venue }}</div>
+                            <div><strong>Requirements:</strong> {{ proposal.requirements|truncatewords:20 }}</div>
+                        </div>
                     </td>
 
                 </tr>

@@ -275,7 +275,7 @@
                     </div>
 
                     <div class="info-value">
-                        {{ event.venue|default:"Not Specified" }}
+                        {{ proposal.proposed_venue|default:"Not Specified" }}
                     </div>
 
                 </div>
@@ -356,7 +356,8 @@
 
             {% endif %}
 
-            <!-- ACTIONS -->
+            <!-- ACTIONS - ORGANIZER ONLY -->
+            {% if role == "organizer" %}
             <div class="action-section">
 
                 <div class="action-title">
@@ -364,15 +365,6 @@
                 </div>
 
                 <div class="action-buttons">
-
-                    <!-- ANNOUNCEMENTS -->
-                    <a href="{% url 'events:event_announcements' event.id %}"
-                       class="btn btn-primary">
-
-                        <i class="fa fa-bullhorn"></i>
-                        Announcements
-
-                    </a>
 
                     <!-- ORGANIZER ACTIONS -->
                     {% if role == "organizer" %}
@@ -448,6 +440,7 @@
                 </div>
 
             </div>
+            {% endif %}
 
         </div>
 

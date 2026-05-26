@@ -140,6 +140,13 @@ def my_events(request):
             registrations__student=request.user
         ).distinct()
         role = "student"
+        
+        # ADD FEEDBACK STATUS FOR EACH EVENT
+        for event in events:
+            event.has_feedback = Feedback.objects.filter(
+                event=event,
+                student=request.user
+            ).exists()
 
     return render(request, "events/my_events.html", {
         "events": events,
