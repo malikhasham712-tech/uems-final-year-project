@@ -80,10 +80,8 @@ def is_organizer_or_admin(user, event):
 @login_required
 def dashboard(request):
 
-    role = get_role(request.user)
-
-    if role == "organizer":
-
+    if hasattr(request.user, 'profile') and request.user.profile.is_organizer:
+        # ORGANIZER DASHBOARD
         events = Event.objects.filter(
             organizer=request.user
         ).annotate(
@@ -96,15 +94,14 @@ def dashboard(request):
         )
 
         return render(request, "accounts/dashboard.html", {
-            "role": role,
+            "role": "organizer",
             "events": events,
             **notif_context(request)
         })
 
-    if role == "student":
+    else:
+        # STUDENT - Go to available events
         return redirect("events:available_events")
-
-    return redirect("/admin/")
 
 
 # =====================================================
@@ -127,25 +124,22 @@ def available_events(request):
 @login_required
 def my_events(request):
 
-    role = get_role(request.user)
-
-    if role == "student":
-
-        events = Event.objects.filter(
-            registrations__student=request.user
-        ).distinct()
-
-    elif role == "organizer":
-
+    if hasattr(request.user, 'profile') and request.user.profile.is_organizer:
+        # ORGANIZER - Show their events
         events = Event.objects.filter(
             organizer=request.user
         ).annotate(
             total_registrations=Count("registrations"),
             total_attendance=Count("attendances")
         )
+        role = "organizer"
 
     else:
-        return redirect("/admin/")
+        # STUDENT - Show registered events
+        events = Event.objects.filter(
+            registrations__student=request.user
+        ).distinct()
+        role = "student"
 
     return render(request, "events/my_events.html", {
         "events": events,
@@ -362,9 +356,10 @@ def attendance_records(request, event_id):
 
     event = get_object_or_404(Event, id=event_id)
 
-    role = get_role(request.user)
+    is_organizer = hasattr(request.user, 'profile') and request.user.profile.is_organizer
+    is_admin = request.user.is_superuser
 
-    if role != "admin" and request.user != event.organizer:
+    if not is_admin and not is_organizer:
         return redirect("events:dashboard")
 
     # Get registrations
@@ -403,7 +398,7 @@ def attendance_records(request, event_id):
         "present": present_count,
         "absent": absent_count,
         "percentage": percentage,
-        "role": role,
+        "role": "organizer" if is_organizer else "admin",
         **notif_context(request)
     })
 
@@ -696,10 +691,7 @@ def view_feedbacks(request, event_id):
         id=event_id
     )
 
-    if get_role(request.user) not in [
-        "organizer",
-        "admin"
-    ]:
+    if not (request.user.is_superuser or (hasattr(request.user, 'profile') and request.user.profile.is_organizer)):
         return redirect("events:my_events")
 
     feedbacks = Feedback.objects.filter(
