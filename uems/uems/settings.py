@@ -30,15 +30,21 @@ ALLOWED_HOSTS = [
 CSRF_TRUSTED_ORIGINS = [
     "http://127.0.0.1:8000",
     "http://localhost:8000",
-    "http://192.168.1.10:8000"
+    "http://192.168.1.8:8000",
+    "http://192.168.1.10:8000",
 ]
-
+CSRF_COOKIE_HTTPONLY = False
+CSRF_COOKIE_SECURE = False
 
 # ----------------------
 # SESSION FIX (🔥 MOBILE LOGIN STABILITY)
 # ----------------------
 SESSION_COOKIE_SAMESITE = "Lax"
 CSRF_COOKIE_SAMESITE = "Lax"
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+SESSION_COOKIE_AGE = 1209600  # 2 weeks
+SESSION_SAVE_EVERY_REQUEST = True
+SESSION_COOKIE_HTTPONLY = False
 
 
 # ----------------------

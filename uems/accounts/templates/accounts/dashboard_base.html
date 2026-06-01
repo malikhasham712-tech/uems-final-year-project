@@ -249,6 +249,12 @@
                 <i class="fa fa-list"></i> Available Events
             </a>
 
+        {% elif role == 'faculty' %}
+
+            <a href="{% url 'events:dashboard' %}" class="nav-link">
+                <i class="fa fa-users"></i> Registered Students
+            </a>
+
         {% elif request.user.is_superuser %}
 
             <a href="/admin/" class="nav-link">
@@ -297,21 +303,31 @@
 
             <div class="d-flex gap-2 flex-wrap">
 
-                <button onclick="history.back()" class="btn btn-outline-secondary btn-sm">
-                    Back
-                </button>
+                {% if role == 'faculty' %}
+                    <!-- Faculty: Only Back button -->
+                    <button onclick="goBackToList()" class="btn btn-outline-secondary btn-sm">
+                        Back
+                    </button>
 
-                {% if request.user.is_superuser %}
-                    <a href="/admin/" class="btn btn-primary btn-sm">Admin</a>
-                {% elif role == 'organizer' %}
-                    <a href="{% url 'events:dashboard' %}" class="btn btn-primary btn-sm">Dashboard</a>
                 {% else %}
-                    <a href="{% url 'events:available_events' %}" class="btn btn-primary btn-sm">Events</a>
-                {% endif %}
+                    <!-- Other roles: Back, Dashboard/Events, Logout -->
+                    <button onclick="history.back()" class="btn btn-outline-secondary btn-sm">
+                        Back
+                    </button>
 
-                <a href="{% url 'logout' %}" class="btn btn-outline-dark btn-sm">
-                    Logout
-                </a>
+                    {% if request.user.is_superuser %}
+                        <a href="/admin/" class="btn btn-primary btn-sm">Admin</a>
+                    {% elif role == 'organizer' %}
+                        <a href="{% url 'events:dashboard' %}" class="btn btn-primary btn-sm">Dashboard</a>
+                    {% else %}
+                        <a href="{% url 'events:available_events' %}" class="btn btn-primary btn-sm">Events</a>
+                    {% endif %}
+
+                    <a href="{% url 'logout' %}" class="btn btn-outline-dark btn-sm">
+                        Logout
+                    </a>
+
+                {% endif %}
 
             </div>
 

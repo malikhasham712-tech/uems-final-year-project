@@ -99,6 +99,21 @@ def dashboard(request):
             **notif_context(request)
         })
 
+    elif hasattr(request.user, 'profile') and request.user.profile.role == 'faculty':
+        # FACULTY DASHBOARD - View registered students
+        students = User.objects.filter(
+            profile__role='student'
+        ).select_related('profile')
+
+        total_students = students.count()
+
+        return render(request, "accounts/faculty_dashboard.html", {
+            "role": "faculty",
+            "students": students,
+            "total_students": total_students,
+            **notif_context(request)
+        })
+
     else:
         # STUDENT - Go to available events
         return redirect("events:available_events")

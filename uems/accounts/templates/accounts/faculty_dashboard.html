@@ -1,0 +1,198 @@
+{% extends "accounts/dashboard_base.html" %}
+
+{% block title %}Faculty Dashboard{% endblock %}
+
+{% block content %}
+
+<div class="row">
+    <!-- MAIN CONTENT AREA -->
+    <div class="col-12">
+        <div class="box">
+            
+            <!-- INITIAL STATE - No selection -->
+            <div id="no-selection" class="text-center py-5 text-muted">
+                <i class="fas fa-users fa-4x mb-3 d-block opacity-50"></i>
+                <p class="mt-4">Click on <strong>"Registered Students"</strong> in the sidebar</p>
+            </div>
+
+            <!-- STUDENTS LIST VIEW -->
+            <div id="students-list-view" style="display: none;">
+                
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <h5 class="fw-bold text-primary mb-0">
+                        Registered Students
+                    </h5>
+                    <span class="badge bg-primary">{{ total_students }}</span>
+                </div>
+
+                <hr class="my-3">
+
+                {% if students %}
+                    <div class="list-group">
+                        {% for student in students %}
+                        <button type="button" class="list-group-item list-group-item-action text-start py-3" 
+                                onclick="showStudent({{ student.id }});"
+                                data-student-id="{{ student.id }}">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="avatar bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold" 
+                                     style="width: 40px; height: 40px; font-size: 16px; flex-shrink: 0;">
+                                    {{ student.username|first|upper }}
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold text-dark mb-0" style="font-size: 14px;">
+                                        {{ student.username }}
+                                    </h6>
+                                </div>
+                            </div>
+                        </button>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-4 text-muted">
+                        <p>No students registered yet.</p>
+                    </div>
+                {% endif %}
+
+            </div>
+
+            <!-- STUDENT DETAILS VIEW -->
+            <div id="student-details" style="display: none;">
+
+                <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+                    <div>
+                        <h4 class="fw-bold text-primary mb-1">
+                            <span id="detail-fullname"></span>
+                        </h4>
+                        <p class="text-muted mb-0 small">
+                            <i class="fas fa-envelope me-2"></i>
+                            <span id="detail-email"></span>
+                        </p>
+                    </div>
+                </div>
+
+                <hr class="my-3">
+
+                <!-- STUDENT INFO -->
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <div class="p-3 bg-light rounded">
+                            <small class="text-muted d-block mb-2 fw-semibold">Full Name</small>
+                            <p class="fw-semibold mb-0" id="detail-fullname-card">-</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="p-3 bg-light rounded">
+                            <small class="text-muted d-block mb-2 fw-semibold">Username</small>
+                            <p class="fw-semibold mb-0" id="detail-username">-</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="p-3 bg-light rounded">
+                            <small class="text-muted d-block mb-2 fw-semibold">Email Verified</small>
+                            <p class="fw-semibold mb-0">
+                                <span id="detail-email-verified" class="badge bg-success">Yes</span>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="p-3 bg-light rounded">
+                            <small class="text-muted d-block mb-2 fw-semibold">Account Status</small>
+                            <p class="fw-semibold mb-0">
+                                <span id="detail-status" class="badge bg-success">Active</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // Store student data
+    const studentsData = {
+        {% for student in students %}
+        {{ student.id }}: {
+            id: {{ student.id }},
+            username: "{{ student.username }}",
+            email: "{{ student.email }}",
+            first_name: "{{ student.first_name|default:'' }}",
+            last_name: "{{ student.last_name|default:'' }}",
+            is_active: {{ student.is_active|lower }},
+            email_verified: {{ student.profile.email_verified|lower }},
+        },
+        {% endfor %}
+    };
+
+    function showStudentsList() {
+        document.getElementById('no-selection').style.display = 'none';
+        document.getElementById('student-details').style.display = 'none';
+        document.getElementById('students-list-view').style.display = 'block';
+    }
+    window.showStudentsList = showStudentsList;
+
+    function showStudent(studentId) {
+        const student = studentsData[studentId];
+        
+        if (!student) return;
+
+        // Build full name
+        const fullName = student.first_name && student.last_name 
+            ? `${student.first_name} ${student.last_name}`
+            : student.username;
+
+        // Update details
+        document.getElementById('detail-fullname').textContent = fullName;
+        document.getElementById('detail-fullname-card').textContent = fullName;
+        document.getElementById('detail-username').textContent = student.username;
+        document.getElementById('detail-email').textContent = student.email;
+        
+        document.getElementById('detail-email-verified').textContent = 
+            student.email_verified ? 'Yes' : 'No';
+        document.getElementById('detail-email-verified').className = 
+            student.email_verified ? 'badge bg-success' : 'badge bg-warning text-dark';
+        
+        document.getElementById('detail-status').textContent = 
+            student.is_active ? 'Active' : 'Inactive';
+        document.getElementById('detail-status').className = 
+            student.is_active ? 'badge bg-success' : 'badge bg-danger';
+
+        // Show/hide sections
+        document.getElementById('no-selection').style.display = 'none';
+        document.getElementById('students-list-view').style.display = 'none';
+        document.getElementById('student-details').style.display = 'block';
+    }
+    window.showStudent = showStudent;
+
+    function goBackToList() {
+        showStudentsList();
+    }
+    window.goBackToList = goBackToList;
+
+    // Add click handler to sidebar "Registered Students" link
+    document.addEventListener('DOMContentLoaded', function() {
+        const registeredStudentsLink = document.querySelector('a[href*="dashboard"]');
+        if (registeredStudentsLink) {
+            // Check if it's the Faculty version (contains Registered Students text or is in faculty sidebar)
+            const isRegisteredStudentsLink = registeredStudentsLink.textContent.includes('Registered Students');
+            
+            if (isRegisteredStudentsLink) {
+                registeredStudentsLink.addEventListener('click', function(e) {
+                    // Prevent default navigation if already on dashboard
+                    if (window.location.pathname.includes('dashboard')) {
+                        e.preventDefault();
+                        showStudentsList();
+                    }
+                });
+            }
+        }
+    });
+</script>
+
+{% endblock %}
