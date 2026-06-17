@@ -27,6 +27,7 @@
                         <th>Email</th>
                         <th>Contact</th>
                         <th>Date</th>
+                        <th>Message</th>
                     </tr>
                 </thead>
 
@@ -57,6 +58,13 @@
 
                         <td>
                             {{ r.created_at|date:"d M Y H:i" }}
+                        </td>
+
+                        <td>
+                            <a href="{% url 'events:event_message_thread' event.id r.student.id %}"
+                               class="btn btn-sm btn-outline-primary">
+                                Send Message
+                            </a>
                         </td>
 
                     </tr>

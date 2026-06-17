@@ -51,6 +51,27 @@ urlpatterns = [
     ),
 
     # ======================
+    # EVENT MESSAGING
+    # ======================
+    path(
+        'messages/',
+        views.message_inbox,
+        name='message_inbox'
+    ),
+
+    path(
+        'event/<int:event_id>/messages/<int:user_id>/',
+        views.event_message_thread,
+        name='event_message_thread'
+    ),
+
+    path(
+        'event/<int:event_id>/messages/<int:user_id>/latest/',
+        views.event_messages_latest,
+        name='event_messages_latest'
+    ),
+
+    # ======================
     # QR ATTENDANCE SYSTEM
     # ======================
     path(

@@ -190,6 +190,35 @@ class Notification(models.Model):
 
 
 # =====================================================
+# EVENT MESSAGE
+# =====================================================
+class EventMessage(models.Model):
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="messages")
+    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name="sent_event_messages")
+    recipient = models.ForeignKey(User, on_delete=models.CASCADE, related_name="received_event_messages")
+
+    message = models.TextField()
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["created_at"]
+        indexes = [
+            models.Index(
+                fields=["event", "sender", "recipient", "created_at"],
+                name="evt_msg_thread_idx"
+            ),
+            models.Index(
+                fields=["recipient", "is_read"],
+                name="evt_msg_unread_idx"
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.event.name}: {self.sender.username} to {self.recipient.username}"
+
+
+# =====================================================
 # FEEDBACK
 # =====================================================
 class Feedback(models.Model):

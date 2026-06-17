@@ -24,6 +24,7 @@
                     <th>Date</th>
                     <th>Status</th>
                     <th>Announcements</th>
+                    <th>Messages</th>
                     <th>Attendance</th>
                     <th>Feedback</th>
                 </tr>
@@ -69,6 +70,23 @@
                        class="btn btn-sm btn-outline-primary w-100 w-md-auto">
                         View
                     </a>
+                </td>
+
+                <!-- MESSAGES -->
+                <td>
+                    {% if role == "student" and event.organizer %}
+                        <a href="{% url 'events:event_message_thread' event.id event.organizer.id %}"
+                           class="btn btn-sm btn-outline-dark w-100 w-md-auto">
+                            Message Organizer
+                        </a>
+                    {% elif role == "organizer" %}
+                        <a href="{% url 'events:event_registrations' event.id %}"
+                           class="btn btn-sm btn-outline-dark w-100 w-md-auto">
+                            Message Students
+                        </a>
+                    {% else %}
+                        <span class="text-muted">-</span>
+                    {% endif %}
                 </td>
 
                 <!-- ATTENDANCE -->

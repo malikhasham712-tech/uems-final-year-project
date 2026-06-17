@@ -4,7 +4,9 @@ from django.db.models import Count
 from django.contrib import messages
 from django.contrib.auth.models import User
 from django.http import HttpResponse
+from django.http import JsonResponse
 from django.urls import reverse
+from django.db.models import Q
 
 from openpyxl import Workbook
 
@@ -20,12 +22,13 @@ from .models import (
     Announcement,
     Feedback,
     Attendance,
+    EventMessage,
     Notification,
     EventStatus,
     ProposalStatus,
 )
 
-from .forms import ProposalForm, EventRegistrationForm
+from .forms import EventMessageForm, ProposalForm, EventRegistrationForm
 from .notification_router import send_notification
 
 
@@ -72,6 +75,56 @@ def is_organizer_or_admin(user, event):
         user.is_superuser
         or user == event.organizer
     )
+
+
+def is_registered_for_event(user, event):
+    return EventRegistration.objects.filter(
+        event=event,
+        student=user
+    ).exists()
+
+
+def get_message_partner(user, event, partner_id):
+    partner = get_object_or_404(User, id=partner_id)
+
+    if user == event.organizer:
+        if is_registered_for_event(partner, event):
+            return partner
+
+        return None
+
+    if (
+        event.organizer_id == partner.id
+        and is_registered_for_event(user, event)
+    ):
+        return partner
+
+    return None
+
+
+def get_event_thread(event, user, partner):
+    return EventMessage.objects.filter(
+        event=event
+    ).filter(
+        Q(sender=user, recipient=partner)
+        | Q(sender=partner, recipient=user)
+    ).select_related(
+        "sender",
+        "recipient"
+    )
+
+
+def serialize_event_messages(messages_qs, user):
+    return [
+        {
+            "id": msg.id,
+            "sender": msg.sender.username,
+            "message": msg.message,
+            "created_at": msg.created_at.strftime("%d %b %Y, %I:%M %p"),
+            "is_mine": msg.sender_id == user.id,
+        }
+        for msg in messages_qs
+    ]
 
 
 # =====================================================
@@ -290,6 +343,183 @@ def event_registrations(request, event_id):
         "total": regs.count(),
         "role": "organizer",
         **notif_context(request)
+    })
+
+
+# =====================================================
+# EVENT MESSAGING
+# =====================================================
+@login_required
+def message_inbox(request):
+
+    user = request.user
+
+    message_qs = EventMessage.objects.filter(
+        Q(sender=user) | Q(recipient=user)
+    ).select_related(
+        "event",
+        "sender",
+        "recipient"
+    ).order_by(
+        "-created_at"
+    )
+
+    conversations = []
+    seen = set()
+
+    for msg in message_qs:
+
+        partner = (
+            msg.recipient
+            if msg.sender_id == user.id
+            else msg.sender
+        )
+
+        key = (
+            msg.event_id,
+            partner.id
+        )
+
+        if key in seen:
+            continue
+
+        if not get_message_partner(
+            user,
+            msg.event,
+            partner.id
+        ):
+            continue
+
+        seen.add(key)
+
+        conversations.append({
+            "event": msg.event,
+            "partner": partner,
+            "latest_message": msg,
+            "unread_count": EventMessage.objects.filter(
+                event=msg.event,
+                sender=partner,
+                recipient=user,
+                is_read=False
+            ).count()
+        })
+
+    return render(request, "events/message_inbox.html", {
+        "conversations": conversations,
+        "role": get_role(user),
+        **notif_context(request)
+    })
+
+
+@login_required
+def event_message_thread(request, event_id, user_id):
+
+    event = get_object_or_404(
+        Event.objects.select_related("organizer"),
+        id=event_id
+    )
+
+    partner = get_message_partner(
+        request.user,
+        event,
+        user_id
+    )
+
+    if not partner:
+        messages.error(
+            request,
+            "You are not allowed to message this participant for this event."
+        )
+
+        return redirect("events:my_events")
+
+    if request.method == "POST":
+
+        form = EventMessageForm(request.POST)
+
+        if form.is_valid():
+
+            obj = form.save(commit=False)
+            obj.event = event
+            obj.sender = request.user
+            obj.recipient = partner
+            obj.save()
+
+            if request.headers.get("x-requested-with") == "XMLHttpRequest":
+                return JsonResponse({"success": True})
+
+            return redirect(
+                "events:event_message_thread",
+                event_id=event.id,
+                user_id=partner.id
+            )
+
+        if request.headers.get("x-requested-with") == "XMLHttpRequest":
+            return JsonResponse({
+                "success": False,
+                "errors": form.errors
+            }, status=400)
+
+    EventMessage.objects.filter(
+        event=event,
+        sender=partner,
+        recipient=request.user,
+        is_read=False
+    ).update(
+        is_read=True
+    )
+
+    thread_messages = get_event_thread(
+        event,
+        request.user,
+        partner
+    )
+
+    return render(request, "events/event_message_thread.html", {
+        "event": event,
+        "partner": partner,
+        "messages": thread_messages,
+        "form": EventMessageForm(),
+        "role": get_role(request.user),
+        **notif_context(request)
+    })
+
+
+@login_required
+def event_messages_latest(request, event_id, user_id):
+
+    event = get_object_or_404(
+        Event.objects.select_related("organizer"),
+        id=event_id
+    )
+
+    partner = get_message_partner(
+        request.user,
+        event,
+        user_id
+    )
+
+    if not partner:
+        return JsonResponse({
+            "success": False,
+            "message": "Not allowed"
+        }, status=403)
+
+    EventMessage.objects.filter(
+        event=event,
+        sender=partner,
+        recipient=request.user,
+        is_read=False
+    ).update(
+        is_read=True
+    )
+
+    return JsonResponse({
+        "success": True,
+        "messages": serialize_event_messages(
+            get_event_thread(event, request.user, partner),
+            request.user
+        )
     })
 
 

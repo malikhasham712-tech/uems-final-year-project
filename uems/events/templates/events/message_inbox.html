@@ -1,0 +1,78 @@
+{% extends "accounts/dashboard_base.html" %}
+
+{% block title %}Messages{% endblock %}
+
+{% block content %}
+
+<div class="box">
+
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <h4 class="text-primary fw-bold mb-0">
+            Messages
+        </h4>
+    </div>
+
+    {% if conversations %}
+
+        <div class="list-group shadow-sm">
+
+            {% for item in conversations %}
+
+                <a href="{% url 'events:event_message_thread' item.event.id item.partner.id %}"
+                   class="list-group-item list-group-item-action p-3">
+
+                    <div class="d-flex justify-content-between align-items-start gap-3">
+
+                        <div class="min-w-0">
+
+                            <div class="fw-bold text-dark">
+                                {{ item.partner.username }}
+                            </div>
+
+                            <div class="small text-primary fw-semibold">
+                                {{ item.event.name }}
+                            </div>
+
+                            <div class="text-muted mt-1 text-truncate">
+                                {{ item.latest_message.message }}
+                            </div>
+
+                        </div>
+
+                        <div class="text-end flex-shrink-0">
+
+                            {% if item.unread_count %}
+                                <span class="badge bg-danger mb-2">
+                                    {{ item.unread_count }}
+                                </span>
+                                <br>
+                            {% endif %}
+
+                            <small class="text-muted">
+                                {{ item.latest_message.created_at|date:"d M, h:i A" }}
+                            </small>
+
+                        </div>
+
+                    </div>
+
+                </a>
+
+            {% endfor %}
+
+        </div>
+
+    {% else %}
+
+        <div class="text-center py-5 px-3">
+            <i class="fa fa-envelope-open fa-2x text-muted mb-3"></i>
+            <p class="text-muted mb-0">
+                No messages yet.
+            </p>
+        </div>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}

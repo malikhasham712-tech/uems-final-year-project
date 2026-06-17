@@ -1,5 +1,5 @@
 from django import forms
-from .models import EventProposal, EventRegistration
+from .models import EventMessage, EventProposal, EventRegistration
 
 
 # ----------------------
@@ -39,4 +39,21 @@ class EventRegistrationForm(forms.ModelForm):
             'department': forms.TextInput(attrs={'class': 'form-control'}),
             'email': forms.EmailInput(attrs={'class': 'form-control'}),
             'contact_no': forms.TextInput(attrs={'class': 'form-control'}),
+        }
+
+
+# ----------------------
+# EVENT MESSAGE FORM
+# ----------------------
+class EventMessageForm(forms.ModelForm):
+    class Meta:
+        model = EventMessage
+        fields = ['message']
+
+        widgets = {
+            'message': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'Write your message...'
+            }),
         }

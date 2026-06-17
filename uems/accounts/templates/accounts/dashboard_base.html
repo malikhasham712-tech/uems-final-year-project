@@ -239,10 +239,18 @@
                 <i class="fa fa-calendar"></i> My Events
             </a>
 
+            <a href="{% url 'events:message_inbox' %}" class="nav-link">
+                <i class="fa fa-envelope"></i> Messages
+            </a>
+
         {% elif role == 'student' %}
 
             <a href="{% url 'events:my_events' %}" class="nav-link">
                 <i class="fa fa-calendar"></i> My Events
+            </a>
+
+            <a href="{% url 'events:message_inbox' %}" class="nav-link">
+                <i class="fa fa-envelope"></i> Messages
             </a>
 
             <a href="{% url 'events:available_events' %}" class="nav-link">
