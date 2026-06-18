@@ -66,6 +66,16 @@ def attendance_event_list(request):
     )
 
 
+def apply_accepted_proposal_to_event(proposal):
+    event = proposal.event
+    event.venue = proposal.proposed_venue
+
+    if proposal.proposed_date:
+        event.date = proposal.proposed_date
+
+    event.save(update_fields=["venue", "date"])
+
+
 # =====================================================
 # CATEGORY
 # =====================================================
@@ -207,11 +217,13 @@ class EventProposalAdmin(admin.ModelAdmin):
         'event',
         'organizer',
         'proposed_venue',
+        'proposed_date',
         'status',
         'submitted_at'
     )
 
     list_filter = ('status',)
+    actions = ('approve_proposals', 'reject_proposals')
 
     search_fields = (
         'event__name',
@@ -227,6 +239,12 @@ class EventProposalAdmin(admin.ModelAdmin):
     def has_delete_permission(self, request, obj=None):
         return True
 
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+
+        if obj.status == ProposalStatus.ACCEPTED:
+            apply_accepted_proposal_to_event(obj)
+
     def get_readonly_fields(self, request, obj=None):
 
         if obj:
@@ -240,7 +258,10 @@ class EventProposalAdmin(admin.ModelAdmin):
 
     @admin.action(description="Approve selected proposals")
     def approve_proposals(self, request, queryset):
-        queryset.update(status=ProposalStatus.ACCEPTED)
+        for proposal in queryset.select_related("event"):
+            proposal.status = ProposalStatus.ACCEPTED
+            proposal.save(update_fields=["status"])
+            apply_accepted_proposal_to_event(proposal)
 
     @admin.action(description="Reject selected proposals")
     def reject_proposals(self, request, queryset):

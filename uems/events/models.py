@@ -85,6 +85,7 @@ class EventProposal(models.Model):
     organizer = models.ForeignKey(User, on_delete=models.CASCADE, related_name="proposals")
 
     proposed_venue = models.CharField(max_length=200)
+    proposed_date = models.DateField(null=True, blank=True)
     details = models.TextField(blank=True)
     requirements = models.TextField(blank=True, null=True)
 

@@ -6,9 +6,17 @@ from .models import EventMessage, EventProposal, EventRegistration
 # PROPOSAL FORM
 # ----------------------
 class ProposalForm(forms.ModelForm):
+    proposed_date = forms.DateField(
+        required=True,
+        widget=forms.DateInput(attrs={
+            'class': 'form-control',
+            'type': 'date'
+        })
+    )
+
     class Meta:
         model = EventProposal
-        fields = ['proposed_venue', 'details', 'requirements']
+        fields = ['proposed_venue', 'proposed_date', 'details', 'requirements']
 
         widgets = {
             'proposed_venue': forms.TextInput(attrs={'class': 'form-control'}),

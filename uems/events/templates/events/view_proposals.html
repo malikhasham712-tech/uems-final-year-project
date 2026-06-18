@@ -86,6 +86,7 @@
                     <td class="text-start">
                         <div class="small text-muted">
                             <div><strong>Venue:</strong> {{ proposal.proposed_venue }}</div>
+                            <div><strong>Date:</strong> {{ proposal.proposed_date|date:"d M Y"|default:"-" }}</div>
                             <div><strong>Requirements:</strong> {{ proposal.requirements|truncatewords:20 }}</div>
                         </div>
                     </td>
