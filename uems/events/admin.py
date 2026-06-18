@@ -113,6 +113,10 @@ class EventAdmin(admin.ModelAdmin):
             )
         ):
 
+            if hasattr(obj.organizer, "profile") and not obj.organizer.profile.is_organizer:
+                obj.organizer.profile.is_organizer = True
+                obj.organizer.profile.save(update_fields=["is_organizer"])
+
             Notification.objects.create(
                 user=obj.organizer,
                 event=obj,

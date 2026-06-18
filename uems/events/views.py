@@ -133,7 +133,17 @@ def serialize_event_messages(messages_qs, user):
 @login_required
 def dashboard(request):
 
-    if hasattr(request.user, 'profile') and request.user.profile.is_organizer:
+    has_assigned_events = Event.objects.filter(
+        organizer=request.user
+    ).exists()
+
+    if (
+        hasattr(request.user, 'profile')
+        and (
+            request.user.profile.is_organizer
+            or has_assigned_events
+        )
+    ):
         # ORGANIZER DASHBOARD
         events = Event.objects.filter(
             organizer=request.user
