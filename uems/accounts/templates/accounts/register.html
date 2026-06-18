@@ -1,12 +1,50 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 
 {% block title %}Register{% endblock %}
 
 {% block content %}
 
+<style>
+    .form-control-lg {
+        font-size: 1rem;
+        padding: 0.75rem 1rem;
+        border-radius: 0.375rem;
+    }
+    
+    .form-control:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+    
+    .invalid-feedback {
+        display: block;
+        margin-top: 0.25rem;
+        font-size: 0.875rem;
+        color: #dc3545;
+    }
+    
+    .form-control.is-invalid {
+        border-color: #dc3545;
+    }
+    
+    .form-control.is-invalid:focus {
+        border-color: #dc3545;
+        box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25);
+    }
+    
+    select.form-control-lg {
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 0.75rem center;
+        background-size: 16px 12px;
+        padding-right: 2.5rem;
+    }
+</style>
+
 <div class="container d-flex justify-content-center align-items-center" style="min-height:85vh;">
 
-    <div class="w-100" style="max-width:460px;">
+    <div class="w-100" style="max-width:420px;">
 
         <div class="card border-0 shadow-lg p-4 p-md-5 rounded-4">
 
@@ -26,49 +64,114 @@
             {% endif %}
 
             <!-- FORM -->
-            <form method="POST">
+            <form method="POST" novalidate>
                 {% csrf_token %}
 
+                <!-- First Name -->
                 <div class="mb-3">
                     <label class="form-label fw-semibold">First Name</label>
-                    <div class="form-control form-control-lg p-0 border-0">
-                        {{ form.first_name }}
-                    </div>
+                    <input type="text"
+                           name="first_name"
+                           class="form-control form-control-lg {% if form.first_name.errors %}is-invalid{% endif %}"
+                           placeholder="Enter first name"
+                           value="{{ form.first_name.value|default:'' }}"
+                           required>
+                    {% if form.first_name.errors %}
+                        <div class="invalid-feedback">
+                            {% for error in form.first_name.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
                 </div>
 
+                <!-- Last Name -->
                 <div class="mb-3">
                     <label class="form-label fw-semibold">Last Name</label>
-                    <div class="form-control form-control-lg p-0 border-0">
-                        {{ form.last_name }}
-                    </div>
+                    <input type="text"
+                           name="last_name"
+                           class="form-control form-control-lg {% if form.last_name.errors %}is-invalid{% endif %}"
+                           placeholder="Enter last name"
+                           value="{{ form.last_name.value|default:'' }}"
+                           required>
+                    {% if form.last_name.errors %}
+                        <div class="invalid-feedback">
+                            {% for error in form.last_name.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
                 </div>
 
+                <!-- Username -->
                 <div class="mb-3">
                     <label class="form-label fw-semibold">Username</label>
-                    <div class="form-control form-control-lg p-0 border-0">
-                        {{ form.username }}
-                    </div>
+                    <input type="text"
+                           name="username"
+                           class="form-control form-control-lg {% if form.username.errors %}is-invalid{% endif %}"
+                           placeholder="Enter username"
+                           value="{{ form.username.value|default:'' }}"
+                           required>
+                    {% if form.username.errors %}
+                        <div class="invalid-feedback">
+                            {% for error in form.username.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
                 </div>
 
+                <!-- Email -->
                 <div class="mb-3">
                     <label class="form-label fw-semibold">Email</label>
-                    <div class="form-control form-control-lg p-0 border-0">
-                        {{ form.email }}
-                    </div>
+                    <input type="email"
+                           name="email"
+                           class="form-control form-control-lg {% if form.email.errors %}is-invalid{% endif %}"
+                           placeholder="Enter email"
+                           value="{{ form.email.value|default:'' }}"
+                           required>
+                    {% if form.email.errors %}
+                        <div class="invalid-feedback">
+                            {% for error in form.email.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
                 </div>
 
+                <!-- Password -->
                 <div class="mb-3">
                     <label class="form-label fw-semibold">Password</label>
-                    <div class="form-control form-control-lg p-0 border-0">
-                        {{ form.password }}
-                    </div>
+                    <input type="password"
+                           name="password"
+                           class="form-control form-control-lg {% if form.password.errors %}is-invalid{% endif %}"
+                           placeholder="Enter password"
+                           required>
+                    {% if form.password.errors %}
+                        <div class="invalid-feedback">
+                            {% for error in form.password.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
                 </div>
 
+                <!-- Role -->
                 <div class="mb-3">
                     <label class="form-label fw-semibold">Role</label>
-                    <div class="form-control form-control-lg p-0 border-0">
-                        {{ form.role }}
-                    </div>
+                    <select name="role"
+                            class="form-control form-control-lg {% if form.role.errors %}is-invalid{% endif %}"
+                            required>
+                        <option value="student" {% if form.role.value == 'student' %}selected{% endif %}>Student</option>
+                        <option value="faculty" {% if form.role.value == 'faculty' %}selected{% endif %}>Faculty</option>
+                    </select>
+                    {% if form.role.errors %}
+                        <div class="invalid-feedback">
+                            {% for error in form.role.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
                 </div>
 
                 <button type="submit"

@@ -225,25 +225,6 @@
                 {{ event.name }}
             </div>
 
-            <div class="event-meta">
-
-                <div class="meta-badge">
-                    <i class="fa fa-calendar"></i>
-                    {{ event.date|date:"d M Y" }}
-                </div>
-
-                <div class="meta-badge">
-                    <i class="fa fa-location-dot"></i>
-                    {{ event.venue|default:"Venue Not Specified" }}
-                </div>
-
-                <div class="meta-badge">
-                    <i class="fa fa-circle-info"></i>
-                    {{ event.status|title }}
-                </div>
-
-            </div>
-
         </div>
 
         <!-- BODY -->
