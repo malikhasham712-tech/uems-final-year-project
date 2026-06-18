@@ -8,6 +8,11 @@ from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from django.db.models import Count
 from django.contrib.auth.models import User
+from django.contrib.auth.password_validation import validate_password
+from django.contrib.auth.tokens import default_token_generator
+from django.core.exceptions import ValidationError
+from django.utils.encoding import force_bytes, force_str
+from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 
 from .forms import RegisterForm
 from .models import Profile
@@ -141,6 +146,101 @@ def login_view(request):
 
     # GET request always returns page
     return render(request, 'accounts/login.html')
+
+
+# ----------------------
+# FORGOT PASSWORD
+# ----------------------
+def forgot_password(request):
+    if request.method != 'POST':
+        return redirect('login')
+
+    email = request.POST.get('email', '').strip()
+
+    if not email:
+        messages.error(request, 'Please enter your email address.')
+        return redirect('login')
+
+    user = User.objects.filter(email__iexact=email).first()
+
+    if not user:
+        messages.error(request, 'No account found with this email address.')
+        return redirect('login')
+
+    uid = urlsafe_base64_encode(force_bytes(user.pk))
+    token = default_token_generator.make_token(user)
+
+    reset_link = request.build_absolute_uri(
+        reverse('password-reset-confirm', args=[uid, token])
+    )
+
+    try:
+        send_mail(
+            subject='Reset your UEMS password',
+            message=(
+                'You requested a password reset for your UEMS account.\n\n'
+                f'Click the link below to set a new password:\n{reset_link}\n\n'
+                'If you did not request this, you can ignore this email.'
+            ),
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[user.email],
+            fail_silently=False,
+        )
+    except Exception:
+        messages.error(request, 'Unable to send reset email right now. Please try again later.')
+        return redirect('login')
+
+    messages.success(request, 'Password reset link sent to your email.')
+    return redirect('login')
+
+
+# ----------------------
+# RESET PASSWORD
+# ----------------------
+def reset_password_confirm(request, uidb64, token):
+    try:
+        uid = force_str(urlsafe_base64_decode(uidb64))
+        user = User.objects.get(pk=uid)
+    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+        user = None
+
+    if user is None or not default_token_generator.check_token(user, token):
+        messages.error(request, 'Invalid or expired password reset link.')
+        return redirect('login')
+
+    if request.method == 'POST':
+        password = request.POST.get('password', '')
+        confirm_password = request.POST.get('confirm_password', '')
+
+        reset_errors = {}
+
+        if not password:
+            reset_errors['password'] = 'This field is required.'
+
+        if not confirm_password:
+            reset_errors['confirm_password'] = 'This field is required.'
+
+        if password and confirm_password and password != confirm_password:
+            reset_errors['confirm_password'] = 'Passwords do not match.'
+
+        if password:
+            try:
+                validate_password(password, user)
+            except ValidationError as exc:
+                reset_errors['password'] = ' '.join(exc.messages)
+
+        if reset_errors:
+            return render(request, 'accounts/password_reset_confirm.html', {
+                'reset_errors': reset_errors,
+            })
+
+        user.set_password(password)
+        user.save()
+
+        messages.success(request, 'Password changed successfully. You can login now.')
+        return redirect('login')
+
+    return render(request, 'accounts/password_reset_confirm.html')
 # ----------------------
 # LOGOUT
 # ----------------------
