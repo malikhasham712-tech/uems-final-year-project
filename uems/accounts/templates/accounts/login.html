@@ -88,11 +88,11 @@
                 {% csrf_token %}
 
                 <div class="mb-3">
-                    <label class="form-label fw-semibold">Username</label>
+                    <label class="form-label fw-semibold">Username or Email</label>
                     <input type="text"
                            name="username"
                            class="form-control form-control-lg {% if login_errors.username %}is-invalid{% endif %}"
-                           placeholder="Enter username"
+                           placeholder="Enter username or email"
                            value="{{ username_value|default:'' }}"
                            required>
                     {% if login_errors.username %}
