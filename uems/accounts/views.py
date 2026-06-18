@@ -89,8 +89,22 @@ def verify_email(request, token):
 # ----------------------
 def login_view(request):
     if request.method == 'POST':
-        username = request.POST.get('username')
-        password = request.POST.get('password')
+        username = request.POST.get('username', '').strip()
+        password = request.POST.get('password', '')
+
+        login_errors = {}
+
+        if not username:
+            login_errors['username'] = 'This field is required.'
+
+        if not password:
+            login_errors['password'] = 'This field is required.'
+
+        if login_errors:
+            return render(request, 'accounts/login.html', {
+                'login_errors': login_errors,
+                'username_value': username,
+            })
 
         user = authenticate(request, username=username, password=password)
 
@@ -121,7 +135,9 @@ def login_view(request):
 
         # 🔥 IMPORTANT: RETURN HERE WAS MISSING
         messages.error(request, 'Invalid username or password.')
-        return redirect('login')
+        return render(request, 'accounts/login.html', {
+            'username_value': username,
+        })
 
     # GET request always returns page
     return render(request, 'accounts/login.html')
