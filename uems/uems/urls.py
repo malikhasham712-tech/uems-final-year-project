@@ -5,6 +5,7 @@ from accounts import views as accounts_views
 from events import views as events_views
 
 urlpatterns = [
+    path('admin/', lambda request: redirect('/admin/events/event/')),
     path('admin/', admin.site.urls),
 
     # Accounts
