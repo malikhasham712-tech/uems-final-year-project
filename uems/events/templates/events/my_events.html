@@ -1,6 +1,6 @@
 {% extends "accounts/dashboard_base.html" %}
 
-{% block title %}My Events{% endblock %}
+{% block title %}Registered Events{% endblock %}
 
 {% block content %}
 
@@ -8,7 +8,7 @@
 
     <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
         <h4 class="text-primary fw-bold mb-0">
-            My Events
+            Registered Events
         </h4>
     </div>
 
@@ -21,8 +21,9 @@
             <thead class="table-light">
                 <tr>
                     <th>Event</th>
-                    <th>Date</th>
+                    <th>Schedule</th>
                     <th>Status</th>
+                    <th>Registration Date</th>
                     <th>Announcements</th>
                     <th>Messages</th>
                     <th>Attendance</th>
@@ -37,10 +38,13 @@
 
                 <!-- EVENT NAME -->
                 <td class="fw-semibold text-wrap">
-                    {{ event.name }}
+                    <a href="{% url 'events:view_event' event.id %}"
+                       class="text-decoration-none">
+                        {{ event.name }}
+                    </a>
                 </td>
 
-                <!-- DATE -->
+                <!-- SCHEDULE -->
                 <td>
                     {% if event.date %}
                         {{ event.date|date:"d M Y" }}
@@ -61,6 +65,15 @@
                         <span class="badge bg-secondary px-3 py-2">
                             {{ event.status|title }}
                         </span>
+                    {% endif %}
+                </td>
+
+                 <!-- REGISTRATION DATE -->
+                <td>
+                    {% if event.registration_date %}
+                        {{ event.registration_date|date:"d M Y" }}
+                    {% else %}
+                        <span class="text-muted">-</span>
                     {% endif %}
                 </td>
 

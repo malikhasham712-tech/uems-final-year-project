@@ -196,7 +196,9 @@ def available_events(request):
 
     events = Event.objects.filter(
         status=EventStatus.ANNOUNCED
-    )
+    ).exclude(
+        registrations__student=request.user
+    ).distinct()
 
     return render(request, "events/available_events.html", {
         "events": events,
@@ -223,13 +225,19 @@ def my_events(request):
 
     else:
         # STUDENT - Show registered events
-        events = Event.objects.filter(
-            registrations__student=request.user
-        ).distinct()
+        registrations = EventRegistration.objects.filter(
+            student=request.user
+        ).select_related(
+            "event",
+            "event__organizer"
+        )
+        events = [registration.event for registration in registrations]
         role = "student"
-        
+
         # ADD FEEDBACK STATUS FOR EACH EVENT
-        for event in events:
+        for registration in registrations:
+            event = registration.event
+            event.registration_date = registration.created_at
             event.has_feedback = Feedback.objects.filter(
                 event=event,
                 student=request.user
