@@ -43,19 +43,4 @@ class ProfileAdmin(admin.ModelAdmin):
             url
         )
 
-    def render_change_form(self, request, context, add=False, change=False, form_url='', obj=None):
-        response = super().render_change_form(
-            request,
-            context,
-            add=add,
-            change=change,
-            form_url=form_url,
-            obj=obj
-        )
-
-        response.context_data['show_save_and_add_another'] = False
-        response.context_data['show_save_and_continue'] = False
-
-        return response
-
 admin.site.register(Profile, ProfileAdmin)

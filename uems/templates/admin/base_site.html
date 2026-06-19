@@ -2,6 +2,16 @@
 
 {% block title %}UEMS Admin Panel{% endblock %}
 
+{% block extrastyle %}
+{{ block.super }}
+<style>
+    input[name="_addanother"],
+    input[name="_continue"] {
+        display: none !important;
+    }
+</style>
+{% endblock %}
+
 {% block branding %}
 <h1 id="site-name" style="font-size:22px;">
     University Event Management System - Admin Panel
