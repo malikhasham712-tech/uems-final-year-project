@@ -1,0 +1,281 @@
+{% extends "accounts/dashboard_base.html" %}
+
+{% block title %}Manage Event{% endblock %}
+
+{% block content %}
+
+<style>
+    .manage-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 16px;
+        margin-bottom: 22px;
+    }
+
+    .event-title {
+        font-size: 26px;
+        font-weight: 800;
+        color: #0d6efd;
+        margin-bottom: 6px;
+        overflow-wrap: anywhere;
+    }
+
+    .event-meta {
+        color: #6c757d;
+        font-size: 14px;
+    }
+
+    .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 14px;
+        margin-bottom: 22px;
+    }
+
+    .summary-card {
+        background: white;
+        border: 1px solid #e9edf5;
+        border-radius: 8px;
+        padding: 16px;
+    }
+
+    .summary-label {
+        font-size: 13px;
+        color: #6c757d;
+        margin-bottom: 8px;
+        font-weight: 600;
+    }
+
+    .summary-value {
+        font-size: 20px;
+        font-weight: 800;
+        color: #212529;
+    }
+
+    .section-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 16px;
+    }
+
+    .manage-section {
+        background: white;
+        border: 1px solid #e9edf5;
+        border-radius: 8px;
+        padding: 18px;
+        min-width: 0;
+    }
+
+    .section-title {
+        font-size: 17px;
+        font-weight: 800;
+        color: #0d6efd;
+        margin-bottom: 12px;
+    }
+
+    .action-stack {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 14px;
+    }
+
+    .action-stack .btn {
+        min-width: 130px;
+    }
+
+    @media(max-width:768px) {
+        .manage-header {
+            flex-direction: column;
+        }
+
+        .action-stack .btn {
+            width: 100%;
+        }
+    }
+</style>
+
+<div class="box">
+
+    <div class="manage-header">
+        <div>
+            <div class="event-title">
+                {{ event.name }}
+            </div>
+
+            <div class="event-meta">
+                {{ event.category|default:"No category" }} &bull;
+                {{ event.venue|default:"Venue TBD" }} &bull;
+                {% if event.date %}
+                    {{ event.date|date:"d M Y" }}
+                {% else %}
+                    Date TBD
+                {% endif %}
+            </div>
+        </div>
+
+        <a href="{% url 'events:dashboard' %}" class="btn btn-outline-secondary btn-sm">
+            Back to Events
+        </a>
+    </div>
+
+    <div class="summary-grid">
+
+        <div class="summary-card">
+            <div class="summary-label">Status</div>
+            <div class="summary-value">
+                {{ event.status|title }}
+            </div>
+        </div>
+
+        <div class="summary-card">
+            <div class="summary-label">Registrations</div>
+            <div class="summary-value">
+                {{ total_registrations }}
+            </div>
+        </div>
+
+        <div class="summary-card">
+            <div class="summary-label">Attendance</div>
+            <div class="summary-value">
+                {{ total_attendance }} Present
+            </div>
+            <div class="small text-muted">
+                {{ total_absent }} Absent
+            </div>
+        </div>
+
+        <div class="summary-card">
+            <div class="summary-label">Feedback</div>
+            <div class="summary-value">
+                {{ total_feedback }}
+            </div>
+        </div>
+
+    </div>
+
+    <div class="section-grid">
+
+        <div class="manage-section">
+            <div class="section-title">Proposal</div>
+
+            {% if latest_proposal %}
+                <p class="mb-1">
+                    <strong>Status:</strong> {{ latest_proposal.status|title }}
+                </p>
+                <p class="mb-1">
+                    <strong>Venue:</strong> {{ latest_proposal.proposed_venue|default:"-" }}
+                </p>
+                <p class="mb-0">
+                    <strong>Date:</strong>
+                    {% if latest_proposal.proposed_date %}
+                        {{ latest_proposal.proposed_date|date:"d M Y" }}
+                    {% else %}
+                        -
+                    {% endif %}
+                </p>
+            {% else %}
+                <p class="text-muted mb-0">
+                    No proposal submitted yet.
+                </p>
+            {% endif %}
+
+            <div class="action-stack">
+                {% if latest_proposal %}
+                    <a href="{% url 'events:view_proposals' event.id %}" class="btn btn-outline-primary btn-sm">
+                        View Proposal
+                    </a>
+                {% endif %}
+
+                {% if not latest_proposal or latest_proposal.status == "rejected" %}
+                    <a href="{% url 'events:submit_proposal' event.id %}" class="btn btn-primary btn-sm">
+                        Submit Proposal
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="manage-section">
+            <div class="section-title">Registrations</div>
+            <p class="mb-0 text-muted">
+                View registered students and send direct messages.
+            </p>
+
+            <div class="action-stack">
+                <a href="{% url 'events:event_registrations' event.id %}" class="btn btn-primary btn-sm">
+                    View Registrations
+                </a>
+            </div>
+        </div>
+
+        <div class="manage-section">
+            <div class="section-title">Announcements</div>
+            <p class="mb-0 text-muted">
+                {{ total_announcements }} announcement{{ total_announcements|pluralize }} for this event.
+            </p>
+
+            <div class="action-stack">
+                <a href="{% url 'events:event_announcements' event.id %}" class="btn btn-outline-primary btn-sm">
+                    View Announcements
+                </a>
+            </div>
+        </div>
+
+        <div class="manage-section">
+            <div class="section-title">Messages</div>
+            <p class="mb-0 text-muted">
+                Message students from the registration list.
+            </p>
+
+            <div class="action-stack">
+                <a href="{% url 'events:event_registrations' event.id %}" class="btn btn-outline-dark btn-sm">
+                    Message Students
+                </a>
+                <a href="{% url 'events:message_inbox' %}" class="btn btn-outline-primary btn-sm">
+                    Inbox
+                </a>
+            </div>
+        </div>
+
+        <div class="manage-section">
+            <div class="section-title">Attendance</div>
+            <p class="mb-0 text-muted">
+                Track present and absent students for this event.
+            </p>
+
+            <div class="action-stack">
+                <a href="{% url 'events:view_attendance' event.id %}" class="btn btn-dark btn-sm">
+                    View Attendance
+                </a>
+
+                {% if event.status == "announced" %}
+                    <a href="{% url 'events:generate_qr' event.id %}" target="_blank" class="btn btn-success btn-sm">
+                        Generate QR
+                    </a>
+                {% else %}
+                    <button class="btn btn-secondary btn-sm" disabled>
+                        QR Not Available
+                    </button>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="manage-section">
+            <div class="section-title">Feedback</div>
+            <p class="mb-0 text-muted">
+                Review feedback submitted after event completion.
+            </p>
+
+            <div class="action-stack">
+                <a href="{% url 'events:view_feedbacks' event.id %}" class="btn btn-primary btn-sm">
+                    View Feedback
+                </a>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

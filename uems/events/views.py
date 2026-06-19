@@ -202,15 +202,18 @@ def available_events(request):
 @login_required
 def my_events(request):
 
-    if hasattr(request.user, 'profile') and request.user.profile.is_organizer:
-        # ORGANIZER - Show their events
-        events = Event.objects.filter(
-            organizer=request.user
-        ).annotate(
-            total_registrations=Count("registrations"),
-            total_attendance=Count("attendances")
+    has_assigned_events = Event.objects.filter(
+        organizer=request.user
+    ).exists()
+
+    if (
+        hasattr(request.user, 'profile')
+        and (
+            request.user.profile.is_organizer
+            or has_assigned_events
         )
-        role = "organizer"
+    ):
+        return redirect("events:dashboard")
 
     else:
         # STUDENT - Show registered events
@@ -229,6 +232,48 @@ def my_events(request):
     return render(request, "events/my_events.html", {
         "events": events,
         "role": role,
+        **notif_context(request)
+    })
+
+
+@login_required
+def manage_event(request, event_id):
+
+    event = get_object_or_404(
+        Event.objects.select_related("category", "organizer"),
+        id=event_id
+    )
+
+    if not is_organizer_or_admin(request.user, event):
+        return redirect("events:dashboard")
+
+    registrations = EventRegistration.objects.filter(event=event)
+    attendance = Attendance.objects.filter(event=event)
+    feedbacks = Feedback.objects.filter(event=event)
+    announcements = Announcement.objects.filter(event=event)
+
+    latest_proposal = EventProposal.objects.filter(
+        event=event
+    ).order_by("-submitted_at").first()
+
+    accepted_proposal = EventProposal.objects.filter(
+        event=event,
+        status=ProposalStatus.ACCEPTED
+    ).order_by("-submitted_at").first()
+
+    total_registrations = registrations.count()
+    total_attendance = attendance.count()
+
+    return render(request, "events/manage_event.html", {
+        "event": event,
+        "latest_proposal": latest_proposal,
+        "accepted_proposal": accepted_proposal,
+        "total_registrations": total_registrations,
+        "total_attendance": total_attendance,
+        "total_absent": max(total_registrations - total_attendance, 0),
+        "total_feedback": feedbacks.count(),
+        "total_announcements": announcements.count(),
+        "role": "admin" if request.user.is_superuser else "organizer",
         **notif_context(request)
     })
 

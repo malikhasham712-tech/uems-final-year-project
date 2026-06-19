@@ -35,6 +35,12 @@ urlpatterns = [
         name='view_event'
     ),
 
+    path(
+        'event/<int:event_id>/manage/',
+        views.manage_event,
+        name='manage_event'
+    ),
+
     # ======================
     # REGISTRATION
     # ======================

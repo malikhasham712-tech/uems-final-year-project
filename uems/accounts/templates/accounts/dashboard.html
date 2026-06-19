@@ -10,7 +10,7 @@
 
     <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
         <h4 class="fw-bold text-primary mb-0">
-            Organizer Dashboard
+            My Organized Events
         </h4>
     </div>
 
@@ -23,12 +23,11 @@
             <thead class="table-light">
                 <tr>
                     <th>Event</th>
-                    <th>Venue</th>
-                    <th>Date</th>
+                     <th>Venue</th>
+                    <th>Schedule</th>
                     <th>Status</th>
-                    <th>Proposal</th>
-                    <th>Registrations</th>
-                    <th>Attendance QR</th>
+                    <!-- <th>Proposal</th> -->
+                    <th>Manage Event</th>
                 </tr>
             </thead>
 
@@ -38,19 +37,24 @@
             <tr>
 
                 <!-- EVENT -->
-                <td class="text-start fw-semibold text-wrap">
+                <!-- <td class="text-start fw-semibold text-wrap"> -->
+                   <td>
                     <a href="{% url 'events:view_event' event.id %}"
                        class="text-decoration-none text-dark">
                         {{ event.name }}
                     </a>
+
+                    <!-- <div class="small text-muted mt-1">
+                        {{ event.venue|default:"Venue TBD" }}
+                    </div> -->
                 </td>
 
-                <!-- VENUE -->
-                <td class="text-muted text-wrap">
-                    {{ event.venue|default:"TBD" }}
+
+                <td>
+                    {{ event.venue}}
                 </td>
 
-                <!-- DATE -->
+                <!-- SCHEDULE -->
                 <td>
                     {% if event.date %}
                         {{ event.date|date:"d M Y" }}
@@ -86,10 +90,10 @@
                 </td>
 
                 <!-- PROPOSAL -->
-                <td>
-                    {% with proposal=event.proposals.first %}
+                <!-- <td> -->
+                    <!-- {% with proposal=event.proposals.first %}
 
-                        <div class="d-flex flex-column gap-1">
+                        <div class="d-flex flex-column gap-1 align-items-center">
 
                             {% if proposal %}
 
@@ -111,9 +115,9 @@
                                    class="btn btn-primary btn-sm">
                                     Submit
                                 </a>
-                            {% endif %}
+                            {% endif %} -->
 
-                            <a href="{% url 'events:view_proposals' event.id %}"
+                            <!-- <a href="{% url 'events:view_proposals' event.id %}"
                                class="btn btn-outline-secondary btn-sm">
                                 View
                             </a>
@@ -121,33 +125,14 @@
                         </div>
 
                     {% endwith %}
-                </td>
+                </td> -->
 
-                <!-- REGISTRATIONS -->
+                <!-- MANAGE -->
                 <td>
-                    <a href="{% url 'events:event_registrations' event.id %}"
-                       class="btn btn-primary btn-sm w-100">
-                        View
+                    <a href="{% url 'events:manage_event' event.id %}"
+                       class="btn btn-primary btn-sm">
+                        Manage
                     </a>
-                </td>
-
-                <!-- ATTENDANCE QR -->
-                <td>
-                    {% if event.status == "announced" %}
-
-                        <a href="{% url 'events:generate_qr' event.id %}"
-                           target="_blank"
-                           class="btn btn-success btn-sm w-100">
-                            Generate QR
-                        </a>
-
-                    {% else %}
-
-                        <button class="btn btn-secondary btn-sm w-100" disabled>
-                            Not Available
-                        </button>
-
-                    {% endif %}
                 </td>
 
             </tr>
