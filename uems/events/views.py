@@ -506,6 +506,11 @@ def event_message_thread(request, event_id, user_id):
         Event.objects.select_related("organizer"),
         id=event_id
     )
+    role = (
+        "organizer"
+        if request.user == event.organizer
+        else get_role(request.user)
+    )
 
     partner = get_message_partner(
         request.user,
@@ -568,7 +573,7 @@ def event_message_thread(request, event_id, user_id):
         "partner": partner,
         "messages": thread_messages,
         "form": EventMessageForm(),
-        "role": get_role(request.user),
+        "role": role,
         **notif_context(request)
     })
 
