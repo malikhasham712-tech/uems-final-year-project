@@ -66,6 +66,12 @@ urlpatterns = [
     ),
 
     path(
+        'messages/unread-count/',
+        views.unread_message_count,
+        name='unread_message_count'
+    ),
+
+    path(
         'event/<int:event_id>/messages/<int:user_id>/',
         views.event_message_thread,
         name='event_message_thread'

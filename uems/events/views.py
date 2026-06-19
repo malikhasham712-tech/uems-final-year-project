@@ -42,6 +42,10 @@ def notif_context(request):
         notifications = request.user.notifications.all().order_by(
             "-created_at"
         )
+        unread_event_messages = EventMessage.objects.filter(
+            recipient=request.user,
+            is_read=False
+        ).count()
 
         return {
 
@@ -49,7 +53,9 @@ def notif_context(request):
 
             "unread_notifications": notifications.filter(
                 is_read=False
-            ).count()
+            ).count(),
+
+            "unread_event_messages": unread_event_messages
         }
 
     return {}
@@ -408,6 +414,20 @@ def event_registrations(request, event_id):
 def message_inbox(request):
 
     user = request.user
+    has_assigned_events = Event.objects.filter(
+        organizer=user
+    ).exists()
+    role = (
+        "organizer"
+        if (
+            hasattr(user, "profile")
+            and (
+                user.profile.is_organizer
+                or has_assigned_events
+            )
+        )
+        else get_role(user)
+    )
 
     message_qs = EventMessage.objects.filter(
         Q(sender=user) | Q(recipient=user)
@@ -461,8 +481,21 @@ def message_inbox(request):
 
     return render(request, "events/message_inbox.html", {
         "conversations": conversations,
-        "role": get_role(user),
+        "role": role,
         **notif_context(request)
+    })
+
+
+@login_required
+def unread_message_count(request):
+    unread_count = EventMessage.objects.filter(
+        recipient=request.user,
+        is_read=False
+    ).count()
+
+    return JsonResponse({
+        "success": True,
+        "unread_count": unread_count
     })
 
 
