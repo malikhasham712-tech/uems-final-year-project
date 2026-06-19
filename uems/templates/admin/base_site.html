@@ -9,7 +9,45 @@
     input[name="_continue"] {
         display: none !important;
     }
+
+    .admin-subtitle-row {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        justify-content: space-between;
+        margin-top: 18px;
+        margin-bottom: 24px;
+    }
+
+    .admin-subtitle-row h2 {
+        margin: 0;
+    }
+
+    .admin-back-link {
+        background: #4a4a4a !important;
+        border-radius: 6px;
+        color: white !important;
+        padding: 7px 14px;
+        font-weight: 500;
+        text-decoration: none;
+    }
+
+    .admin-back-link:hover {
+        background: #5a5a5a !important;
+        color: white !important;
+    }
 </style>
+{% endblock %}
+
+{% block content_subtitle %}
+{% if subtitle %}
+<div class="admin-subtitle-row">
+    <h2>{{ subtitle }}</h2>
+    {% if original %}
+        <a href="#" onclick="history.back(); return false;" class="admin-back-link">Back</a>
+    {% endif %}
+</div>
+{% endif %}
 {% endblock %}
 
 {% block branding %}
