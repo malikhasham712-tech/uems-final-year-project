@@ -2,91 +2,267 @@
 
 {% block content %}
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <style>
 
+/* =====================================================
+   CONTAINER
+===================================================== */
+
 .container {
-    padding: 20px;
     max-width: 1100px;
+    padding: 24px;
+    margin: auto;
 }
 
-/* HEADER */
+/* =====================================================
+   HEADER
+===================================================== */
+
 .header {
-    background: #111827;
-    padding: 16px;
-    border-radius: 10px;
-    color: white;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    margin-bottom: 20px;
+    padding: 14px 18px;
+    background: #111827;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
 }
 
 .title {
-    font-size: 18px;
-    font-weight: bold;
-}
-
-.export-btn {
-    background: #16a34a;
-    padding: 8px 12px;
-    border-radius: 6px;
+    font-size: 20px;
+    font-weight: 700;
     color: white;
-    text-decoration: none;
-    font-size: 13px;
 }
 
-/* STATS */
-.stats {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 12px;
-    margin-top: 20px;
+/* =====================================================
+   BUTTONS
+===================================================== */
+
+.btn {
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: 0.2s ease;
 }
+
+.btn:hover {
+    opacity: 0.92;
+}
+
+.btn-back {
+    background: #374151;
+    color: white;
+}
+
+.btn-export {
+    background: #16a34a;
+    color: white;
+    margin-right: 8px;
+}
+
+/* =====================================================
+   GRID LAYOUT (TWO COLUMNS)
+===================================================== */
+
+.report-grid {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 18px;
+    margin-bottom: 20px;
+}
+
+@media(max-width: 900px) {
+    .report-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* =====================================================
+   CARD
+===================================================== */
 
 .card {
-    background: #1f2937;
-    padding: 16px;
-    border-radius: 10px;
+    background: #111827;
+    border: 1px solid #374151;
+    border-radius: 14px;
+    padding: 18px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+}
+
+/* =====================================================
+   CHART SECTION
+===================================================== */
+
+.chart-title {
     color: white;
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 16px;
     text-align: center;
 }
 
-.card h2 {
-    margin: 0;
-    font-size: 22px;
+.chart-box {
+    width: 240px;
+    height: 240px;
+    margin: auto;
 }
 
-.card span {
-    font-size: 13px;
-    color: #9ca3af;
+.chart-container {
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-/* TABLE FIX (IMPORTANT) */
-.table-wrap {
-    margin-top: 20px;
-    background: #111827;
+.chart-container:hover {
+    transform: scale(1.02);
+    box-shadow: 0 0 20px rgba(34, 197, 94, 0.3);
+}
+
+/* =====================================================
+   SUMMARY SECTION
+===================================================== */
+
+.summary-title {
+    color: white;
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 16px;
+}
+
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+
+.summary-box {
     border-radius: 10px;
-    overflow: hidden;
+    padding: 12px 10px;
+    text-align: center;
+    color: white;
+    transition: transform 0.2s ease;
 }
 
-table {
+.summary-box:hover {
+    transform: translateY(-2px);
+}
+
+.summary-count {
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 6px;
+}
+
+.summary-label {
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.summary-percent {
+    margin-top: 4px;
+    font-size: 11px;
+    opacity: 0.9;
+}
+
+.bg-total-students {
+    background: #3b82f6;
+    color: white;
+}
+
+.bg-present {
+    background: #16a34a;
+    color: white;
+}
+
+.bg-absent {
+    background: #dc2626;
+    color: white;
+}
+
+.bg-attendance-rate {
+    background: #8b5cf6;
+    color: white;
+}
+
+/* Smart text contrast - ensure readability */
+.bg-total-students .summary-count,
+.bg-total-students .summary-label,
+.bg-total-students .summary-percent {
+    color: white;
+}
+
+.bg-present .summary-count,
+.bg-present .summary-label,
+.bg-present .summary-percent {
+    color: white;
+}
+
+.bg-absent .summary-count,
+.bg-absent .summary-label,
+.bg-absent .summary-percent {
+    color: white;
+}
+
+.bg-attendance-rate .summary-count,
+.bg-attendance-rate .summary-label,
+.bg-attendance-rate .summary-percent {
+    color: white;
+}
+
+/* =====================================================
+   TABLE SECTION
+===================================================== */
+
+.table-card {
+    margin-top: 18px;
+}
+
+.table-title {
+    color: white;
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 14px;
+}
+
+.table {
     width: 100%;
     border-collapse: collapse;
 }
 
-th, td {
+.table th {
+    background: #111827;
+    color: white !important;
+    padding: 12px;
+    text-align: left;
+    font-size: 13px;
+    border-bottom: 1px solid #374151;
+}
+
+.table tbody tr {
+    background: #1f2937;
+    transition: 0.2s;
+}
+
+.table tbody tr:hover {
+    background: #273447;
+}
+
+.table td {
     padding: 12px;
     border-bottom: 1px solid #374151;
-    color: #ffffff !important;
-    text-align: left;
+    color: white !important;
+    vertical-align: top;
 }
 
-/* FORCE READABILITY (IMPORTANT FIX) */
-th {
-    background: #0f172a;
-    color: #ffffff !important;
-}
+/* =====================================================
+   STATUS BADGES
+===================================================== */
 
-/* STATUS */
 .present {
     color: #22c55e;
     font-weight: bold;
@@ -97,51 +273,143 @@ th {
     font-weight: bold;
 }
 
+/* =====================================================
+   EMPTY STATE
+===================================================== */
+
+.empty-box {
+    text-align: center;
+    color: white;
+    padding: 30px;
+    font-size: 15px;
+}
+
+/* REMOVE DJANGO TITLE */
+
+h1 {
+    display: none;
+}
+
 </style>
 
 <div class="container">
 
-    <!-- HEADER -->
+    <!-- =====================================================
+         HEADER
+    ====================================================== -->
+
     <div class="header">
         <div class="title">
             Attendance Report - {{ event.name }}
         </div>
 
-        <a href="/reports/{{ event.id }}/export/?mode=attendance"
-           class="export-btn">
-            Export Attendance
-        </a>
+        <div>
+            <a href="/reports/{{ event.id }}/export/?mode=attendance"
+               class="btn btn-export">
+                Export Attendance
+            </a>
+            <a href="{% url 'admin:attendance_report_list' %}"
+               class="btn btn-back">
+                ← Back
+            </a>
+        </div>
     </div>
 
-    <!-- STATS (SAFE FALLBACKS) -->
-    <div class="stats">
+    <!-- =====================================================
+         REPORT GRID (TWO COLUMN LAYOUT)
+    ====================================================== -->
 
-        <div class="card">
-            <h2>{{ total_students|default:0 }}</h2>
-            <span>Total Students</span>
+    <div class="report-grid">
+
+        <!-- CHART CARD (LEFT) -->
+
+        <div class="card chart-container">
+
+            <div class="chart-title">
+                Attendance Analytics
+            </div>
+
+            <div class="chart-box">
+                <canvas id="attendanceChart"></canvas>
+            </div>
+
         </div>
 
-        <div class="card">
-            <h2 style="color:#22c55e;">{{ present|default:0 }}</h2>
-            <span>Present</span>
-        </div>
+        <!-- SUMMARY CARD (RIGHT) -->
 
         <div class="card">
-            <h2 style="color:#ef4444;">{{ absent|default:0 }}</h2>
-            <span>Absent</span>
-        </div>
 
-        <div class="card">
-            <h2>{{ percentage|default:0 }}%</h2>
-            <span>Attendance Rate</span>
+            <div class="summary-title">
+                Attendance Summary
+            </div>
+
+            <div class="summary-grid">
+
+                <div class="summary-box bg-total-students">
+
+                    <div class="summary-count">
+                        {{ total_students|default:0 }}
+                    </div>
+
+                    <div class="summary-label">
+                        Total Students
+                    </div>
+
+                </div>
+
+                <div class="summary-box bg-present">
+
+                    <div class="summary-count">
+                        {{ present|default:0 }}
+                    </div>
+
+                    <div class="summary-label">
+                        Present
+                    </div>
+
+                </div>
+
+                <div class="summary-box bg-absent">
+
+                    <div class="summary-count">
+                        {{ absent|default:0 }}
+                    </div>
+
+                    <div class="summary-label">
+                        Absent
+                    </div>
+
+                </div>
+
+                <div class="summary-box bg-attendance-rate">
+
+                    <div class="summary-count">
+                        {{ percentage|default:0 }}%
+                    </div>
+
+                    <div class="summary-label">
+                        Attendance Rate
+                    </div>
+
+                </div>
+
+            </div>
+
         </div>
 
     </div>
 
-    <!-- TABLE -->
-    <div class="table-wrap">
+    <!-- =====================================================
+         ATTENDANCE TABLE
+    ====================================================== -->
 
-        <table>
+    <div class="card table-card">
+
+        <div class="table-title">
+            Student Attendance Details
+        </div>
+
+        <table class="table">
 
             <thead>
                 <tr>
@@ -186,5 +454,87 @@ th {
     </div>
 
 </div>
+
+<!-- =====================================================
+     CHART.JS INITIALIZATION
+===================================================== -->
+
+<script>
+
+const present = Number("{{ present|default:0 }}");
+const absent = Number("{{ absent|default:0 }}");
+
+const values = [present, absent];
+
+new Chart(document.getElementById('attendanceChart'), {
+
+    type: 'doughnut',
+
+    data: {
+        labels: ['Present', 'Absent'],
+
+        datasets: [{
+            data: values,
+
+            backgroundColor: [
+                '#16a34a',
+                '#dc2626'
+            ],
+
+            borderWidth: 2,
+            borderColor: '#111827',
+            hoverOffset: 8
+        }]
+    },
+
+    options: {
+
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '68%',
+
+        plugins: {
+
+            legend: {
+                position: 'bottom',
+
+                labels: {
+                    color: 'white',
+                    padding: 16,
+                    boxWidth: 14,
+                    font: {
+                        size: 12,
+                        weight: '600'
+                    }
+                }
+            },
+
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+
+                        const value = context.raw || 0;
+
+                        const total = context.chart.data.datasets[0].data.reduce(
+                            (a, b) => a + b,
+                            0
+                        );
+
+                        const percent = total
+                            ? ((value / total) * 100).toFixed(1)
+                            : 0;
+
+                        return `${context.label}: ${percent}%`;
+                    }
+                }
+            }
+
+        }
+
+    }
+
+});
+
+</script>
 
 {% endblock %}
