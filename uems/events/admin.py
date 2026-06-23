@@ -173,7 +173,7 @@ class EventAdmin(admin.ModelAdmin):
     def registration_btn(self, obj):
 
         url = reverse(
-            'events:event_registrations',
+            'admin:events_event_registrations',
             args=[obj.id]
         )
 
@@ -205,6 +205,47 @@ class EventAdmin(admin.ModelAdmin):
             '<a class="button" href="{}">Feedback</a>',
             url
         )
+
+    def registrations_view(self, request, event_id):
+
+        event = get_object_or_404(Event, pk=event_id)
+
+        registrations = EventRegistration.objects.filter(
+            event=event
+        ).select_related("student")
+
+        context = {
+            **self.admin_site.each_context(request),
+            "title": f"Registrations for {event.name}",
+            "subtitle": str(event),
+            "original": event,
+            "opts": self.model._meta,
+            "event": event,
+            "registrations": registrations,
+            "total": registrations.count(),
+        }
+
+        return TemplateResponse(
+            request,
+            "admin/event_registrations.html",
+            context
+        )
+
+    def get_urls(self):
+
+        urls = super().get_urls()
+
+        custom_urls = [
+            path(
+                '<int:event_id>/registrations/',
+                self.admin_site.admin_view(
+                    self.registrations_view
+                ),
+                name="events_event_registrations"
+            ),
+        ]
+
+        return custom_urls + urls
 
 
 # =====================================================

@@ -1,0 +1,100 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% translate 'Home' %}</a>
+    &rsaquo; <a href="{% url 'admin:app_list' app_label=opts.app_label %}">Events</a>
+    &rsaquo; <a href="{% url 'admin:events_event_changelist' %}">Events</a>
+    &rsaquo; {{ title }}
+</div>
+{% endblock %}
+
+{% block content %}
+
+<div id="content-main">
+
+    <div class="module" id="changelist">
+
+        {% if registrations %}
+
+            <div class="results">
+                <table id="result_list">
+                    <thead>
+                        <tr>
+                            <th scope="col">
+                                <div class="text">Name</div>
+                            </th>
+                            <th scope="col">
+                                <div class="text">Reg No</div>
+                            </th>
+                            <th scope="col">
+                                <div class="text">Department</div>
+                            </th>
+                            <th scope="col">
+                                <div class="text">Email</div>
+                            </th>
+                            <th scope="col">
+                                <div class="text">Contact</div>
+                            </th>
+                            <th scope="col">
+                                <div class="text">Date</div>
+                            </th>
+                            <th scope="col">
+                                <div class="text">Message</div>
+                            </th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for registration in registrations %}
+                            <tr class="{% cycle 'row1' 'row2' %}">
+                                <th class="field-student_name">
+                                    {{ registration.student_name }}
+                                </th>
+                                <td class="field-registration_no">
+                                    {{ registration.registration_no }}
+                                </td>
+                                <td class="field-department">
+                                    {{ registration.department }}
+                                </td>
+                                <td class="field-email">
+                                    {{ registration.email }}
+                                </td>
+                                <td class="field-contact_no">
+                                    {{ registration.contact_no }}
+                                </td>
+                                <td class="field-created_at nowrap">
+                                    {{ registration.created_at|date:"d M Y H:i" }}
+                                </td>
+                                <td class="field-message">
+                                    {% if registration.student %}
+                                        <a class="button"
+                                           href="{% url 'events:event_message_thread' event.id registration.student.id %}">
+                                            Send Message
+                                        </a>
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <p class="paginator">
+                {{ total }} registration{{ total|pluralize }}
+            </p>
+
+        {% else %}
+
+            <p>No registrations yet.</p>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+{% endblock %}
