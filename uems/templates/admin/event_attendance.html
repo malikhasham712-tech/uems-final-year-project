@@ -1,0 +1,121 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% translate 'Home' %}</a>
+    &rsaquo; <a href="{% url 'admin:app_list' app_label=opts.app_label %}">Events</a>
+    &rsaquo; <a href="{% url 'admin:events_event_changelist' %}">Events</a>
+    &rsaquo; {{ title }}
+</div>
+{% endblock %}
+
+{% block content %}
+
+<div id="content-main">
+
+    <div class="module">
+        <table>
+            <caption>Attendance Summary</caption>
+            <tbody>
+                <tr>
+                    <th scope="row">Total Students</th>
+                    <td>{{ total }}</td>
+                </tr>
+                <tr>
+                    <th scope="row">Present</th>
+                    <td>{{ present }}</td>
+                </tr>
+                <tr>
+                    <th scope="row">Absent</th>
+                    <td>{{ absent }}</td>
+                </tr>
+                <tr>
+                    <th scope="row">Attendance Rate</th>
+                    <td>{{ percentage }}%</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="module" id="changelist">
+
+        {% if rows %}
+
+            <div class="results">
+                <table id="result_list">
+                    <thead>
+                        <tr>
+                            <th scope="col">
+                                <div class="text">Student</div>
+                            </th>
+                            <th scope="col">
+                                <div class="text">Reg No</div>
+                            </th>
+                            <th scope="col">
+                                <div class="text">Department</div>
+                            </th>
+                            <th scope="col">
+                                <div class="text">Email</div>
+                            </th>
+                            <th scope="col">
+                                <div class="text">Status</div>
+                            </th>
+                            <th scope="col">
+                                <div class="text">Marked At</div>
+                            </th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for row in rows %}
+                            <tr class="{% cycle 'row1' 'row2' %}">
+                                <th class="field-name">
+                                    {{ row.name }}
+                                </th>
+                                <td class="field-reg_no">
+                                    {{ row.reg_no }}
+                                </td>
+                                <td class="field-department">
+                                    {{ row.department }}
+                                </td>
+                                <td class="field-email">
+                                    {{ row.email }}
+                                </td>
+                                <td class="field-status">
+                                    {% if row.status == "present" %}
+                                        <img src="/static/admin/img/icon-yes.svg" alt="True">
+                                        Present
+                                    {% else %}
+                                        <img src="/static/admin/img/icon-no.svg" alt="False">
+                                        Absent
+                                    {% endif %}
+                                </td>
+                                <td class="field-marked_at nowrap">
+                                    {% if row.marked_at %}
+                                        {{ row.marked_at|date:"d M Y H:i" }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <p class="paginator">
+                {{ total }} student{{ total|pluralize }}
+            </p>
+
+        {% else %}
+
+            <p>No registrations found.</p>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+{% endblock %}

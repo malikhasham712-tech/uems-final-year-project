@@ -40,9 +40,6 @@
                             <th scope="col">
                                 <div class="text">Date</div>
                             </th>
-                            <th scope="col">
-                                <div class="text">Message</div>
-                            </th>
                         </tr>
                     </thead>
 
@@ -66,16 +63,6 @@
                                 </td>
                                 <td class="field-created_at nowrap">
                                     {{ registration.created_at|date:"d M Y H:i" }}
-                                </td>
-                                <td class="field-message">
-                                    {% if registration.student %}
-                                        <a class="button"
-                                           href="{% url 'events:event_message_thread' event.id registration.student.id %}">
-                                            Send Message
-                                        </a>
-                                    {% else %}
-                                        -
-                                    {% endif %}
                                 </td>
                             </tr>
                         {% endfor %}

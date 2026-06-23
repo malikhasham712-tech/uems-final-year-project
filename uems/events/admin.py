@@ -185,7 +185,7 @@ class EventAdmin(admin.ModelAdmin):
     def attendance_btn(self, obj):
 
         url = reverse(
-            'events:view_attendance',
+            'admin:events_event_attendance',
             args=[obj.id]
         )
 
@@ -231,6 +231,60 @@ class EventAdmin(admin.ModelAdmin):
             context
         )
 
+    def attendance_view(self, request, event_id):
+
+        event = get_object_or_404(Event, pk=event_id)
+
+        registrations = EventRegistration.objects.filter(
+            event=event
+        ).select_related("student")
+
+        attendance_map = {
+            attendance.student_id: attendance.marked_at
+            for attendance in Attendance.objects.filter(event=event)
+        }
+
+        rows = []
+
+        for registration in registrations:
+            rows.append({
+                "name": registration.student.username,
+                "reg_no": registration.registration_no,
+                "department": registration.department,
+                "email": registration.student.email,
+                "status": (
+                    "present"
+                    if registration.student_id in attendance_map
+                    else "absent"
+                ),
+                "marked_at": attendance_map.get(registration.student_id),
+            })
+
+        present = sum(1 for row in rows if row["status"] == "present")
+        total = len(rows)
+        absent = total - present
+        percentage = round((present / total) * 100, 2) if total else 0
+
+        context = {
+            **self.admin_site.each_context(request),
+            "title": f"Attendance for {event.name}",
+            "subtitle": str(event),
+            "original": event,
+            "opts": self.model._meta,
+            "event": event,
+            "rows": rows,
+            "total": total,
+            "present": present,
+            "absent": absent,
+            "percentage": percentage,
+        }
+
+        return TemplateResponse(
+            request,
+            "admin/event_attendance.html",
+            context
+        )
+
     def get_urls(self):
 
         urls = super().get_urls()
@@ -242,6 +296,13 @@ class EventAdmin(admin.ModelAdmin):
                     self.registrations_view
                 ),
                 name="events_event_registrations"
+            ),
+            path(
+                '<int:event_id>/attendance/',
+                self.admin_site.admin_view(
+                    self.attendance_view
+                ),
+                name="events_event_attendance"
             ),
         ]
 
