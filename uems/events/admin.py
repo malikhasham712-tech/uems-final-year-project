@@ -197,7 +197,7 @@ class EventAdmin(admin.ModelAdmin):
     def feedback_btn(self, obj):
 
         url = reverse(
-            'events:view_feedbacks',
+            'admin:events_event_feedback',
             args=[obj.id]
         )
 
@@ -285,6 +285,42 @@ class EventAdmin(admin.ModelAdmin):
             context
         )
 
+    def feedback_view(self, request, event_id):
+
+        event = get_object_or_404(Event, pk=event_id)
+
+        feedbacks = Feedback.objects.filter(
+            event=event
+        ).select_related("student")
+
+        ratings = [
+            feedback.rating
+            for feedback in feedbacks
+            if feedback.rating is not None
+        ]
+
+        context = {
+            **self.admin_site.each_context(request),
+            "title": f"Feedback for {event.name}",
+            "subtitle": str(event),
+            "original": event,
+            "opts": self.model._meta,
+            "event": event,
+            "feedbacks": feedbacks,
+            "total": feedbacks.count(),
+            "average_rating": (
+                round(sum(ratings) / len(ratings), 2)
+                if ratings
+                else None
+            ),
+        }
+
+        return TemplateResponse(
+            request,
+            "admin/event_feedback.html",
+            context
+        )
+
     def get_urls(self):
 
         urls = super().get_urls()
@@ -303,6 +339,13 @@ class EventAdmin(admin.ModelAdmin):
                     self.attendance_view
                 ),
                 name="events_event_attendance"
+            ),
+            path(
+                '<int:event_id>/feedback/',
+                self.admin_site.admin_view(
+                    self.feedback_view
+                ),
+                name="events_event_feedback"
             ),
         ]
 

@@ -1,0 +1,107 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% translate 'Home' %}</a>
+    &rsaquo; <a href="{% url 'admin:app_list' app_label=opts.app_label %}">Events</a>
+    &rsaquo; <a href="{% url 'admin:events_event_changelist' %}">Events</a>
+    &rsaquo; {{ title }}
+</div>
+{% endblock %}
+
+{% block content %}
+
+<div id="content-main">
+
+    <div class="module">
+        <table>
+            <caption>Feedback Summary</caption>
+            <tbody>
+                <tr>
+                    <th scope="row">Total Feedback</th>
+                    <td>{{ total }}</td>
+                </tr>
+                <tr>
+                    <th scope="row">Average Rating</th>
+                    <td>
+                        {% if average_rating %}
+                            {{ average_rating }}/5
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="module" id="changelist">
+
+        {% if feedbacks %}
+
+            <div class="results">
+                <table id="result_list">
+                    <thead>
+                        <tr>
+                            <th scope="col">
+                                <div class="text">Student</div>
+                            </th>
+                            <th scope="col">
+                                <div class="text">Rating</div>
+                            </th>
+                            <th scope="col">
+                                <div class="text">Experience</div>
+                            </th>
+                            <th scope="col">
+                                <div class="text">Message</div>
+                            </th>
+                            <th scope="col">
+                                <div class="text">Submitted At</div>
+                            </th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for feedback in feedbacks %}
+                            <tr class="{% cycle 'row1' 'row2' %}">
+                                <th class="field-student">
+                                    {{ feedback.student.username }}
+                                </th>
+                                <td class="field-rating">
+                                    {% if feedback.rating %}
+                                        {{ feedback.rating }}/5
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td class="field-experience">
+                                    {{ feedback.get_experience_display|default:"-" }}
+                                </td>
+                                <td class="field-message">
+                                    {{ feedback.message }}
+                                </td>
+                                <td class="field-created_at nowrap">
+                                    {{ feedback.created_at|date:"d M Y H:i" }}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <p class="paginator">
+                {{ total }} feedback entr{{ total|pluralize:"y,ies" }}
+            </p>
+
+        {% else %}
+
+            <p>No feedback submitted yet.</p>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+{% endblock %}
