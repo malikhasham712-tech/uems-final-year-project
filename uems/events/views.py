@@ -314,13 +314,19 @@ def view_event(request, event_id):
         student=request.user
     ).first()
 
+    role = (
+        "organizer"
+        if event.organizer_id == request.user.id
+        else get_role(request.user)
+    )
+
     return render(request, "events/view_event.html", {
         "event": event,
         "proposal": proposal,
         "is_registered": is_registered,
         "feedback": feedback_obj,
         "feedback_submitted": feedback_obj is not None,
-        "role": get_role(request.user),
+        "role": role,
         **notif_context(request)
     })
 
