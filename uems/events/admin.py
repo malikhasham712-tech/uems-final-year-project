@@ -107,6 +107,15 @@ class EventAdmin(admin.ModelAdmin):
     list_filter = ('status', 'category')
     search_fields = ('name',)
 
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "organizer":
+            kwargs["queryset"] = User.objects.filter(
+                profile__role="faculty",
+                is_active=True,
+            ).order_by("username")
+
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
     def save_model(self, request, obj, form, change):
 
         old_obj = None
