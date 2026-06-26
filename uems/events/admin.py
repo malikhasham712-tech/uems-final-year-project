@@ -716,3 +716,52 @@ admin.site.register(EventRegistration, HiddenAdmin)
 admin.site.register(Feedback, HiddenAdmin)
 admin.site.register(Announcement, HiddenAdmin)
 admin.site.register(Notification, HiddenAdmin)
+
+
+# =====================================================
+# ADMIN SIDEBAR ORDER
+# =====================================================
+EVENTS_ADMIN_MODEL_ORDER = {
+    "Event": 0,
+    "Category": 1,
+    "EventReport": 2,
+}
+
+EVENTS_ADMIN_MODEL_NAMES = {
+    "EventReport": "Reports",
+}
+
+
+def apply_admin_sidebar_ordering():
+    site = admin.site
+
+    if not hasattr(site, "_uems_original_get_app_list"):
+        site._uems_original_get_app_list = site.get_app_list
+
+    def get_app_list(request, app_label=None):
+        app_list = site._uems_original_get_app_list(request, app_label)
+
+        for app in app_list:
+            if app["app_label"] == "events":
+                for model in app["models"]:
+                    model["name"] = EVENTS_ADMIN_MODEL_NAMES.get(
+                        model["object_name"],
+                        model["name"],
+                    )
+
+                app["models"].sort(
+                    key=lambda model: (
+                        EVENTS_ADMIN_MODEL_ORDER.get(
+                            model["object_name"],
+                            len(EVENTS_ADMIN_MODEL_ORDER),
+                        ),
+                        model["name"],
+                    )
+                )
+
+        return app_list
+
+    site.get_app_list = get_app_list
+
+
+apply_admin_sidebar_ordering()
