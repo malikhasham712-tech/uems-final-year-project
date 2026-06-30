@@ -6,6 +6,9 @@ from django.conf.urls.static import static
 from accounts import views as accounts_views
 from events import views as events_views
 
+admin.site.password_change_template = "admin/password_change_form.html"
+admin.site.password_change_done_template = "admin/password_change_done.html"
+
 urlpatterns = [
     path('admin/', lambda request: redirect('/admin/events/event/')),
     path('admin/', admin.site.urls),
