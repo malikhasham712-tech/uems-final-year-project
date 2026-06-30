@@ -262,6 +262,19 @@ def get_user_role(user):
     if user.is_superuser:
         return 'admin'
 
+    has_assigned_events = Event.objects.filter(
+        organizer=user
+    ).exists()
+
+    if (
+        hasattr(user, 'profile')
+        and (
+            user.profile.is_organizer
+            or has_assigned_events
+        )
+    ):
+        return 'organizer'
+
     if hasattr(user, 'profile') and hasattr(user.profile, 'role'):
         return user.profile.role
 
@@ -368,6 +381,18 @@ def change_password(request):
             return redirect('profile')
     else:
         form = PasswordChangeForm(request.user)
+
+    password_fields = {
+        'old_password': 'Enter current password',
+        'new_password1': 'Enter new password',
+        'new_password2': 'Confirm new password',
+    }
+
+    for field_name, placeholder in password_fields.items():
+        form.fields[field_name].widget.attrs.update({
+            'class': 'form-control form-control-lg',
+            'placeholder': placeholder,
+        })
 
     return render(request, 'accounts/password_change.html', {
         'role': get_user_role(request.user),
