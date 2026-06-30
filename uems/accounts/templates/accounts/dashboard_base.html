@@ -114,10 +114,6 @@
             background:rgba(255,255,255,0.22);
         }
 
-        .logout-btn{
-            margin-top:auto;
-        }
-
         /* ================= MAIN ================= */
 
         .main{
@@ -166,6 +162,77 @@
 
         .topbar .btn{
             white-space:nowrap;
+        }
+
+        .account-dropdown{
+            position:relative;
+        }
+
+        .account-toggle{
+            border:1px solid #d9e2f2;
+            background:#fff;
+            color:#1f2937;
+            border-radius:999px;
+            padding:3px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            width:40px;
+            height:40px;
+            box-shadow:0 4px 12px rgba(13,110,253,0.08);
+        }
+
+        .account-toggle::after{
+            display:none;
+        }
+
+        .account-toggle:hover,
+        .account-toggle:focus{
+            border-color:#0d6efd;
+            color:#0d6efd;
+            box-shadow:0 6px 18px rgba(13,110,253,0.14);
+        }
+
+        .account-avatar{
+            width:32px;
+            height:32px;
+            border-radius:50%;
+            object-fit:cover;
+            flex:0 0 auto;
+        }
+
+        .account-avatar-fallback{
+            width:32px;
+            height:32px;
+            border-radius:50%;
+            background:#0d6efd;
+            color:white;
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            font-size:13px;
+            font-weight:800;
+            flex:0 0 auto;
+        }
+
+        .account-menu{
+            border:1px solid #e6ebf5;
+            border-radius:12px;
+            padding:8px;
+            min-width:210px;
+        }
+
+        .account-menu .dropdown-item{
+            border-radius:8px;
+            padding:9px 10px;
+            display:flex;
+            align-items:center;
+            gap:10px;
+            font-size:14px;
+        }
+
+        .account-menu .dropdown-header{
+            padding:6px 10px 8px;
         }
 
         /* ================= MOBILE ================= */
@@ -302,12 +369,6 @@
 
         {% endif %}
 
-        <div class="logout-btn">
-            <a href="{% url 'logout' %}" class="nav-link">
-                <i class="fa fa-sign-out-alt"></i> Logout
-            </a>
-        </div>
-
     </div>
 
     <!-- MAIN -->
@@ -326,33 +387,51 @@
                 </div>
             </div>
 
-            <div class="d-flex gap-2 flex-wrap">
+            <div class="d-flex gap-2 flex-wrap align-items-center">
 
-                {% if role == 'faculty' %}
-                    <!-- Faculty: Only Back button -->
-                    <button onclick="goBackNavigation('{{ role|default:"student" }}')" class="btn btn-outline-secondary btn-sm">
-                        Back
-                    </button>
+                <button onclick="goBackNavigation('{{ role|default:"student" }}')" class="btn btn-outline-secondary btn-sm">
+                    Back
+                </button>
 
-                {% else %}
-                    <!-- Other roles: Back, Dashboard/Events, Logout -->
-                    <button onclick="goBackNavigation('{{ role|default:"student" }}')" class="btn btn-outline-secondary btn-sm">
-                        Back
-                    </button>
-
-                    {% if request.user.is_superuser %}
-                        <a href="/admin/" class="btn btn-primary btn-sm">Admin</a>
-                    {% elif role == 'organizer' %}
-                        <a href="{% url 'events:dashboard' %}" class="btn btn-primary btn-sm">Dashboard</a>
-                    {% else %}
-                        <a href="{% url 'events:available_events' %}" class="btn btn-primary btn-sm">Events</a>
-                    {% endif %}
-
-                    <a href="{% url 'logout' %}" class="btn btn-outline-dark btn-sm">
-                        Logout
-                    </a>
-
+                {% if request.user.is_superuser %}
+                    <a href="/admin/" class="btn btn-primary btn-sm">Admin</a>
+                {% elif role == 'organizer' %}
+                    <a href="{% url 'events:dashboard' %}" class="btn btn-primary btn-sm">Dashboard</a>
+                {% elif role != 'faculty' %}
+                    <a href="{% url 'events:available_events' %}" class="btn btn-primary btn-sm">Events</a>
                 {% endif %}
+
+                <div class="dropdown account-dropdown">
+                    <button class="account-toggle dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        {% if request.user.profile.profile_picture %}
+                            <img src="{{ request.user.profile.profile_picture.url }}" alt="Profile picture" class="account-avatar">
+                        {% else %}
+                            <span class="account-avatar-fallback">
+                                {{ request.user.first_name|default:request.user.username|slice:":1"|upper }}
+                            </span>
+                        {% endif %}
+                    </button>
+
+                    <ul class="dropdown-menu dropdown-menu-end account-menu">
+                        <li>
+                            <div class="dropdown-header">
+                                <div class="fw-bold text-dark">{{ request.user.get_full_name|default:request.user.username }}</div>
+                                <div class="small text-muted">{{ role|default:"student"|title }}</div>
+                            </div>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="{% url 'profile' %}">
+                                <i class="fa fa-user-circle"></i> Profile
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item text-danger" href="{% url 'logout' %}">
+                                <i class="fa fa-sign-out-alt"></i> Logout
+                            </a>
+                        </li>
+                    </ul>
+                </div>
 
             </div>
 

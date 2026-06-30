@@ -1,0 +1,61 @@
+{% extends "accounts/dashboard_base.html" %}
+
+{% block title %}Edit Profile{% endblock %}
+
+{% block content %}
+
+<div class="box p-4 bg-white rounded shadow-sm">
+    <h3 class="mb-4">Edit Profile</h3>
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <div class="row gy-3">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label class="form-label">First Name</label>
+                    {{ user_form.first_name }}
+                    {% if user_form.first_name.errors %}
+                        <div class="text-danger small">{{ user_form.first_name.errors.0 }}</div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label class="form-label">Last Name</label>
+                    {{ user_form.last_name }}
+                    {% if user_form.last_name.errors %}
+                        <div class="text-danger small">{{ user_form.last_name.errors.0 }}</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Email</label>
+            {{ user_form.email }}
+            {% if user_form.email.errors %}
+                <div class="text-danger small">{{ user_form.email.errors.0 }}</div>
+            {% endif %}
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Profile Picture</label>
+            {{ profile_form.profile_picture }}
+            {% if profile_form.profile_picture.errors %}
+                <div class="text-danger small">{{ profile_form.profile_picture.errors.0 }}</div>
+            {% endif %}
+        </div>
+
+        {% if request.user.profile.profile_picture %}
+            <div class="mb-4">
+                <img src="{{ request.user.profile.profile_picture.url }}" alt="Profile picture" class="rounded-circle" width="96" height="96">
+            </div>
+        {% endif %}
+
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+        <a href="{% url 'profile' %}" class="btn btn-outline-secondary">Cancel</a>
+    </form>
+</div>
+
+{% endblock %}

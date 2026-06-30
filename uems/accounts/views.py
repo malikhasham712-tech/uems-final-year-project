@@ -1,8 +1,9 @@
-import profile
 from urllib import request
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import update_session_auth_hash
+from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib import messages
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
@@ -14,7 +15,7 @@ from django.core.exceptions import ValidationError
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 
-from .forms import RegisterForm
+from .forms import RegisterForm, UserUpdateForm, ProfileUpdateForm
 from .models import Profile
 from events.models import Event, EventRegistration
 
@@ -257,6 +258,16 @@ def logout_view(request):
     return redirect('login')
 
 
+def get_user_role(user):
+    if user.is_superuser:
+        return 'admin'
+
+    if hasattr(user, 'profile') and hasattr(user.profile, 'role'):
+        return user.profile.role
+
+    return 'student'
+
+
 # ----------------------
 # DASHBOARD
 # ----------------------
@@ -310,6 +321,57 @@ def view_event(request, event_id):
     return render(request, 'accounts/view_event.html', {
         'event': event,
         'organizer': event.organizer,
+    })
+
+
+@login_required
+def profile(request):
+    return render(request, 'accounts/profile.html', {
+        'role': get_user_role(request.user),
+        'profile': request.user.profile,
+    })
+
+
+@login_required
+def edit_profile(request):
+    user = request.user
+
+    if request.method == 'POST':
+        user_form = UserUpdateForm(request.POST, instance=user)
+        profile_form = ProfileUpdateForm(request.POST, request.FILES, instance=user.profile)
+
+        if user_form.is_valid() and profile_form.is_valid():
+            user_form.save()
+            profile_form.save()
+            messages.success(request, 'Profile updated successfully.')
+            return redirect('profile')
+    else:
+        user_form = UserUpdateForm(instance=user)
+        profile_form = ProfileUpdateForm(instance=user.profile)
+
+    return render(request, 'accounts/profile_edit.html', {
+        'role': get_user_role(user),
+        'user_form': user_form,
+        'profile_form': profile_form,
+    })
+
+
+@login_required
+def change_password(request):
+    if request.method == 'POST':
+        form = PasswordChangeForm(request.user, request.POST)
+
+        if form.is_valid():
+            user = form.save()
+            update_session_auth_hash(request, user)
+            messages.success(request, 'Password changed successfully.')
+            return redirect('profile')
+    else:
+        form = PasswordChangeForm(request.user)
+
+    return render(request, 'accounts/password_change.html', {
+        'role': get_user_role(request.user),
+        'form': form,
     })
 
 

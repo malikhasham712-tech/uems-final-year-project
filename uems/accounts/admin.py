@@ -11,9 +11,9 @@ class ProfileAdmin(admin.ModelAdmin):
 
     def get_fields(self, request, obj=None):
         if obj:
-            return ('user_detail', 'role', 'email_verified', 'is_organizer')
+            return ('user_detail', 'role', 'profile_picture', 'email_verified', 'is_organizer')
 
-        return ('user', 'role', 'email_verified', 'is_organizer')
+        return ('user', 'role', 'profile_picture', 'email_verified', 'is_organizer')
 
     def get_readonly_fields(self, request, obj=None):
         if obj:
