@@ -1,0 +1,167 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+
+<style>
+    .admin-profile-shell {
+        max-width: 980px;
+    }
+
+    .admin-profile-card {
+        background: var(--body-bg);
+        border: 1px solid var(--hairline-color);
+        border-radius: 6px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+        overflow: hidden;
+    }
+
+    .admin-profile-header {
+        display: flex;
+        gap: 22px;
+        align-items: center;
+        padding: 26px;
+        border-bottom: 1px solid var(--hairline-color);
+    }
+
+    .admin-profile-avatar {
+        width: 96px;
+        height: 96px;
+        border-radius: 50%;
+        object-fit: cover;
+        flex: 0 0 auto;
+    }
+
+    .admin-profile-avatar-fallback {
+        width: 96px;
+        height: 96px;
+        border-radius: 50%;
+        background: var(--primary);
+        color: var(--primary-fg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+        font-weight: 700;
+        flex: 0 0 auto;
+    }
+
+    .admin-profile-title {
+        margin: 0 0 6px;
+        font-size: 24px;
+        font-weight: 600;
+        color: var(--body-fg);
+    }
+
+    .admin-profile-muted {
+        color: var(--body-quiet-color);
+        margin: 0;
+    }
+
+    .admin-profile-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        padding: 18px 26px;
+        border-bottom: 1px solid var(--hairline-color);
+    }
+
+    .admin-profile-btn {
+        background: var(--button-bg);
+        color: var(--button-fg) !important;
+        border-radius: 4px;
+        padding: 9px 14px;
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    .admin-profile-btn.secondary {
+        background: var(--darkened-bg);
+        color: var(--body-fg) !important;
+        border: 1px solid var(--border-color);
+    }
+
+    .admin-profile-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px;
+        padding: 26px;
+    }
+
+    .admin-profile-panel {
+        border: 1px solid var(--hairline-color);
+        border-radius: 6px;
+        padding: 18px;
+        background: var(--darkened-bg);
+    }
+
+    .admin-profile-panel h2 {
+        margin: 0 0 14px;
+        font-size: 18px;
+    }
+
+    .admin-profile-row {
+        margin: 0 0 11px;
+    }
+
+    .admin-profile-row:last-child {
+        margin-bottom: 0;
+    }
+
+    @media (max-width: 760px) {
+        .admin-profile-header,
+        .admin-profile-actions {
+            padding: 18px;
+        }
+
+        .admin-profile-grid {
+            grid-template-columns: 1fr;
+            padding: 18px;
+        }
+    }
+</style>
+
+<div class="admin-profile-shell">
+    <div class="admin-profile-card">
+        <div class="admin-profile-header">
+            {% if profile.profile_picture %}
+                <img src="{{ profile.profile_picture.url }}" alt="Profile picture" class="admin-profile-avatar">
+            {% else %}
+                <div class="admin-profile-avatar-fallback">
+                    {{ request.user.first_name|default:request.user.username|slice:":1"|upper }}
+                </div>
+            {% endif %}
+
+            <div>
+                <h1 class="admin-profile-title">{{ request.user.get_full_name|default:request.user.username }}</h1>
+                <p class="admin-profile-muted">{{ request.user.email|default:"No email added" }}</p>
+                <p class="admin-profile-muted">Admin</p>
+            </div>
+        </div>
+
+        <div class="admin-profile-actions">
+            <a href="{% url 'admin_edit_profile' %}" class="admin-profile-btn">Edit Profile</a>
+            <a href="{% url 'admin:password_change' %}" class="admin-profile-btn secondary">Change Password</a>
+            <a href="{% url 'admin:index' %}" class="admin-profile-btn secondary">Back to Admin</a>
+        </div>
+
+        <div class="admin-profile-grid">
+            <div class="admin-profile-panel">
+                <h2>Personal Information</h2>
+                <p class="admin-profile-row"><strong>Username:</strong> {{ request.user.username }}</p>
+                <p class="admin-profile-row"><strong>First Name:</strong> {{ request.user.first_name|default:"Not added" }}</p>
+                <p class="admin-profile-row"><strong>Last Name:</strong> {{ request.user.last_name|default:"Not added" }}</p>
+                <p class="admin-profile-row"><strong>Email:</strong> {{ request.user.email|default:"Not added" }}</p>
+                <p class="admin-profile-row"><strong>Phone:</strong> {{ profile.phone|default:"Not added" }}</p>
+            </div>
+
+            <div class="admin-profile-panel">
+                <h2>Account Settings</h2>
+                <p class="admin-profile-row"><strong>Staff Status:</strong> {{ request.user.is_staff|yesno:"Yes,No" }}</p>
+                <p class="admin-profile-row"><strong>Superuser:</strong> {{ request.user.is_superuser|yesno:"Yes,No" }}</p>
+                <p class="admin-profile-row"><strong>Email Verified:</strong> {{ profile.email_verified|yesno:"Yes,No" }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

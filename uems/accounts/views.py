@@ -1,12 +1,14 @@
 from urllib import request
 
 from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import admin
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib import messages
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
+from django.contrib.admin.views.decorators import staff_member_required
 from django.db.models import Count
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
@@ -281,6 +283,18 @@ def get_user_role(user):
     return 'student'
 
 
+def get_or_create_user_profile(user):
+    profile, _ = Profile.objects.get_or_create(
+        user=user,
+        defaults={
+            'role': 'faculty',
+            'email_verified': True,
+        }
+    )
+
+    return profile
+
+
 # ----------------------
 # DASHBOARD
 # ----------------------
@@ -339,19 +353,28 @@ def view_event(request, event_id):
 
 @login_required
 def profile(request):
+    if request.user.is_staff:
+        return redirect('admin_profile')
+
+    user_profile = get_or_create_user_profile(request.user)
+
     return render(request, 'accounts/profile.html', {
         'role': get_user_role(request.user),
-        'profile': request.user.profile,
+        'profile': user_profile,
     })
 
 
 @login_required
 def edit_profile(request):
+    if request.user.is_staff:
+        return redirect('admin_edit_profile')
+
     user = request.user
+    user_profile = get_or_create_user_profile(user)
 
     if request.method == 'POST':
         user_form = UserUpdateForm(request.POST, instance=user)
-        profile_form = ProfileUpdateForm(request.POST, request.FILES, instance=user.profile)
+        profile_form = ProfileUpdateForm(request.POST, request.FILES, instance=user_profile)
 
         if user_form.is_valid() and profile_form.is_valid():
             user_form.save()
@@ -360,7 +383,7 @@ def edit_profile(request):
             return redirect('profile')
     else:
         user_form = UserUpdateForm(instance=user)
-        profile_form = ProfileUpdateForm(instance=user.profile)
+        profile_form = ProfileUpdateForm(instance=user_profile)
 
     return render(request, 'accounts/profile_edit.html', {
         'role': get_user_role(user),
@@ -369,8 +392,51 @@ def edit_profile(request):
     })
 
 
+@staff_member_required
+def admin_profile(request):
+    user_profile = get_or_create_user_profile(request.user)
+    context = {
+        **admin.site.each_context(request),
+        'title': 'Profile',
+        'profile': user_profile,
+    }
+
+    return render(request, 'admin/profile.html', context)
+
+
+@staff_member_required
+def admin_edit_profile(request):
+    user = request.user
+    user_profile = get_or_create_user_profile(user)
+
+    if request.method == 'POST':
+        user_form = UserUpdateForm(request.POST, instance=user)
+        profile_form = ProfileUpdateForm(request.POST, request.FILES, instance=user_profile)
+
+        if user_form.is_valid() and profile_form.is_valid():
+            user_form.save()
+            profile_form.save()
+            messages.success(request, 'Profile updated successfully.')
+            return redirect('admin_profile')
+    else:
+        user_form = UserUpdateForm(instance=user)
+        profile_form = ProfileUpdateForm(instance=user_profile)
+
+    context = {
+        **admin.site.each_context(request),
+        'title': 'Edit Profile',
+        'profile': user_profile,
+        'user_form': user_form,
+        'profile_form': profile_form,
+    }
+
+    return render(request, 'admin/profile_edit.html', context)
+
+
 @login_required
 def change_password(request):
+    get_or_create_user_profile(request.user)
+
     if request.method == 'POST':
         form = PasswordChangeForm(request.user, request.POST)
 
