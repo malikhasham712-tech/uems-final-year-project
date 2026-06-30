@@ -41,7 +41,11 @@ class UserUpdateForm(forms.ModelForm):
 class ProfileUpdateForm(forms.ModelForm):
     class Meta:
         model = Profile
-        fields = ['profile_picture']
+        fields = ['phone', 'profile_picture']
         widgets = {
+            'phone': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Enter phone number',
+            }),
             'profile_picture': forms.ClearableFileInput(attrs={'class': 'form-control'}),
         }

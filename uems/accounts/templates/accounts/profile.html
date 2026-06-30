@@ -34,6 +34,7 @@
                 <p><strong>First Name:</strong> {{ request.user.first_name }}</p>
                 <p><strong>Last Name:</strong> {{ request.user.last_name }}</p>
                 <p><strong>Email:</strong> {{ request.user.email }}</p>
+                <p><strong>Phone:</strong> {{ profile.phone|default:"Not added" }}</p>
             </div>
         </div>
 

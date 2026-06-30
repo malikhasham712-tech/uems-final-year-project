@@ -15,6 +15,7 @@ class Profile(models.Model):
     email_verified = models.BooleanField(default=False)
     verification_token = models.UUIDField(default=uuid.uuid4)
     is_organizer = models.BooleanField(default=False)  # Add this field
+    phone = models.CharField(max_length=20, blank=True)
     profile_picture = models.ImageField(
         upload_to='profile_pictures/',
         blank=True,

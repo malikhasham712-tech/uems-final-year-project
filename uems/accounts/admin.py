@@ -5,15 +5,15 @@ from .models import Profile
 
 # Register Profile
 class ProfileAdmin(admin.ModelAdmin):
-    list_display = ('user', 'role')
+    list_display = ('user', 'role', 'phone')
     list_filter = ('role',)
-    search_fields = ('user__username',)
+    search_fields = ('user__username', 'phone')
 
     def get_fields(self, request, obj=None):
         if obj:
-            return ('user_detail', 'role', 'profile_picture', 'email_verified', 'is_organizer')
+            return ('user_detail', 'role', 'phone', 'profile_picture', 'email_verified', 'is_organizer')
 
-        return ('user', 'role', 'profile_picture', 'email_verified', 'is_organizer')
+        return ('user', 'role', 'phone', 'profile_picture', 'email_verified', 'is_organizer')
 
     def get_readonly_fields(self, request, obj=None):
         if obj:
