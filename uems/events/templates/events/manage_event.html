@@ -85,6 +85,43 @@
         min-width: 130px;
     }
 
+    .admin-contact-card {
+        margin-top: 16px;
+        background: white;
+        border: 1px solid #e9edf5;
+        border-radius: 8px;
+        padding: 18px;
+    }
+
+    .admin-contact-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+        gap: 14px;
+        margin-top: 14px;
+    }
+
+    .admin-contact-item {
+        background: #f8fbff;
+        border: 1px solid #eef3fb;
+        border-radius: 8px;
+        padding: 12px 14px;
+        min-width: 0;
+    }
+
+    .admin-contact-label {
+        color: #6c757d;
+        font-size: 12px;
+        font-weight: 700;
+        margin-bottom: 4px;
+        text-transform: uppercase;
+    }
+
+    .admin-contact-value {
+        color: #212529;
+        font-weight: 700;
+        overflow-wrap: anywhere;
+    }
+
     @media(max-width:768px) {
         .manage-header {
             flex-direction: column;
@@ -274,6 +311,43 @@
             </div>
         </div>
 
+    </div>
+
+    <div class="admin-contact-card">
+        <div class="section-title">Admin Contact</div>
+        <p class="mb-0 text-muted">
+            Contact the admin for event-related support or changes.
+        </p>
+
+        <div class="admin-contact-grid">
+            <div class="admin-contact-item">
+                <div class="admin-contact-label">First Name</div>
+                <div class="admin-contact-value">
+                    {{ admin_contact.first_name|default:"Not added" }}
+                </div>
+            </div>
+
+            <div class="admin-contact-item">
+                <div class="admin-contact-label">Last Name</div>
+                <div class="admin-contact-value">
+                    {{ admin_contact.last_name|default:"Not added" }}
+                </div>
+            </div>
+
+            <div class="admin-contact-item">
+                <div class="admin-contact-label">Email</div>
+                <div class="admin-contact-value">
+                    {{ admin_contact.email|default:"Not added" }}
+                </div>
+            </div>
+
+            <div class="admin-contact-item">
+                <div class="admin-contact-label">Phone</div>
+                <div class="admin-contact-value">
+                    {{ admin_contact.profile.phone|default:"Not added" }}
+                </div>
+            </div>
+        </div>
     </div>
 
 </div>

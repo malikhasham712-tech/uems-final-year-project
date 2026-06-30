@@ -277,6 +277,14 @@ def manage_event(request, event_id):
 
     total_registrations = registrations.count()
     total_attendance = attendance.count()
+    admin_contact = User.objects.filter(
+        is_superuser=True,
+        is_active=True
+    ).select_related(
+        "profile"
+    ).order_by(
+        "id"
+    ).first()
 
     return render(request, "events/manage_event.html", {
         "event": event,
@@ -287,6 +295,7 @@ def manage_event(request, event_id):
         "total_absent": max(total_registrations - total_attendance, 0),
         "total_feedback": feedbacks.count(),
         "total_announcements": announcements.count(),
+        "admin_contact": admin_contact,
         "role": "admin" if request.user.is_superuser else "organizer",
         **notif_context(request)
     })
