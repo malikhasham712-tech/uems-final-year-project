@@ -11,19 +11,23 @@
         display: none !important;
     }
 
-    html,
-    body {
+    body:not(.login) {
         min-height: 100%;
         height: auto;
     }
 
-    #container {
+    body:not(.login) #container {
         min-height: 100vh;
         height: auto;
     }
 
-    #container > .main {
+    body:not(.login) #container > .main {
         flex: 1 0 auto;
+    }
+
+    body.login #container {
+        min-height: 0;
+        height: auto;
     }
 
     .admin-subtitle-row {
@@ -267,6 +271,7 @@
 
 {% block extrabody %}
 {{ block.super }}
+{% if has_permission %}
 <script>
     (function(){
         const unreadMessagesUrl = "{% url 'events:unread_message_count' %}";
@@ -318,4 +323,5 @@
         setInterval(refreshMessagesBadge, 10000);
     })();
 </script>
+{% endif %}
 {% endblock %}

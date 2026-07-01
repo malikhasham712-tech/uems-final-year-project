@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.contrib.auth.views import LogoutView
 from django.shortcuts import redirect
 from django.urls import path, include
 from django.conf import settings
@@ -10,6 +11,7 @@ admin.site.password_change_template = "admin/password_change_form.html"
 admin.site.password_change_done_template = "admin/password_change_done.html"
 
 urlpatterns = [
+    path('admin/logout/', LogoutView.as_view(next_page='/admin/login/')),
     path('admin/', lambda request: redirect('/admin/events/event/')),
     path('admin/', admin.site.urls),
 
