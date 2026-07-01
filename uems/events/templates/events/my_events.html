@@ -1,4 +1,4 @@
-{% extends "accounts/dashboard_base.html" %}
+﻿{% extends "accounts/dashboard_base.html" %}
 
 {% block title %}Registered Events{% endblock %}
 
@@ -105,10 +105,6 @@
         <h4 class="text-primary fw-bold mb-0">
             Registered Events
         </h4>
-        <a href="{% url 'events:available_events' %}" class="btn btn-outline-primary btn-sm">
-            <i class="fa fa-plus"></i>
-            Find Events
-        </a>
     </div>
 
     {% if events %}
@@ -135,7 +131,6 @@
             {% for event in events %}
             <tr>
 
-                <!-- EVENT NAME -->
                 <td class="fw-semibold text-wrap">
                     <a href="{% url 'events:view_event' event.id %}"
                        class="text-decoration-none">
@@ -143,7 +138,6 @@
                     </a>
                 </td>
 
-                <!-- SCHEDULE -->
                 <td>
                     {% if event.date %}
                         {{ event.date|date:"d M Y" }}
@@ -152,14 +146,11 @@
                     {% endif %}
                 </td>
 
-                <!-- STATUS -->
                 <td>
                     {% if event.status|lower == "completed" %}
                         <span class="badge bg-success px-3 py-2">Completed</span>
-
                     {% elif event.status|lower == "announced" %}
                         <span class="badge bg-primary px-3 py-2">Announced</span>
-
                     {% else %}
                         <span class="badge bg-secondary px-3 py-2">
                             {{ event.status|title }}
@@ -167,7 +158,6 @@
                     {% endif %}
                 </td>
 
-                 <!-- REGISTRATION DATE -->
                 <td>
                     {% if event.registration_date %}
                         {{ event.registration_date|date:"d M Y" }}
@@ -176,7 +166,6 @@
                     {% endif %}
                 </td>
 
-                <!-- ANNOUNCEMENTS -->
                 <td>
                     <a href="{% url 'events:event_announcements' event.id %}"
                        class="btn btn-sm btn-outline-primary w-100 w-md-auto">
@@ -184,7 +173,6 @@
                     </a>
                 </td>
 
-                <!-- MESSAGES -->
                 <td>
                     {% if role == "student" and event.organizer %}
                         <a href="{% url 'events:event_message_thread' event.id event.organizer.id %}"
@@ -201,11 +189,8 @@
                     {% endif %}
                 </td>
 
-                <!-- ATTENDANCE -->
                 <td>
-
                     {% if role == "organizer" %}
-
                         <a href="{% url 'events:view_attendance' event.id %}"
                            class="btn btn-sm btn-dark w-100 w-md-auto">
                             View
@@ -214,24 +199,18 @@
                         <div class="small text-muted mt-1">
                             {{ event.total_attendance|default:0 }} Present
                         </div>
-
                     {% elif role == "student" %}
-
                         {% if event.attendance_marked %}
                             <span class="badge bg-success px-3 py-2">Present</span>
                         {% else %}
                             <span class="badge bg-secondary px-3 py-2">Pending</span>
                         {% endif %}
-
                     {% else %}
                         <span class="text-muted">-</span>
                     {% endif %}
-
                 </td>
 
-                <!-- FEEDBACK -->
                 <td>
-
                     {% if role == "student" and event.status|lower == "completed" %}
                         {% if event.has_feedback %}
                             <span class="badge bg-success px-3 py-2">Submitted</span>
@@ -241,17 +220,14 @@
                                 Submit
                             </a>
                         {% endif %}
-
                     {% elif role == "organizer" %}
                         <a href="{% url 'events:view_feedbacks' event.id %}"
                            class="btn btn-sm btn-primary w-100 w-md-auto">
                             View
                         </a>
-
                     {% else %}
                         <span class="text-muted small">Not Available</span>
                     {% endif %}
-
                 </td>
 
             </tr>
