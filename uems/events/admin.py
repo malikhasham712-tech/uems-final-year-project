@@ -121,7 +121,7 @@ class EventAdmin(admin.ModelAdmin):
         'feedback_btn',
     )
 
-    list_filter = ('status', 'category')
+    # list_filter = ('status', 'category')
     search_fields = ('name',)
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
@@ -212,6 +212,7 @@ class EventAdmin(admin.ModelAdmin):
                     message=f"Event Announced: {obj.name}"
                 )
 
+    @admin.display(description="Proposals")
     def proposal_btn(self, obj):
 
         proposal = EventProposal.objects.filter(
@@ -225,12 +226,13 @@ class EventAdmin(admin.ModelAdmin):
             )
 
             return format_html(
-                '<a class="button" href="{}">Proposal</a>',
+                '<a class="button" href="{}">View</a>',
                 url
             )
 
         return "No Proposal"
 
+    @admin.display(description="Registrations")
     def registration_btn(self, obj):
 
         url = reverse(
@@ -239,10 +241,11 @@ class EventAdmin(admin.ModelAdmin):
         )
 
         return format_html(
-            '<a class="button" href="{}">Registrations</a>',
+            '<a class="button" href="{}">View</a>',
             url
         )
 
+    @admin.display(description="Attendance")
     def attendance_btn(self, obj):
 
         url = reverse(
@@ -251,10 +254,11 @@ class EventAdmin(admin.ModelAdmin):
         )
 
         return format_html(
-            '<a class="button" href="{}">Attendance</a>',
+            '<a class="button" href="{}">View</a>',
             url
         )
 
+    @admin.display(description="Feedback")
     def feedback_btn(self, obj):
 
         url = reverse(
@@ -263,7 +267,7 @@ class EventAdmin(admin.ModelAdmin):
         )
 
         return format_html(
-            '<a class="button" href="{}">Feedback</a>',
+            '<a class="button" href="{}">View</a>',
             url
         )
 
