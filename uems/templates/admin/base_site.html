@@ -37,6 +37,34 @@
         background: #5a5a5a !important;
         color: white !important;
     }
+
+    #footer {
+        padding: 0;
+    }
+
+    .admin-panel-footer {
+        border-top: 1px solid var(--hairline-color);
+        background: var(--darkened-bg);
+        color: var(--body-quiet-color);
+        text-align: center;
+        padding: 18px 24px;
+        font-size: 13px;
+        line-height: 1.5;
+    }
+
+    .admin-panel-footer.has-nav-sidebar {
+        margin-left: 299px;
+    }
+
+    @media (max-width: 767px) {
+        .admin-panel-footer.has-nav-sidebar {
+            margin-left: 0;
+        }
+
+        .admin-panel-footer {
+            padding: 16px 12px;
+        }
+    }
 </style>
 {% endblock %}
 
@@ -69,3 +97,11 @@
 {% endblock %}
 
 {% block nav-global %}{% endblock %}
+
+{% block footer %}
+{% if has_permission %}
+<div class="admin-panel-footer{% if is_nav_sidebar_enabled %} has-nav-sidebar{% endif %}">
+    &copy; 2026 University Event Management System (UEMS)
+</div>
+{% endif %}
+{% endblock %}
