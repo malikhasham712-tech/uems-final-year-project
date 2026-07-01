@@ -11,6 +11,21 @@
         display: none !important;
     }
 
+    html,
+    body {
+        min-height: 100%;
+        height: auto;
+    }
+
+    #container {
+        min-height: 100vh;
+        height: auto;
+    }
+
+    #container > .main {
+        flex: 1 0 auto;
+    }
+
     .admin-subtitle-row {
         display: flex;
         align-items: center;
@@ -40,6 +55,7 @@
 
     #footer {
         padding: 0;
+        flex-shrink: 0;
     }
 
     .admin-panel-footer {
