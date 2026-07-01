@@ -70,9 +70,7 @@
                 </table>
             </div>
 
-            <p class="paginator">
-                {{ total }} registration{{ total|pluralize }}
-            </p>
+            {% include "admin/uems_pagination.html" %}
 
         {% else %}
 

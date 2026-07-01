@@ -56,6 +56,58 @@
         margin-left: 299px;
     }
 
+    #changelist .uems-changelist-footer {
+        display: block;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .uems-admin-pagination {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        align-items: center;
+        gap: 12px;
+        margin: 14px 0 0;
+        width: 100%;
+        box-sizing: border-box;
+        color: var(--body-quiet-color);
+        font-size: 13px;
+    }
+
+    .uems-admin-pagination-links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: flex-end;
+        justify-self: end;
+    }
+
+    .uems-admin-page-btn {
+        background: var(--darkened-bg);
+        color: var(--body-fg) !important;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        padding: 7px 12px;
+        min-width: 34px;
+        text-align: center;
+        text-decoration: none;
+        font-weight: 500;
+        box-sizing: border-box;
+    }
+
+    .uems-admin-page-btn.current {
+        background: var(--button-bg);
+        border-color: var(--button-bg);
+        color: var(--button-fg) !important;
+        pointer-events: none;
+    }
+
+    .uems-admin-page-btn.disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
+
     @media (max-width: 767px) {
         .admin-panel-footer.has-nav-sidebar {
             margin-left: 0;
@@ -63,6 +115,21 @@
 
         .admin-panel-footer {
             padding: 16px 12px;
+        }
+
+        .uems-admin-pagination {
+            align-items: stretch;
+            grid-template-columns: 1fr;
+        }
+
+        .uems-admin-pagination-links {
+            width: 100%;
+            justify-content: flex-end;
+            justify-self: stretch;
+        }
+
+        .uems-admin-page-btn {
+            flex: 1 1 auto;
         }
     }
 </style>

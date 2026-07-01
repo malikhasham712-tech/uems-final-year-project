@@ -90,9 +90,7 @@
                 </table>
             </div>
 
-            <p class="paginator">
-                {{ total }} feedback entr{{ total|pluralize:"y,ies" }}
-            </p>
+            {% include "admin/uems_pagination.html" %}
 
         {% else %}
 

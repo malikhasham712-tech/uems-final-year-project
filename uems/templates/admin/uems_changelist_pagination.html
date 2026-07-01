@@ -1,0 +1,33 @@
+{% if pagination %}
+<div class="uems-admin-pagination">
+    <div>
+        {% if pagination.count %}
+            Showing {{ pagination.start }}-{{ pagination.end }} of {{ pagination.count }}
+        {% else %}
+            Showing 0 of 0
+        {% endif %}
+    </div>
+
+    <div class="uems-admin-pagination-links">
+        {% if pagination.has_previous %}
+            <a href="{{ pagination.previous_url }}" class="uems-admin-page-btn">Previous</a>
+        {% else %}
+            <span class="uems-admin-page-btn disabled">Previous</span>
+        {% endif %}
+
+        {% for page_item in pagination.page_items %}
+            {% if page_item.current %}
+                <span class="uems-admin-page-btn current">{{ page_item.label }}</span>
+            {% else %}
+                <a href="{{ page_item.url }}" class="uems-admin-page-btn">{{ page_item.label }}</a>
+            {% endif %}
+        {% endfor %}
+
+        {% if pagination.has_next %}
+            <a href="{{ pagination.next_url }}" class="uems-admin-page-btn">Next</a>
+        {% else %}
+            <span class="uems-admin-page-btn disabled">Next</span>
+        {% endif %}
+    </div>
+</div>
+{% endif %}

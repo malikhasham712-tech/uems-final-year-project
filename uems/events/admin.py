@@ -7,6 +7,7 @@ from django.utils.html import format_html
 from django.contrib.auth.models import User
 from django.db.models import Count
 from django.core.paginator import Paginator
+from django.contrib.admin.views.main import PAGE_VAR
 
 from openpyxl import Workbook
 
@@ -98,6 +99,8 @@ class CategoryAdmin(admin.ModelAdmin):
 # =====================================================
 @admin.register(Event)
 class EventAdmin(admin.ModelAdmin):
+    list_per_page = 10
+    change_list_template = "admin/events_event_change_list.html"
 
     list_display = (
         'name',
@@ -123,6 +126,41 @@ class EventAdmin(admin.ModelAdmin):
             ).order_by("username")
 
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+    def changelist_view(self, request, extra_context=None):
+        response = super().changelist_view(request, extra_context)
+
+        if not hasattr(response, "context_data") or "cl" not in response.context_data:
+            return response
+
+        cl = response.context_data["cl"]
+
+        def page_url(page_index):
+            params = request.GET.copy()
+            params[PAGE_VAR] = page_index
+            return f"?{params.urlencode()}"
+
+        page_items = [
+            {
+                "label": page_number,
+                "url": page_url(page_number),
+                "current": page_number == cl.page_num,
+            }
+            for page_number in range(1, cl.paginator.num_pages + 1)
+        ]
+
+        response.context_data["event_pagination"] = {
+            "count": cl.result_count,
+            "start": cl.result_count and ((cl.page_num - 1) * cl.list_per_page) + 1,
+            "end": min(cl.page_num * cl.list_per_page, cl.result_count),
+            "has_previous": cl.page_num > 1,
+            "previous_url": page_url(cl.page_num - 1),
+            "has_next": cl.page_num < cl.paginator.num_pages,
+            "next_url": page_url(cl.page_num + 1),
+            "page_items": page_items,
+        }
+
+        return response
 
     def save_model(self, request, obj, form, change):
 
@@ -229,7 +267,11 @@ class EventAdmin(admin.ModelAdmin):
 
         registrations = EventRegistration.objects.filter(
             event=event
-        ).select_related("student")
+        ).select_related("student").order_by("-created_at")
+        registrations_page = Paginator(
+            registrations,
+            10
+        ).get_page(request.GET.get("page"))
 
         context = {
             **self.admin_site.each_context(request),
@@ -238,7 +280,8 @@ class EventAdmin(admin.ModelAdmin):
             "original": event,
             "opts": self.model._meta,
             "event": event,
-            "registrations": registrations,
+            "registrations": registrations_page.object_list,
+            "page_obj": registrations_page,
             "total": registrations.count(),
         }
 
@@ -254,7 +297,7 @@ class EventAdmin(admin.ModelAdmin):
 
         registrations = EventRegistration.objects.filter(
             event=event
-        ).select_related("student")
+        ).select_related("student").order_by("-created_at")
 
         attendance_map = {
             attendance.student_id: attendance.marked_at
@@ -281,6 +324,10 @@ class EventAdmin(admin.ModelAdmin):
         total = len(rows)
         absent = total - present
         percentage = round((present / total) * 100, 2) if total else 0
+        rows_page = Paginator(
+            rows,
+            10
+        ).get_page(request.GET.get("page"))
 
         context = {
             **self.admin_site.each_context(request),
@@ -289,7 +336,8 @@ class EventAdmin(admin.ModelAdmin):
             "original": event,
             "opts": self.model._meta,
             "event": event,
-            "rows": rows,
+            "rows": rows_page.object_list,
+            "page_obj": rows_page,
             "total": total,
             "present": present,
             "absent": absent,
@@ -309,6 +357,10 @@ class EventAdmin(admin.ModelAdmin):
         feedbacks = Feedback.objects.filter(
             event=event
         ).select_related("student")
+        feedback_page = Paginator(
+            feedbacks.order_by("-created_at"),
+            10
+        ).get_page(request.GET.get("page"))
 
         ratings = [
             feedback.rating
@@ -323,7 +375,8 @@ class EventAdmin(admin.ModelAdmin):
             "original": event,
             "opts": self.model._meta,
             "event": event,
-            "feedbacks": feedbacks,
+            "feedbacks": feedback_page.object_list,
+            "page_obj": feedback_page,
             "total": feedbacks.count(),
             "average_rating": (
                 round(sum(ratings) / len(ratings), 2)

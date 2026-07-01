@@ -17,11 +17,17 @@
         margin-bottom: 18px;
     }
 
-    .report-admin-header h1 {
+    .report-context-title {
         color: var(--body-fg);
-        font-size: 20px;
-        font-weight: 400;
+        font-size: 15px;
+        font-weight: 600;
         margin: 0;
+    }
+
+    .report-context-subtitle {
+        color: var(--body-quiet-color);
+        font-size: 13px;
+        margin-top: 4px;
     }
 
     .report-actions {
@@ -213,7 +219,10 @@
 <div class="report-admin-shell">
 
     <div class="report-admin-header">
-        <h1>Attendance Report - {{ event.name }}</h1>
+        <div>
+            <div class="report-context-title">{{ event.name }}</div>
+            <div class="report-context-subtitle">Attendance details and analytics</div>
+        </div>
 
         <div class="report-actions">
             <a href="/reports/{{ event.id }}/export/?mode=attendance" class="report-admin-btn">
