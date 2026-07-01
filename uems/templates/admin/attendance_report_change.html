@@ -129,6 +129,40 @@
         vertical-align: top;
     }
 
+    .report-pagination {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-top: 14px;
+        color: var(--body-quiet-color);
+        font-size: 13px;
+    }
+
+    .report-pagination-links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .report-page-number {
+        min-width: 34px;
+        text-align: center;
+    }
+
+    .report-page-number.current {
+        background: var(--button-bg);
+        color: var(--button-fg) !important;
+        border-color: var(--button-bg);
+        pointer-events: none;
+    }
+
+    .report-admin-btn.disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
+
     .present {
         color: #198754;
         font-weight: 700;
@@ -155,6 +189,15 @@
         .report-admin-btn {
             width: 100%;
             text-align: center;
+        }
+
+        .report-pagination {
+            align-items: stretch;
+            flex-direction: column;
+        }
+
+        .report-pagination-links {
+            width: 100%;
         }
 
         .summary-grid {
@@ -254,6 +297,35 @@
                     {% endfor %}
                 </tbody>
             </table>
+        </div>
+
+        <div class="report-pagination">
+            <div>
+                {% if page_obj.paginator.count %}
+                    Showing {{ page_obj.start_index }}-{{ page_obj.end_index }} of {{ page_obj.paginator.count }}
+                {% else %}
+                    Showing 0 of 0
+                {% endif %}
+            </div>
+            <div class="report-pagination-links">
+                {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}" class="report-admin-btn secondary">Previous</a>
+                {% else %}
+                    <span class="report-admin-btn secondary disabled">Previous</span>
+                {% endif %}
+                {% for page_number in page_obj.paginator.page_range %}
+                    {% if page_number == page_obj.number %}
+                        <span class="report-admin-btn secondary report-page-number current">{{ page_number }}</span>
+                    {% else %}
+                        <a href="?page={{ page_number }}" class="report-admin-btn secondary report-page-number">{{ page_number }}</a>
+                    {% endif %}
+                {% endfor %}
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}" class="report-admin-btn secondary">Next</a>
+                {% else %}
+                    <span class="report-admin-btn secondary disabled">Next</span>
+                {% endif %}
+            </div>
         </div>
     </div>
 

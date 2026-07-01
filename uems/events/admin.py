@@ -6,6 +6,7 @@ from django.template.response import TemplateResponse
 from django.utils.html import format_html
 from django.contrib.auth.models import User
 from django.db.models import Count
+from django.core.paginator import Paginator
 
 from openpyxl import Workbook
 
@@ -535,12 +536,17 @@ class EventReportAdmin(admin.ModelAdmin):
             "average_percent": pct(average),
             "poor_percent": pct(poor),
         }
+        feedback_page = Paginator(
+            feedbacks.select_related("student").order_by("-created_at"),
+            10
+        ).get_page(request.GET.get("page"))
 
         extra_context = extra_context or {}
         extra_context.update({
             "event": event,
             "report": report,
-            "feedbacks": feedbacks,
+            "feedbacks": feedback_page.object_list,
+            "page_obj": feedback_page,
             "stats": stats,
             "has_feedback": feedbacks.exists(),
             **percentages,
@@ -651,6 +657,10 @@ class EventReportAdmin(admin.ModelAdmin):
         percentage = (
             (present_count / total_students) * 100
         ) if total_students else 0
+        attendance_page = Paginator(
+            data,
+            10
+        ).get_page(request.GET.get("page"))
 
         return TemplateResponse(
             request,
@@ -658,7 +668,8 @@ class EventReportAdmin(admin.ModelAdmin):
             {
                 **self.admin_site.each_context(request),
                 "event": event,
-                "data": data,
+                "data": attendance_page.object_list,
+                "page_obj": attendance_page,
                 "total_students": total_students,
                 "present": present_count,
                 "absent": absent_count,
