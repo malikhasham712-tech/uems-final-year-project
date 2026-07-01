@@ -1,0 +1,285 @@
+{% extends "admin/base_site.html" %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">Home</a>
+    &rsaquo; <a href="{% url 'admin:events_event_changelist' %}">Events</a>
+    &rsaquo; Event Messages
+</div>
+{% endblock %}
+
+{% block content %}
+<style>
+    .admin-message-shell {
+        max-width: 1040px;
+    }
+
+    .admin-message-card {
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        background: var(--body-bg);
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+    }
+
+    .admin-message-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 18px 20px;
+        border-bottom: 1px solid var(--hairline-color);
+    }
+
+    .admin-message-title {
+        margin: 0 0 6px;
+        color: var(--body-fg);
+        font-size: 20px;
+        font-weight: 600;
+    }
+
+    .admin-message-subtitle {
+        color: var(--body-quiet-color);
+        font-size: 13px;
+    }
+
+    .admin-message-btn {
+        display: inline-block;
+        background: var(--button-bg);
+        color: var(--button-fg) !important;
+        border: 1px solid var(--button-bg);
+        border-radius: 4px;
+        padding: 8px 14px;
+        text-decoration: none !important;
+        font-weight: 500;
+        line-height: 1.2;
+        cursor: pointer;
+    }
+
+    .admin-message-btn.secondary {
+        background: var(--darkened-bg);
+        color: var(--body-fg) !important;
+        border-color: var(--border-color);
+    }
+
+    .admin-message-thread {
+        height: 430px;
+        overflow-y: auto;
+        background: var(--darkened-bg);
+        border: 1px solid var(--hairline-color);
+        border-radius: 4px;
+        margin: 20px;
+        padding: 16px;
+    }
+
+    .admin-message-row {
+        display: flex;
+        margin-bottom: 12px;
+    }
+
+    .admin-message-row.mine {
+        justify-content: flex-end;
+    }
+
+    .admin-message-bubble {
+        max-width: 75%;
+        background: var(--body-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        padding: 10px 12px;
+        color: var(--body-fg);
+        overflow-wrap: anywhere;
+    }
+
+    .admin-message-row.mine .admin-message-bubble {
+        background: var(--button-bg);
+        border-color: var(--button-bg);
+        color: var(--button-fg);
+    }
+
+    .admin-message-meta {
+        color: var(--body-quiet-color);
+        font-size: 12px;
+        margin-bottom: 5px;
+    }
+
+    .admin-message-row.mine .admin-message-meta {
+        color: rgba(255, 255, 255, 0.78);
+    }
+
+    .admin-message-empty {
+        color: var(--body-quiet-color);
+        margin: 150px 0 0;
+        text-align: center;
+    }
+
+    .admin-message-form {
+        padding: 0 20px 20px;
+    }
+
+    .admin-message-form textarea {
+        width: 100%;
+        min-height: 100px;
+        box-sizing: border-box;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        background: var(--body-bg);
+        color: var(--body-fg);
+        padding: 10px 12px;
+        resize: vertical;
+    }
+
+    .admin-message-actions {
+        margin-top: 10px;
+        text-align: right;
+    }
+
+    @media (max-width: 767px) {
+        .admin-message-header {
+            align-items: stretch;
+            flex-direction: column;
+        }
+
+        .admin-message-thread {
+            height: 360px;
+            margin: 14px;
+        }
+
+        .admin-message-bubble {
+            max-width: 90%;
+        }
+
+        .admin-message-form {
+            padding: 0 14px 14px;
+        }
+    }
+</style>
+
+<div class="admin-message-shell">
+    <div class="admin-subtitle-row">
+        <h2>Event Messages</h2>
+        <a href="#" onclick="history.back(); return false;" class="admin-back-link">Back</a>
+    </div>
+
+    <div class="admin-message-card">
+        <div class="admin-message-header">
+            <div>
+                <h1 class="admin-message-title">{{ event.name }}</h1>
+                <div class="admin-message-subtitle">
+                    Conversation with {{ partner.username }}
+                </div>
+            </div>
+
+            <a href="{% url 'events:message_inbox' %}" class="admin-message-btn secondary">Inbox</a>
+        </div>
+
+        <div id="message-thread" class="admin-message-thread">
+            {% if thread_messages %}
+                {% for msg in thread_messages %}
+                    <div class="admin-message-row {% if msg.sender_id == request.user.id %}mine{% endif %}">
+                        <div class="admin-message-bubble">
+                            <div class="admin-message-meta">
+                                {{ msg.sender.username }} - {{ msg.created_at|date:"d M Y, h:i A" }}
+                            </div>
+                            <div>{{ msg.message }}</div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p class="admin-message-empty">No messages yet.</p>
+            {% endif %}
+        </div>
+
+        <form id="message-form" method="POST" class="admin-message-form">
+            {% csrf_token %}
+            {{ form.message }}
+            <div class="admin-message-actions">
+                <button type="submit" class="admin-message-btn">Send</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    const threadBox = document.getElementById("message-thread");
+    const messageForm = document.getElementById("message-form");
+    const messageInput = document.getElementById("id_message");
+    const latestUrl = "{% url 'events:event_messages_latest' event.id partner.id %}";
+
+    function scrollThreadToBottom(){
+        threadBox.scrollTop = threadBox.scrollHeight;
+    }
+
+    function renderMessages(items){
+        threadBox.innerHTML = "";
+
+        if(!items.length){
+            const empty = document.createElement("p");
+            empty.className = "admin-message-empty";
+            empty.textContent = "No messages yet.";
+            threadBox.appendChild(empty);
+            return;
+        }
+
+        items.forEach((item) => {
+            const row = document.createElement("div");
+            row.className = item.is_mine ? "admin-message-row mine" : "admin-message-row";
+
+            const bubble = document.createElement("div");
+            bubble.className = "admin-message-bubble";
+
+            const meta = document.createElement("div");
+            meta.className = "admin-message-meta";
+            meta.textContent = `${item.sender} - ${item.created_at}`;
+
+            const body = document.createElement("div");
+            body.textContent = item.message;
+
+            bubble.appendChild(meta);
+            bubble.appendChild(body);
+            row.appendChild(bubble);
+            threadBox.appendChild(row);
+        });
+
+        scrollThreadToBottom();
+    }
+
+    function refreshMessages(){
+        fetch(latestUrl, {
+            headers: {
+                "X-Requested-With": "XMLHttpRequest"
+            }
+        })
+            .then((response) => response.json())
+            .then((data) => {
+                if(data.success){
+                    renderMessages(data.messages);
+                }
+            })
+            .catch(() => {});
+    }
+
+    messageForm.addEventListener("submit", function(event){
+        event.preventDefault();
+
+        const formData = new FormData(messageForm);
+
+        fetch(window.location.href, {
+            method: "POST",
+            headers: {
+                "X-Requested-With": "XMLHttpRequest"
+            },
+            body: formData
+        })
+            .then((response) => response.json())
+            .then((data) => {
+                if(data.success){
+                    messageInput.value = "";
+                    refreshMessages();
+                }
+            });
+    });
+
+    scrollThreadToBottom();
+    setInterval(refreshMessages, 10000);
+</script>
+{% endblock %}

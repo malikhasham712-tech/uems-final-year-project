@@ -18,6 +18,7 @@ from .models import (
     Attendance,
     Announcement,
     Feedback,
+    EventMessage,
     EventProposal,
     EventReport,
     Notification,
@@ -119,6 +120,7 @@ class EventAdmin(admin.ModelAdmin):
         'registration_btn',
         'attendance_btn',
         'feedback_btn',
+        'messages_btn',
     )
 
     # list_filter = ('status', 'category')
@@ -268,6 +270,22 @@ class EventAdmin(admin.ModelAdmin):
 
         return format_html(
             '<a class="button" href="{}">View</a>',
+            url
+        )
+
+    @admin.display(description="Messages")
+    def messages_btn(self, obj):
+
+        if not obj.organizer_id:
+            return "-"
+
+        url = reverse(
+            'events:event_message_thread',
+            args=[obj.id, obj.organizer_id]
+        )
+
+        return format_html(
+            '<a class="button" href="{}">Message Organizer</a>',
             url
         )
 
@@ -821,7 +839,8 @@ admin.site.register(Notification, HiddenAdmin)
 EVENTS_ADMIN_MODEL_ORDER = {
     "Event": 0,
     "Category": 1,
-    "EventReport": 2,
+    "Messages": 2,
+    "EventReport": 3,
 }
 
 EVENTS_ADMIN_MODEL_NAMES = {
@@ -840,11 +859,26 @@ def apply_admin_sidebar_ordering():
 
         for app in app_list:
             if app["app_label"] == "events":
+                unread_messages = EventMessage.objects.filter(
+                    recipient=request.user,
+                    is_read=False,
+                ).count()
+
                 for model in app["models"]:
                     model["name"] = EVENTS_ADMIN_MODEL_NAMES.get(
                         model["object_name"],
                         model["name"],
                     )
+
+                app["models"].append({
+                    "name": "Messages",
+                    "object_name": "Messages",
+                    "perms": {"view": True},
+                    "admin_url": reverse("events:message_inbox"),
+                    "add_url": None,
+                    "view_only": True,
+                    "badge_count": unread_messages,
+                })
 
                 app["models"].sort(
                     key=lambda model: (

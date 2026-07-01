@@ -1,0 +1,149 @@
+{% extends "admin/base_site.html" %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">Home</a>
+    &rsaquo; Messages
+</div>
+{% endblock %}
+
+{% block content %}
+<style>
+    .admin-inbox-shell {
+        max-width: 1040px;
+    }
+
+    .admin-inbox-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 18px;
+    }
+
+    .admin-inbox-title {
+        margin: 0;
+        color: var(--body-fg);
+        font-size: 20px;
+        font-weight: 600;
+    }
+
+    .admin-inbox-list {
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        background: var(--body-bg);
+        overflow: hidden;
+    }
+
+    .admin-inbox-item {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 16px;
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--hairline-color);
+        color: var(--body-fg) !important;
+        text-decoration: none !important;
+    }
+
+    .admin-inbox-item:last-child {
+        border-bottom: 0;
+    }
+
+    .admin-inbox-item:hover {
+        background: var(--darkened-bg);
+    }
+
+    .admin-inbox-partner {
+        font-weight: 600;
+        margin-bottom: 4px;
+    }
+
+    .admin-inbox-event {
+        color: var(--link-fg);
+        font-size: 13px;
+        font-weight: 600;
+        margin-bottom: 5px;
+    }
+
+    .admin-inbox-preview {
+        color: var(--body-quiet-color);
+        max-width: 680px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .admin-inbox-meta {
+        text-align: right;
+        color: var(--body-quiet-color);
+        font-size: 12px;
+        white-space: nowrap;
+    }
+
+    .admin-inbox-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: #dc3545;
+        color: #fff;
+        border-radius: 0.375rem;
+        min-width: auto;
+        padding: 0.35em 0.65em;
+        margin-bottom: 8px;
+        text-align: center;
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 1;
+    }
+
+    .admin-inbox-empty {
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        background: var(--body-bg);
+        color: var(--body-quiet-color);
+        padding: 42px 16px;
+        text-align: center;
+    }
+
+    @media (max-width: 767px) {
+        .admin-inbox-item {
+            grid-template-columns: 1fr;
+        }
+
+        .admin-inbox-meta {
+            text-align: left;
+        }
+    }
+</style>
+
+<div class="admin-inbox-shell">
+    <div class="admin-subtitle-row">
+        <h2>Messages</h2>
+        <a href="{% url 'admin:events_event_changelist' %}" class="admin-back-link">Back</a>
+    </div>
+
+    {% if conversations %}
+        <div class="admin-inbox-list">
+            {% for item in conversations %}
+                <a href="{% url 'events:event_message_thread' item.event.id item.partner.id %}" class="admin-inbox-item">
+                    <div>
+                        <div class="admin-inbox-partner">{{ item.partner.username }}</div>
+                        <div class="admin-inbox-event">{{ item.event.name }}</div>
+                        <div class="admin-inbox-preview">{{ item.latest_message.message }}</div>
+                    </div>
+
+                    <div class="admin-inbox-meta">
+                        {% if item.unread_count %}
+                            <span class="admin-inbox-badge">{{ item.unread_count }}</span>
+                            <br>
+                        {% endif %}
+                        {{ item.latest_message.created_at|date:"d M, h:i A" }}
+                    </div>
+                </a>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="admin-inbox-empty">No messages yet.</div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -262,13 +262,18 @@
         <div class="manage-section">
             <div class="section-title">Messages</div>
             <p class="mb-0 text-muted">
-                Message students from the registration list.
+                Message students from the registration list or contact admin.
             </p>
 
             <div class="action-stack">
                 <a href="{% url 'events:event_registrations' event.id %}" class="btn btn-outline-dark btn-sm">
                     Message Students
                 </a>
+                {% if role == "organizer" and admin_contact %}
+                    <a href="{% url 'events:event_message_thread' event.id admin_contact.id %}" class="btn btn-outline-primary btn-sm">
+                        Message Admin
+                    </a>
+                {% endif %}
                 <a href="{% url 'events:message_inbox' %}" class="btn btn-outline-primary btn-sm">
                     Inbox
                 </a>

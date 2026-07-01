@@ -19,17 +19,18 @@
             <tr class="model-{{ model_name }}{% if model.admin_url in request.path|urlencode %} current-model{% endif %}">
               <th scope="row" id="{{ app.app_label }}-{{ model_name }}">
                 {% if model.admin_url %}
-                  <a href="{{ model.admin_url }}"{% if model.admin_url in request.path|urlencode %} aria-current="page"{% endif %}>{{ model.name }}</a>
+                  <a href="{{ model.admin_url }}"{% if model.admin_url in request.path|urlencode %} aria-current="page"{% endif %}>
+                    {{ model.name }}
+                    {% if model.badge_count %}
+                      <span class="admin-sidebar-badge">{{ model.badge_count }}</span>
+                    {% endif %}
+                  </a>
                 {% else %}
                   {{ model.name }}
                 {% endif %}
               </th>
 
-              {% if model.add_url %}
-                <td><a href="{{ model.add_url }}" class="addlink" aria-describedby="{{ app.app_label }}-{{ model_name }}">{% translate 'Add' %}</a></td>
-              {% else %}
-                <td></td>
-              {% endif %}
+              <td></td>
 
               {% if model.admin_url and show_changelinks %}
                 {% if model.view_only %}

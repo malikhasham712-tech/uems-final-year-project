@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import admin as django_admin
 from django.contrib.auth.decorators import login_required
 from django.db.models import Count
 from django.contrib import messages
@@ -93,7 +94,16 @@ def is_registered_for_event(user, event):
 def get_message_partner(user, event, partner_id):
     partner = get_object_or_404(User, id=partner_id)
 
+    if user.is_superuser:
+        if event.organizer_id == partner.id:
+            return partner
+
+        return None
+
     if user == event.organizer:
+        if partner.is_superuser:
+            return partner
+
         if is_registered_for_event(partner, event):
             return partner
 
@@ -447,17 +457,20 @@ def message_inbox(request):
     has_assigned_events = Event.objects.filter(
         organizer=user
     ).exists()
-    role = (
-        "organizer"
-        if (
-            hasattr(user, "profile")
-            and (
-                user.profile.is_organizer
-                or has_assigned_events
+    if user.is_superuser:
+        role = "admin"
+    else:
+        role = (
+            "organizer"
+            if (
+                hasattr(user, "profile")
+                and (
+                    user.profile.is_organizer
+                    or has_assigned_events
+                )
             )
+            else get_role(user)
         )
-        else get_role(user)
-    )
 
     message_qs = EventMessage.objects.filter(
         Q(sender=user) | Q(recipient=user)
@@ -509,11 +522,22 @@ def message_inbox(request):
             ).count()
         })
 
-    return render(request, "events/message_inbox.html", {
+    context = {
         "conversations": conversations,
         "role": role,
         **notif_context(request)
-    })
+    }
+
+    if user.is_superuser:
+        context = {
+            **django_admin.site.each_context(request),
+            **context,
+            "title": "",
+        }
+
+        return render(request, "admin/message_inbox.html", context)
+
+    return render(request, "events/message_inbox.html", context)
 
 
 @login_required
@@ -553,6 +577,9 @@ def event_message_thread(request, event_id, user_id):
             request,
             "You are not allowed to message this participant for this event."
         )
+
+        if request.user.is_superuser:
+            return redirect("admin:events_event_changelist")
 
         return redirect("events:my_events")
 
@@ -598,13 +625,27 @@ def event_message_thread(request, event_id, user_id):
         partner
     )
 
-    return render(request, "events/event_message_thread.html", {
+    context = {
         "event": event,
         "partner": partner,
-        "messages": thread_messages,
         "form": EventMessageForm(),
         "role": role,
         **notif_context(request)
+    }
+
+    if request.user.is_superuser:
+        context = {
+            **django_admin.site.each_context(request),
+            **context,
+            "thread_messages": thread_messages,
+            "title": "",
+        }
+
+        return render(request, "admin/event_message_thread.html", context)
+
+    return render(request, "events/event_message_thread.html", {
+        **context,
+        "messages": thread_messages,
     })
 
 
