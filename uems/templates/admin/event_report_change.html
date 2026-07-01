@@ -1,598 +1,351 @@
-{% extends "admin/base_site.html" %}
+﻿{% extends "admin/base_site.html" %}
 
 {% block content %}
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-
-/* =====================================================
-   CONTAINER
-===================================================== */
-
-.container{
-    max-width:1100px;
-    padding:24px;
-    margin:auto;
-}
-
-/* =====================================================
-   HEADER
-===================================================== */
-
-.header{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    margin-bottom:20px;
-    padding:14px 18px;
-    background:#111827;
-    border-radius:12px;
-    box-shadow:0 4px 12px rgba(0,0,0,0.08);
-}
-
-.title{
-    font-size:20px;
-    font-weight:700;
-    color:white;
-}
-
-/* =====================================================
-   BUTTONS
-===================================================== */
-
-.btn{
-    padding:8px 14px;
-    border-radius:8px;
-    font-size:13px;
-    text-decoration:none;
-    font-weight:600;
-    transition:0.2s ease;
-}
-
-.btn:hover{
-    opacity:0.92;
-}
-
-.btn-back{
-    background:#374151;
-    color:white;
-}
-
-.btn-export{
-    background:#16a34a;
-    color:white;
-    margin-right:8px;
-}
-
-/* =====================================================
-   GRID
-===================================================== */
-
-.report-grid{
-    display:grid;
-    grid-template-columns:320px 1fr;
-    gap:18px;
-    margin-bottom:20px;
-}
-
-@media(max-width:900px){
-
-    .report-grid{
-        grid-template-columns:1fr;
+    .report-admin-shell {
+        max-width: 1100px;
     }
 
-}
+    .report-admin-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 18px;
+    }
 
-/* =====================================================
-   CARD
-===================================================== */
+    .report-admin-header h1 {
+        color: var(--body-fg);
+        font-size: 20px;
+        font-weight: 400;
+        margin: 0;
+    }
 
-.card{
-    background:#111827;
-    border:1px solid #374151;
-    border-radius:14px;
-    padding:18px;
-    box-shadow:0 4px 14px rgba(0,0,0,0.08);
-}
+    .report-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
 
-/* =====================================================
-   CHART
-===================================================== */
+    .report-admin-btn {
+        background: var(--button-bg);
+        color: var(--button-fg) !important;
+        border-radius: 4px;
+        padding: 7px 12px;
+        text-decoration: none;
+        font-weight: 500;
+        display: inline-block;
+        white-space: nowrap;
+    }
 
-.chart-title{
-    color:white;
-    font-size:16px;
-    font-weight:700;
-    margin-bottom:16px;
-    text-align:center;
-}
+    .report-admin-btn.secondary {
+        background: var(--darkened-bg);
+        color: var(--body-fg) !important;
+        border: 1px solid var(--border-color);
+    }
 
-.chart-box{
-    width:240px;
-    height:240px;
-    margin:auto;
-}
+    .report-grid {
+        display: grid;
+        grid-template-columns: 300px minmax(0, 1fr);
+        gap: 16px;
+        margin-bottom: 18px;
+    }
 
-/* =====================================================
-   SUMMARY
-===================================================== */
+    .report-card {
+        background: var(--body-bg);
+        border: 1px solid var(--hairline-color);
+        border-radius: 6px;
+        padding: 18px;
+    }
 
-.summary-title{
-    color:white;
-    font-size:16px;
-    font-weight:700;
-    margin-bottom:16px;
-}
+    .report-card-title {
+        color: var(--body-fg);
+        font-size: 16px;
+        font-weight: 600;
+        margin: 0 0 15px;
+    }
 
-.summary-grid{
-    display:grid;
-    grid-template-columns:repeat(2,1fr);
-    gap:10px;
-}
+    .chart-box {
+        width: 240px;
+        height: 240px;
+        margin: 0 auto;
+    }
 
-.summary-box{
-    border-radius:10px;
-    padding:12px 10px;
-    text-align:center;
-    color:white;
-}
+    .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
 
-.summary-count{
-    font-size:22px;
-    font-weight:700;
-    line-height:1;
-    margin-bottom:6px;
-}
+    .summary-box {
+        border: 1px solid var(--hairline-color);
+        border-radius: 6px;
+        background: var(--darkened-bg);
+        padding: 13px;
+        text-align: center;
+    }
 
-.summary-label{
-    font-size:13px;
-    font-weight:600;
-}
+    .summary-count {
+        color: var(--body-fg);
+        font-size: 22px;
+        font-weight: 700;
+        line-height: 1;
+        margin-bottom: 6px;
+    }
 
-.summary-percent{
-    margin-top:4px;
-    font-size:11px;
-    opacity:0.9;
-}
+    .summary-label {
+        color: var(--body-fg);
+        font-size: 13px;
+        font-weight: 600;
+    }
 
-.bg-excellent{
-    background:#16a34a;
-}
+    .summary-percent {
+        color: var(--body-quiet-color);
+        margin-top: 4px;
+        font-size: 12px;
+    }
 
-.bg-good{
-    background:#2563eb;
-}
+    .report-table-wrap {
+        overflow-x: auto;
+    }
 
-.bg-average{
-    background:#eab308;
-    color:#111827;
-}
+    .report-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 680px;
+    }
 
-.bg-poor{
-    background:#dc2626;
-}
+    .report-table th {
+        background: var(--darkened-bg);
+        color: var(--body-fg);
+        border-bottom: 1px solid var(--hairline-color);
+        padding: 11px 12px;
+        text-align: left;
+        font-weight: 600;
+        white-space: nowrap;
+    }
 
-/* =====================================================
-   TABLE
-===================================================== */
+    .report-table td {
+        border-bottom: 1px solid var(--hairline-color);
+        padding: 11px 12px;
+        color: var(--body-fg);
+        vertical-align: top;
+    }
 
-.table-card{
-    margin-top:18px;
-}
+    .feedback-badge {
+        padding: 5px 9px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 700;
+        display: inline-block;
+    }
 
-.table-title{
-    color:white;
-    font-size:16px;
-    font-weight:700;
-    margin-bottom:14px;
-}
+    .excellent {
+        background: #d1e7dd;
+        color: #0f5132;
+    }
 
-.table{
-    width:100%;
-    border-collapse:collapse;
-}
+    .good {
+        background: #cfe2ff;
+        color: #084298;
+    }
 
-.table th{
-    background:#111827;
-    color:white !important;
-    padding:12px;
-    text-align:left;
-    font-size:13px;
-    border-bottom:1px solid #374151;
-}
+    .average {
+        background: #fff3cd;
+        color: #664d03;
+    }
 
-.table tbody tr{
-    background:#1f2937;
-    transition:0.2s;
-}
+    .poor {
+        background: #f8d7da;
+        color: #842029;
+    }
 
-.table tbody tr:hover{
-    background:#273447;
-}
+    .message {
+        max-width: 500px;
+        overflow-wrap: anywhere;
+        line-height: 1.6;
+    }
 
-.table td{
-    padding:12px;
-    border-bottom:1px solid #374151;
-    color:white !important;
-    vertical-align:top;
-}
+    .empty-box {
+        color: var(--body-quiet-color);
+        text-align: center;
+        padding: 30px;
+    }
 
-/* =====================================================
-   BADGES
-===================================================== */
+    @media (max-width: 900px) {
+        .report-grid {
+            grid-template-columns: 1fr;
+        }
+    }
 
-.badge{
-    padding:6px 10px;
-    border-radius:20px;
-    font-size:12px;
-    font-weight:700;
-    display:inline-block;
-}
+    @media (max-width: 640px) {
+        .report-admin-header {
+            align-items: stretch;
+            flex-direction: column;
+        }
 
-.excellent{
-    background:#dcfce7;
-    color:#166534;
-}
+        .report-actions,
+        .report-admin-btn {
+            width: 100%;
+            text-align: center;
+        }
 
-.good{
-    background:#dbeafe;
-    color:#1d4ed8;
-}
+        .summary-grid {
+            grid-template-columns: 1fr;
+        }
 
-.average{
-    background:#fef9c3;
-    color:#854d0e;
-}
-
-.poor{
-    background:#fee2e2;
-    color:#991b1b;
-}
-
-.message{
-    max-width:500px;
-    word-break:break-word;
-    line-height:1.6;
-}
-
-/* =====================================================
-   EMPTY
-===================================================== */
-
-.empty-box{
-    text-align:center;
-    color:white;
-    padding:30px;
-    font-size:15px;
-}
-
-/* REMOVE DJANGO TITLE */
-
-h1{
-    display:none;
-}
-
+        .chart-box {
+            width: min(240px, 100%);
+        }
+    }
 </style>
 
-<div class="container">
+<div class="report-admin-shell">
 
-    <!-- =====================================================
-         HEADER
-    ====================================================== -->
-
-    <div class="header">
-
-        <div class="title">
-
+    <div class="report-admin-header">
+        <h1>
             {% if event %}
                 {{ event.name }} - Feedback Report
             {% else %}
-                Event Report
+                Feedback Report
             {% endif %}
+        </h1>
 
-        </div>
-
-        <div>
-
+        <div class="report-actions">
             {% if report %}
-                <a href="{% url 'admin:eventreport_export' report.id %}"
-                   class="btn btn-export">
-
+                <a href="{% url 'admin:eventreport_export' report.id %}" class="report-admin-btn">
                     Export Excel
-
                 </a>
             {% endif %}
-
-            <a href="{% url 'admin:eventreport_feedback_list' %}"
-               class="btn btn-back">
-
-                ← Back
-
+            <a href="{% url 'admin:eventreport_feedback_list' %}" class="report-admin-btn secondary">
+                Back
             </a>
-
         </div>
-
     </div>
 
     {% if event %}
-
         {% if has_feedback %}
-
-        <!-- =====================================================
-             REPORT GRID
-        ====================================================== -->
-
-        <div class="report-grid">
-
-            <!-- CHART CARD -->
-
-            <div class="card">
-
-                <div class="chart-title">
-                    Feedback Analytics
+            <div class="report-grid">
+                <div class="report-card">
+                    <h2 class="report-card-title">Feedback Analytics</h2>
+                    <div class="chart-box">
+                        <canvas id="feedbackChart"></canvas>
+                    </div>
                 </div>
 
-                <div class="chart-box">
-                    <canvas id="feedbackChart"></canvas>
+                <div class="report-card">
+                    <h2 class="report-card-title">Feedback Summary</h2>
+                    <div class="summary-grid">
+                        <div class="summary-box">
+                            <div class="summary-count">{{ stats.excellent|default:0 }}</div>
+                            <div class="summary-label">Excellent</div>
+                            <div class="summary-percent">{{ excellent_percent }}%</div>
+                        </div>
+                        <div class="summary-box">
+                            <div class="summary-count">{{ stats.good|default:0 }}</div>
+                            <div class="summary-label">Good</div>
+                            <div class="summary-percent">{{ good_percent }}%</div>
+                        </div>
+                        <div class="summary-box">
+                            <div class="summary-count">{{ stats.average|default:0 }}</div>
+                            <div class="summary-label">Average</div>
+                            <div class="summary-percent">{{ average_percent }}%</div>
+                        </div>
+                        <div class="summary-box">
+                            <div class="summary-count">{{ stats.poor|default:0 }}</div>
+                            <div class="summary-label">Poor</div>
+                            <div class="summary-percent">{{ poor_percent }}%</div>
+                        </div>
+                    </div>
                 </div>
-
             </div>
 
-            <!-- SUMMARY CARD -->
-
-            <div class="card">
-
-                <div class="summary-title">
-                    Feedback Summary
+            <div class="report-card">
+                <h2 class="report-card-title">Student Feedback Details</h2>
+                <div class="report-table-wrap">
+                    <table class="report-table">
+                        <thead>
+                            <tr>
+                                <th style="width:180px;">Student</th>
+                                <th style="width:140px;">Experience</th>
+                                <th>Remarks</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for fb in feedbacks %}
+                            <tr>
+                                <td style="font-weight:600;">{{ fb.student.username|default:"Unknown" }}</td>
+                                <td>
+                                    <span class="feedback-badge {{ fb.experience }}">
+                                        {{ fb.get_experience_display }}
+                                    </span>
+                                </td>
+                                <td class="message">{{ fb.message|default:"-" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
-
-                <div class="summary-grid">
-
-                    <div class="summary-box bg-excellent">
-
-                        <div class="summary-count">
-                            {{ stats.excellent|default:0 }}
-                        </div>
-
-                        <div class="summary-label">
-                            Excellent
-                        </div>
-
-                        <div class="summary-percent">
-                            {{ excellent_percent }}%
-                        </div>
-
-                    </div>
-
-                    <div class="summary-box bg-good">
-
-                        <div class="summary-count">
-                            {{ stats.good|default:0 }}
-                        </div>
-
-                        <div class="summary-label">
-                            Good
-                        </div>
-
-                        <div class="summary-percent">
-                            {{ good_percent }}%
-                        </div>
-
-                    </div>
-
-                    <div class="summary-box bg-average">
-
-                        <div class="summary-count">
-                            {{ stats.average|default:0 }}
-                        </div>
-
-                        <div class="summary-label">
-                            Average
-                        </div>
-
-                        <div class="summary-percent">
-                            {{ average_percent }}%
-                        </div>
-
-                    </div>
-
-                    <div class="summary-box bg-poor">
-
-                        <div class="summary-count">
-                            {{ stats.poor|default:0 }}
-                        </div>
-
-                        <div class="summary-label">
-                            Poor
-                        </div>
-
-                        <div class="summary-percent">
-                            {{ poor_percent }}%
-                        </div>
-
-                    </div>
-
-                </div>
-
             </div>
-
-        </div>
-
-        <!-- =====================================================
-             TABLE
-        ====================================================== -->
-
-        <div class="card table-card">
-
-            <div class="table-title">
-                Student Feedback Details
-            </div>
-
-            <table class="table">
-
-                <thead>
-
-                    <tr>
-                        <th style="width:180px;">Student</th>
-                        <th style="width:140px;">Experience</th>
-                        <th>Remarks</th>
-                    </tr>
-
-                </thead>
-
-                <tbody>
-
-                    {% for fb in feedbacks %}
-
-                    <tr>
-
-                        <td style="font-weight:600;">
-
-                            {{ fb.student.username|default:"Unknown" }}
-
-                        </td>
-
-                        <td>
-
-                            <span class="badge {{ fb.experience }}">
-                                {{ fb.get_experience_display }}
-                            </span>
-
-                        </td>
-
-                        <td class="message">
-
-                            {{ fb.message|default:"-" }}
-
-                        </td>
-
-                    </tr>
-
-                    {% endfor %}
-
-                </tbody>
-
-            </table>
-
-        </div>
-
         {% else %}
-
-        <div class="card empty-box">
-
-            ⚠ This event does not have any feedback yet.
-
-        </div>
-
+            <div class="report-card empty-box">This event does not have any feedback yet.</div>
         {% endif %}
-
     {% else %}
-
-    <div class="card empty-box">
-
-        Event not found.
-
-    </div>
-
+        <div class="report-card empty-box">Event not found.</div>
     {% endif %}
 
 </div>
 
 {% if event and has_feedback %}
-
 <script>
-
 const excellent = Number("{{ stats.excellent|default:0 }}");
 const good = Number("{{ stats.good|default:0 }}");
 const average = Number("{{ stats.average|default:0 }}");
 const poor = Number("{{ stats.poor|default:0 }}");
 
-const values = [
-    excellent,
-    good,
-    average,
-    poor
-];
-
 new Chart(document.getElementById('feedbackChart'), {
-
-    type:'doughnut',
-
-    data:{
-        labels:[
-            'Excellent',
-            'Good',
-            'Average',
-            'Poor'
-        ],
-
-        datasets:[{
-            data:values,
-
-            backgroundColor:[
-                '#16a34a',
-                '#2563eb',
-                '#eab308',
-                '#dc2626'
-            ],
-
-            borderWidth:2,
-            borderColor:'#111827',
-            hoverOffset:8
+    type: 'doughnut',
+    data: {
+        labels: ['Excellent', 'Good', 'Average', 'Poor'],
+        datasets: [{
+            data: [excellent, good, average, poor],
+            backgroundColor: ['#198754', '#0d6efd', '#ffc107', '#dc3545'],
+            borderWidth: 2,
+            borderColor: '#ffffff',
+            hoverOffset: 8
         }]
     },
-
-    options:{
-
-        responsive:true,
-        maintainAspectRatio:false,
-        cutout:'68%',
-
-        plugins:{
-
-            legend:{
-                position:'bottom',
-
-                labels:{
-                    color:'white',
-                    padding:16,
-                    boxWidth:14,
-                    font:{
-                        size:12,
-                        weight:'600'
-                    }
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '68%',
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: {
+                    color: '#1f2937',
+                    padding: 16,
+                    boxWidth: 14,
+                    font: { size: 12, weight: '600' }
                 }
             },
-
-            tooltip:{
-                callbacks:{
-                    label:function(context){
-
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
                         const value = context.raw || 0;
-
-                        const total = context.chart.data.datasets[0].data.reduce(
-                            (a,b)=>a+b,
-                            0
-                        );
-
-                        const percent = total
-                            ? ((value / total) * 100).toFixed(1)
-                            : 0;
-
+                        const total = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                        const percent = total ? ((value / total) * 100).toFixed(1) : 0;
                         return `${context.label}: ${percent}%`;
                     }
                 }
             }
-
         }
-
     }
-
 });
-
 </script>
-
 {% endif %}
 
 {% endblock %}

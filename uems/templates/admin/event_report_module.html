@@ -1,89 +1,94 @@
-{% extends "admin/base_site.html" %}
+﻿{% extends "admin/base_site.html" %}
 
 {% block content %}
 
 <style>
+    .report-admin-shell {
+        max-width: 1100px;
+    }
 
-.container {
-    padding: 20px;
-    max-width: 1100px;
-}
+    .report-admin-title {
+        font-size: 20px;
+        font-weight: 400;
+        margin: 0 0 22px;
+        color: var(--body-fg);
+    }
 
-.header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 18px;
-    padding: 12px 16px;
-    background: #111827;
-    border-radius: 8px;
-}
+    .report-module-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
 
-.title {
-    font-size: 18px;
-    font-weight: 700;
-    color: white;
-}
+    .report-module-card {
+        background: var(--body-bg);
+        border: 1px solid var(--hairline-color);
+        border-radius: 6px;
+        padding: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+    }
 
-.card {
-    background: #1f2937;
-    padding: 16px;
-    border-radius: 10px;
-    margin-bottom: 12px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
+    .report-module-card h3 {
+        color: var(--body-fg);
+        font-size: 16px;
+        margin: 0 0 5px;
+    }
 
-.card h3 {
-    color: white;
-    margin: 0;
-}
+    .report-module-card p {
+        color: var(--body-quiet-color);
+        margin: 0;
+        font-size: 13px;
+    }
 
-.btn {
-    padding: 8px 12px;
-    background: #2563eb;
-    color: white;
-    border-radius: 6px;
-    text-decoration: none;
-    font-size: 13px;
-}
+    .report-admin-btn {
+        background: var(--button-bg);
+        color: var(--button-fg) !important;
+        border-radius: 4px;
+        padding: 8px 13px;
+        text-decoration: none;
+        font-weight: 500;
+        white-space: nowrap;
+    }
 
-.btn-back {
-    padding: 8px 12px;
-    background: #374151;
-    color: white;
-    border-radius: 6px;
-    text-decoration: none;
-    font-size: 13px;
-}
+    @media (max-width: 640px) {
+        .report-module-card {
+            align-items: stretch;
+            flex-direction: column;
+        }
 
+        .report-admin-btn {
+            text-align: center;
+        }
+    }
 </style>
 
-<div class="container">
+<div class="report-admin-shell">
 
-    <div class="header">
-        <div class="title">Event Reports</div>
+    <h1 class="report-admin-title">Event Reports</h1>
 
-        <a href="{% url 'admin:index' %}" class="btn-back">
-            ← Back
-        </a>
-    </div>
+    <div class="report-module-grid">
+        <div class="report-module-card">
+            <div>
+                <h3>Feedback Report</h3>
+                <p>Review event feedback counts and feedback analytics.</p>
+            </div>
+            <a href="{% url 'admin:eventreport_feedback_list' %}" class="report-admin-btn">
+                Open
+            </a>
+        </div>
 
-    <!-- FEEDBACK REPORT -->
-    <div class="card">
-        <h3>Feedback Report</h3>
-        <a href="{% url 'admin:eventreport_feedback_list' %}" class="btn">
-            Open
-        </a>
-    </div>
-
-    <!-- ATTENDANCE REPORT (IMPORTANT FIX) -->
-    <div class="card">
-        <h3>Attendance Report</h3>
-        <a href="{% url 'admin:attendance_report_list' %}" class="btn">
-            Open
-        </a>
+        <div class="report-module-card">
+            <div>
+                <h3>Attendance Report</h3>
+                <p>Review registrations, attendance totals, and attendance details.</p>
+            </div>
+            <a href="{% url 'admin:attendance_report_list' %}" class="report-admin-btn">
+                Open
+            </a>
+        </div>
     </div>
 
 </div>

@@ -31,7 +31,10 @@ def event_report_module(request):
     return TemplateResponse(
         request,
         "admin/event_report_module.html",
-        {}
+        {
+            **admin.site.each_context(request),
+            "title": "Event Reports",
+        }
     )
 
 
@@ -62,7 +65,11 @@ def attendance_event_list(request):
     return TemplateResponse(
         request,
         "admin/attendance_report_list.html",
-        {"rows": rows}
+        {
+            **admin.site.each_context(request),
+            "rows": rows,
+            "title": "Attendance Report",
+        }
     )
 
 
@@ -485,7 +492,11 @@ class EventReportAdmin(admin.ModelAdmin):
         return TemplateResponse(
             request,
             "admin/event_report_list.html",
-            {"rows": rows}
+            {
+                **self.admin_site.each_context(request),
+                "rows": rows,
+                "title": "Feedback Report",
+            }
         )
 
     # =================================================
@@ -539,7 +550,11 @@ class EventReportAdmin(admin.ModelAdmin):
         return TemplateResponse(
             request,
             "admin/event_report_change.html",
-            extra_context
+            {
+                **self.admin_site.each_context(request),
+                **extra_context,
+                "title": "Feedback Report",
+            }
         )
 
     # =================================================
@@ -641,12 +656,14 @@ class EventReportAdmin(admin.ModelAdmin):
             request,
             "admin/attendance_report_change.html",
             {
+                **self.admin_site.each_context(request),
                 "event": event,
                 "data": data,
                 "total_students": total_students,
                 "present": present_count,
                 "absent": absent_count,
                 "percentage": round(percentage, 2),
+                "title": "Attendance Report",
             }
         )
 

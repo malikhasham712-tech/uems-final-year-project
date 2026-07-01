@@ -1,168 +1,133 @@
-{% extends "admin/base_site.html" %}
+﻿{% extends "admin/base_site.html" %}
 
 {% block content %}
 
 <style>
+    .report-admin-shell {
+        max-width: 1100px;
+    }
 
-/* CONTAINER */
-.container {
-    padding: 20px;
-    max-width: 1100px;
-}
+    .report-admin-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 18px;
+    }
 
-/* HEADER */
-.header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 18px;
-    padding: 12px 16px;
-    background: #111827;
-    border-radius: 8px;
-}
+    .report-admin-header h1 {
+        color: var(--body-fg);
+        font-size: 20px;
+        font-weight: 400;
+        margin: 0;
+    }
 
-/* TITLE */
-.title {
-    font-size: 18px;
-    font-weight: 700;
-    color: white;
-}
+    .report-admin-btn {
+        background: var(--button-bg);
+        color: var(--button-fg) !important;
+        border-radius: 4px;
+        padding: 7px 12px;
+        text-decoration: none;
+        font-weight: 500;
+        display: inline-block;
+        white-space: nowrap;
+    }
 
-/* BUTTON */
-.btn-back {
-    padding: 8px 12px;
-    background: #374151;
-    color: white;
-    border-radius: 6px;
-    text-decoration: none;
-    font-size: 13px;
-}
+    .report-admin-btn.secondary {
+        background: var(--darkened-bg);
+        color: var(--body-fg) !important;
+        border: 1px solid var(--border-color);
+    }
 
-/* TABLE */
-.table {
-    width: 100%;
-    border-collapse: collapse;
-}
+    .report-table-wrap {
+        overflow-x: auto;
+        border: 1px solid var(--hairline-color);
+        border-radius: 4px;
+        background: var(--body-bg);
+    }
 
-/* HEADER */
-.table th {
-    background: #111827;
-    color: white !important;
-    padding: 12px;
-    text-align: left;
-}
+    .report-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 680px;
+    }
 
-/* DARK ROWS */
-.table tbody tr {
-    background: #1f2937;
-}
+    .report-table th {
+        background: var(--darkened-bg);
+        color: var(--body-fg);
+        border-bottom: 1px solid var(--hairline-color);
+        padding: 11px 12px;
+        text-align: left;
+        font-weight: 600;
+        white-space: nowrap;
+    }
 
-/* WHITE TEXT */
-.table td {
-    padding: 12px;
-    border-bottom: 1px solid #374151;
-    color: white !important;
-}
+    .report-table td {
+        border-bottom: 1px solid var(--hairline-color);
+        padding: 11px 12px;
+        color: var(--body-fg);
+        vertical-align: middle;
+    }
 
-/* NO HOVER CHANGE */
-.table tbody tr:hover {
-    background: #1f2937;
-}
+    .report-table tbody tr:nth-child(even) {
+        background: var(--darkened-bg);
+    }
 
-/* VIEW BUTTON */
-.btn-view {
-    background: #2563eb;
-    color: white !important;
-    padding: 6px 10px;
-    border-radius: 6px;
-    text-decoration: none;
-    font-size: 12px;
-    border: none;
-    cursor: pointer;
-}
+    .report-empty {
+        text-align: center;
+        color: var(--body-quiet-color) !important;
+        padding: 24px !important;
+    }
 
-/* EMPTY */
-.empty {
-    text-align: center;
-    padding: 20px;
-    color: #d1d5db !important;
-}
+    @media (max-width: 640px) {
+        .report-admin-header {
+            align-items: stretch;
+            flex-direction: column;
+        }
 
-/* REMOVE DJANGO TITLE */
-h1 {
-    display: none;
-}
-
+        .report-admin-btn {
+            text-align: center;
+        }
+    }
 </style>
 
-<div class="container">
+<div class="report-admin-shell">
 
-    <!-- HEADER -->
-    <div class="header">
-
-        <div class="title">
-            Feedback Report
-        </div>
-
-        <!-- BACK BUTTON -->
-        <a href="{% url 'admin:index' %}" class="btn-back">
-            ← Back
-        </a>
-
+    <div class="report-admin-header">
+        <h1>Feedback Report</h1>
+        <a href="{% url 'admin:event_report_module' %}" class="report-admin-btn secondary">Back</a>
     </div>
 
-    <!-- TABLE -->
-    <table class="table">
-
-        <thead>
-            <tr>
-                <th>Event Name</th>
-                <th>Date</th>
-                <th>Feedback Count</th>
-                <th>Action</th>
-            </tr>
-        </thead>
-
-        <tbody>
-
-            {% for item in rows %}
-            <tr>
-
-                <td style="font-weight:600;">
-                    {{ item.event.name }}
-                </td>
-
-                <td>
-                    {{ item.event.date|default:"-" }}
-                </td>
-
-                <td>
-                    {{ item.feedback_count }}
-                </td>
-
-                <td>
-
-                    <a href="{% url 'admin:events_eventreport_change' item.report.id %}" class="btn-view">
-                        View Report
-                    </a>
-
-                </td>
-
-            </tr>
-
-            {% empty %}
-
-            <tr>
-                <td colspan="4" class="empty">
-                    No completed events
-                </td>
-            </tr>
-
-            {% endfor %}
-
-        </tbody>
-
-    </table>
+    <div class="report-table-wrap">
+        <table class="report-table">
+            <thead>
+                <tr>
+                    <th>Event Name</th>
+                    <th>Date</th>
+                    <th>Feedback Count</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in rows %}
+                <tr>
+                    <td style="font-weight:600;">{{ item.event.name }}</td>
+                    <td>{{ item.event.date|default:"-" }}</td>
+                    <td>{{ item.feedback_count }}</td>
+                    <td>
+                        <a href="{% url 'admin:events_eventreport_change' item.report.id %}" class="report-admin-btn">
+                            View Report
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="report-empty">No completed events</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 
 </div>
 
