@@ -7,7 +7,8 @@
 <!-- BACK BUTTON -->
 <div class="d-flex justify-content-end mb-3">
     <a href="{% url 'events:available_events' %}" class="btn btn-outline-secondary btn-sm">
-        ← Back
+        <i class="fa fa-arrow-left"></i>
+        Back
     </a>
 </div>
 
@@ -31,11 +32,11 @@
             <div class="bg-light p-3 rounded-3 mb-4 small">
                 {% if event.venue %}
                     <div class="mb-1">
-                        <strong>📍 Venue:</strong> {{ event.venue }}
+                        <strong><i class="fa fa-location-dot text-primary"></i> Venue:</strong> {{ event.venue }}
                     </div>
                 {% endif %}
                 <div>
-                    <strong>📅 Date:</strong> {{ event.date|date:"d M Y" }}
+                    <strong><i class="fa fa-calendar text-primary"></i> Date:</strong> {{ event.date|date:"d M Y" }}
                 </div>
             </div>
 

@@ -158,6 +158,44 @@
             flex:1;
         }
 
+        .box{
+            background:#fff;
+            border:1px solid #e6ebf5;
+            border-radius:8px;
+            padding:24px;
+            box-shadow:0 6px 18px rgba(15,23,42,0.04);
+        }
+
+        .admin-table{
+            margin-bottom:0;
+        }
+
+        .admin-table th{
+            font-size:14px;
+            font-weight:700;
+            white-space:nowrap;
+        }
+
+        .admin-table td{
+            vertical-align:middle;
+        }
+
+        .btn{
+            border-radius:6px;
+        }
+
+        @media(min-width:576px){
+            .w-sm-auto{
+                width:auto !important;
+            }
+        }
+
+        @media(min-width:768px){
+            .w-md-auto{
+                width:auto !important;
+            }
+        }
+
         /* ================= BUTTON FIX ================= */
 
         .topbar .btn{
@@ -266,6 +304,10 @@
                 padding:15px;
             }
 
+            .box{
+                padding:18px;
+            }
+
             .sidebar-title{
                 margin-bottom:10px;
             }
@@ -286,6 +328,16 @@
             .topbar .d-flex{
                 width:100%;
                 justify-content:flex-start;
+            }
+        }
+
+        @media(max-width:576px){
+            .topbar .btn{
+                min-height:38px;
+            }
+
+            .account-menu{
+                min-width:190px;
             }
         }
 

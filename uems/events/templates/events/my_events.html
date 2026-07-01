@@ -4,17 +4,116 @@
 
 {% block content %}
 
+<style>
+    .student-events-header{
+        gap:12px;
+    }
+
+    .student-event-cards{
+        display:grid;
+        grid-template-columns:1fr;
+        gap:14px;
+    }
+
+    .student-event-card{
+        border:1px solid #e4eaf5;
+        border-radius:8px;
+        background:#fff;
+        overflow:hidden;
+    }
+
+    .student-event-card-header{
+        padding:16px;
+        border-bottom:1px solid #edf1f7;
+        background:#f8faff;
+    }
+
+    .student-event-title{
+        font-size:18px;
+        font-weight:800;
+        line-height:1.25;
+        color:#0d6efd;
+        text-decoration:none;
+        overflow-wrap:anywhere;
+    }
+
+    .student-event-card-body{
+        padding:16px;
+    }
+
+    .student-event-row{
+        display:flex;
+        justify-content:space-between;
+        gap:12px;
+        padding:10px 0;
+        border-bottom:1px solid #f0f3f8;
+    }
+
+    .student-event-row:last-child{
+        border-bottom:0;
+    }
+
+    .student-event-label{
+        color:#667085;
+        font-size:13px;
+        font-weight:700;
+        flex:0 0 42%;
+    }
+
+    .student-event-value{
+        text-align:right;
+        font-size:14px;
+        color:#1f2937;
+        min-width:0;
+        overflow-wrap:anywhere;
+    }
+
+    .student-event-actions{
+        display:grid;
+        gap:10px;
+        margin-top:14px;
+    }
+
+    .student-event-actions .btn,
+    .student-event-actions .badge{
+        min-height:40px;
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        white-space:normal;
+    }
+
+    @media(max-width:420px){
+        .student-event-row{
+            flex-direction:column;
+            gap:4px;
+        }
+
+        .student-event-label{
+            flex:auto;
+        }
+
+        .student-event-value{
+            text-align:left;
+        }
+    }
+</style>
+
 <div class="box">
 
-    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap student-events-header">
         <h4 class="text-primary fw-bold mb-0">
             Registered Events
         </h4>
+        <a href="{% url 'events:available_events' %}" class="btn btn-outline-primary btn-sm">
+            <i class="fa fa-plus"></i>
+            Find Events
+        </a>
     </div>
 
     {% if events %}
 
-    <div class="table-responsive">
+    <div class="table-responsive d-none d-lg-block">
 
         <table class="table table-hover align-middle text-center admin-table">
 
@@ -118,7 +217,7 @@
 
                     {% elif role == "student" %}
 
-                        {% if event.registration_status == "attended" %}
+                        {% if event.attendance_marked %}
                             <span class="badge bg-success px-3 py-2">Present</span>
                         {% else %}
                             <span class="badge bg-secondary px-3 py-2">Pending</span>
@@ -161,6 +260,114 @@
             </tbody>
 
         </table>
+
+    </div>
+
+    <div class="student-event-cards d-lg-none">
+
+        {% for event in events %}
+        <article class="student-event-card">
+
+            <div class="student-event-card-header">
+                <a href="{% url 'events:view_event' event.id %}" class="student-event-title">
+                    {{ event.name }}
+                </a>
+            </div>
+
+            <div class="student-event-card-body">
+
+                <div class="student-event-row">
+                    <div class="student-event-label">Schedule</div>
+                    <div class="student-event-value">
+                        {% if event.date %}
+                            {{ event.date|date:"d M Y" }}
+                        {% else %}
+                            <span class="text-muted">-</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="student-event-row">
+                    <div class="student-event-label">Status</div>
+                    <div class="student-event-value">
+                        {% if event.status|lower == "completed" %}
+                            <span class="badge bg-success px-3 py-2">Completed</span>
+                        {% elif event.status|lower == "announced" %}
+                            <span class="badge bg-primary px-3 py-2">Announced</span>
+                        {% else %}
+                            <span class="badge bg-secondary px-3 py-2">{{ event.status|title }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="student-event-row">
+                    <div class="student-event-label">Registration Date</div>
+                    <div class="student-event-value">
+                        {% if event.registration_date %}
+                            {{ event.registration_date|date:"d M Y" }}
+                        {% else %}
+                            <span class="text-muted">-</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="student-event-row">
+                    <div class="student-event-label">Attendance</div>
+                    <div class="student-event-value">
+                        {% if event.attendance_marked %}
+                            <span class="badge bg-success px-3 py-2">Present</span>
+                        {% else %}
+                            <span class="badge bg-secondary px-3 py-2">Pending</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="student-event-actions">
+                    <a href="{% url 'events:event_announcements' event.id %}"
+                       class="btn btn-outline-primary btn-sm">
+                        <i class="fa fa-bullhorn"></i>
+                        Announcements
+                    </a>
+
+                    {% if role == "student" and event.organizer %}
+                        <a href="{% url 'events:event_message_thread' event.id event.organizer.id %}"
+                           class="btn btn-outline-dark btn-sm">
+                            <i class="fa fa-envelope"></i>
+                            Message Organizer
+                        </a>
+                    {% elif role == "organizer" %}
+                        <a href="{% url 'events:event_registrations' event.id %}"
+                           class="btn btn-outline-dark btn-sm">
+                            <i class="fa fa-envelope"></i>
+                            Message Students
+                        </a>
+                    {% endif %}
+
+                    {% if role == "student" and event.status|lower == "completed" %}
+                        {% if event.has_feedback %}
+                            <span class="badge bg-success px-3 py-2">Feedback Submitted</span>
+                        {% else %}
+                            <a href="{% url 'events:event_feedback' event.id %}"
+                               class="btn btn-success btn-sm">
+                                <i class="fa fa-star"></i>
+                                Submit Feedback
+                            </a>
+                        {% endif %}
+                    {% elif role == "organizer" %}
+                        <a href="{% url 'events:view_feedbacks' event.id %}"
+                           class="btn btn-primary btn-sm">
+                            <i class="fa fa-comments"></i>
+                            View Feedback
+                        </a>
+                    {% else %}
+                        <span class="text-muted small text-center">Feedback Not Available</span>
+                    {% endif %}
+                </div>
+
+            </div>
+
+        </article>
+        {% endfor %}
 
     </div>
 

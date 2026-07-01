@@ -4,6 +4,58 @@
 
 {% block content %}
 
+<style>
+    .available-event-cards{
+        display:grid;
+        grid-template-columns:1fr;
+        gap:14px;
+    }
+
+    .available-event-card{
+        border:1px solid #e4eaf5;
+        border-radius:8px;
+        background:#fff;
+        padding:16px;
+    }
+
+    .available-event-name{
+        font-size:18px;
+        font-weight:800;
+        color:#0d6efd;
+        line-height:1.3;
+        overflow-wrap:anywhere;
+    }
+
+    .available-event-organizer{
+        display:flex;
+        align-items:center;
+        gap:8px;
+        color:#667085;
+        margin-top:8px;
+        font-size:14px;
+    }
+
+    .available-event-actions{
+        display:grid;
+        grid-template-columns:1fr 1fr;
+        gap:10px;
+        margin-top:16px;
+    }
+
+    .available-event-actions .btn{
+        min-height:40px;
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+    }
+
+    @media(max-width:420px){
+        .available-event-actions{
+            grid-template-columns:1fr;
+        }
+    }
+</style>
+
 <div class="box">
 
     <!-- HEADER -->
@@ -15,7 +67,7 @@
 
     {% if events %}
 
-        <div class="table-responsive">
+        <div class="table-responsive d-none d-md-block">
 
             <table class="table table-hover admin-table align-middle">
 
@@ -68,6 +120,33 @@
 
             </table>
 
+        </div>
+
+        <div class="available-event-cards d-md-none">
+            {% for event in events %}
+            <article class="available-event-card">
+                <div class="available-event-name">
+                    {{ event.name }}
+                </div>
+
+                <div class="available-event-organizer">
+                    <i class="fa fa-user"></i>
+                    <span>{{ event.organizer.username }}</span>
+                </div>
+
+                <div class="available-event-actions">
+                    <a href="{% url 'events:view_event' event.id %}"
+                       class="btn btn-outline-primary btn-sm">
+                        View
+                    </a>
+
+                    <a href="{% url 'events:register_event' event.id %}"
+                       class="btn btn-primary btn-sm">
+                        Register
+                    </a>
+                </div>
+            </article>
+            {% endfor %}
         </div>
 
     {% else %}

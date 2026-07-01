@@ -4,6 +4,111 @@
 
 {% block content %}
 
+<style>
+    .student-dashboard-panel{
+        display:grid;
+        grid-template-columns:minmax(0,1.15fr) minmax(260px,0.85fr);
+        gap:18px;
+        align-items:stretch;
+    }
+
+    .student-welcome-card{
+        background:linear-gradient(135deg,#0d6efd,#0b5ed7);
+        color:white;
+        border-radius:8px;
+        padding:28px;
+        min-height:220px;
+        display:flex;
+        flex-direction:column;
+        justify-content:center;
+    }
+
+    .student-welcome-card h4{
+        font-size:28px;
+        font-weight:800;
+        margin-bottom:10px;
+    }
+
+    .student-welcome-card p{
+        color:rgba(255,255,255,0.86);
+        max-width:520px;
+        margin-bottom:20px;
+    }
+
+    .student-quick-links{
+        display:grid;
+        gap:12px;
+    }
+
+    .student-quick-link{
+        border:1px solid #e4eaf5;
+        border-radius:8px;
+        padding:16px;
+        background:#fff;
+        color:#172033;
+        text-decoration:none;
+        display:flex;
+        align-items:center;
+        gap:12px;
+        min-height:74px;
+        transition:0.18s ease;
+    }
+
+    .student-quick-link:hover{
+        border-color:#0d6efd;
+        color:#0d6efd;
+        transform:translateY(-1px);
+    }
+
+    .student-quick-icon{
+        width:42px;
+        height:42px;
+        border-radius:8px;
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        background:#eef5ff;
+        color:#0d6efd;
+        flex:0 0 auto;
+    }
+
+    .student-quick-title{
+        font-weight:800;
+        line-height:1.2;
+    }
+
+    .student-quick-copy{
+        color:#667085;
+        font-size:13px;
+        margin-top:2px;
+    }
+
+    @media(max-width:900px){
+        .student-dashboard-panel{
+            grid-template-columns:1fr;
+        }
+    }
+
+    @media(max-width:576px){
+        .student-welcome-card{
+            padding:22px 18px;
+            min-height:auto;
+        }
+
+        .student-welcome-card h4{
+            font-size:24px;
+        }
+
+        .student-welcome-card .btn{
+            width:100%;
+        }
+
+        .student-quick-link{
+            min-height:68px;
+        }
+    }
+</style>
+
 <div class="box">
 
 {% if role == 'organizer' %}
@@ -155,26 +260,51 @@
 
 {% elif role == 'student' %}
 
-    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <div class="student-dashboard-panel">
 
-        <h4 class="fw-bold text-primary mb-0">
-            Student Dashboard
-        </h4>
+        <section class="student-welcome-card">
+            <h4>Student Dashboard</h4>
+            <p>
+                Explore events, manage registrations, check messages, and confirm attendance from your phone.
+            </p>
+            <div>
+                <a href="{% url 'events:available_events' %}" class="btn btn-light text-primary fw-bold">
+                    Browse Available Events
+                </a>
+            </div>
+        </section>
 
-    </div>
+        <section class="student-quick-links" aria-label="Student quick links">
+            <a href="{% url 'events:my_events' %}" class="student-quick-link">
+                <span class="student-quick-icon">
+                    <i class="fa fa-calendar-check"></i>
+                </span>
+                <span>
+                    <span class="student-quick-title d-block">Registered Events</span>
+                    <span class="student-quick-copy d-block">Attendance, feedback, and event updates</span>
+                </span>
+            </a>
 
-    <div class="text-center py-5 px-3">
+            <a href="{% url 'events:message_inbox' %}" class="student-quick-link">
+                <span class="student-quick-icon">
+                    <i class="fa fa-envelope"></i>
+                </span>
+                <span>
+                    <span class="student-quick-title d-block">Messages</span>
+                    <span class="student-quick-copy d-block">Talk to event organizers</span>
+                </span>
+            </a>
 
-        <p class="text-muted mb-4">
-            Explore available events and register easily.
-        </p>
-
-        <a href="{% url 'events:available_events' %}"
-           class="btn btn-primary btn-lg w-100 w-md-auto">
-
-            Available Events
-
-        </a>
+            <a href="{% url 'events:available_events' %}" class="student-quick-link">
+                <span class="student-quick-icon">
+                    <i class="fa fa-list"></i>
+                </span>
+                <span>
+                    <span class="student-quick-title d-block">Available Events</span>
+                    <span class="student-quick-copy d-block">Find and register for new events</span>
+                </span>
+            </a>
+        </section>
 
     </div>
 

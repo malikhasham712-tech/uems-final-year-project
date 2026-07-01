@@ -4,23 +4,138 @@
 
 {% block content %}
 
-<div class="d-flex justify-content-center">
+<style>
+    .attendance-result-shell{
+        min-height:calc(100vh - 150px);
+        display:flex;
+        align-items:center;
+        justify-content:center;
+    }
 
-    <div class="box text-center" style="max-width: 650px; width: 100%;">
+    .attendance-result-card{
+        max-width:620px;
+        width:100%;
+        text-align:center;
+    }
 
-        <!-- STATUS ICON -->
-        <div class="mb-4">
+    .attendance-status-icon{
+        width:96px;
+        height:96px;
+        border-radius:50%;
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        font-size:42px;
+        margin-bottom:22px;
+    }
 
-            {% if success %}
-                <div class="display-1 text-success">✓</div>
-            {% else %}
-                <div class="display-1 text-danger">✕</div>
-            {% endif %}
+    .attendance-status-icon.success{
+        background:#e8f8ef;
+        color:#198754;
+        border:1px solid #bcebd0;
+    }
 
-        </div>
+    .attendance-status-icon.failed{
+        background:#fdecec;
+        color:#dc3545;
+        border:1px solid #f7c6c6;
+    }
+
+    .attendance-title{
+        font-size:30px;
+        font-weight:800;
+        margin-bottom:10px;
+    }
+
+    .attendance-event-box{
+        border:1px solid #e7edf7;
+        background:#f8faff;
+        border-radius:8px;
+        padding:16px;
+        margin:20px 0;
+    }
+
+    .attendance-event-label{
+        color:#667085;
+        font-size:13px;
+        font-weight:700;
+        margin-bottom:4px;
+        text-transform:uppercase;
+    }
+
+    .attendance-event-name{
+        color:#172033;
+        font-size:18px;
+        font-weight:800;
+        overflow-wrap:anywhere;
+    }
+
+    .attendance-message{
+        color:#4b5563;
+        font-size:16px;
+        line-height:1.6;
+        margin-bottom:24px;
+    }
+
+    .attendance-actions{
+        display:grid;
+        grid-template-columns:1fr 1fr;
+        gap:12px;
+    }
+
+    .attendance-actions .btn{
+        min-height:46px;
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        gap:8px;
+        font-weight:700;
+    }
+
+    @media(max-width:576px){
+        .attendance-result-shell{
+            min-height:auto;
+            align-items:flex-start;
+        }
+
+        .attendance-result-card{
+            padding:22px 16px;
+        }
+
+        .attendance-status-icon{
+            width:82px;
+            height:82px;
+            font-size:36px;
+            margin-bottom:18px;
+        }
+
+        .attendance-title{
+            font-size:24px;
+            line-height:1.25;
+        }
+
+        .attendance-actions{
+            grid-template-columns:1fr;
+        }
+    }
+</style>
+
+<div class="attendance-result-shell">
+
+    <div class="box attendance-result-card">
+
+        {% if success %}
+            <div class="attendance-status-icon success" aria-hidden="true">
+                <i class="fa fa-check"></i>
+            </div>
+        {% else %}
+            <div class="attendance-status-icon failed" aria-hidden="true">
+                <i class="fa fa-xmark"></i>
+            </div>
+        {% endif %}
 
         <!-- TITLE -->
-        <h3 class="fw-bold mb-3 {% if success %}text-success{% else %}text-danger{% endif %}">
+        <h3 class="attendance-title {% if success %}text-success{% else %}text-danger{% endif %}">
             {% if success %}
                 Attendance Successful
             {% else %}
@@ -28,27 +143,33 @@
             {% endif %}
         </h3>
 
-        <!-- EVENT NAME -->
-        <h5 class="fw-semibold mb-3 text-dark">
-            {{ event.name }}
-        </h5>
+        <div class="attendance-event-box">
+            <div class="attendance-event-label">
+                Event
+            </div>
+            <div class="attendance-event-name">
+                {{ event.name }}
+            </div>
+        </div>
 
         <!-- MESSAGE -->
-        <p class="text-muted fs-6 mb-4">
+        <p class="attendance-message">
             {{ message }}
         </p>
 
         <!-- ACTION BUTTONS -->
-        <div class="d-grid gap-2">
+        <div class="attendance-actions">
 
             <a href="{% url 'events:my_events' %}"
-               class="btn btn-primary btn-lg">
-                Go To My Events
+               class="btn btn-primary">
+                <i class="fa fa-calendar-check"></i>
+                My Events
             </a>
 
             <a href="{% url 'events:dashboard' %}"
                class="btn btn-outline-secondary">
-                Back To Dashboard
+                <i class="fa fa-home"></i>
+                Dashboard
             </a>
 
         </div>

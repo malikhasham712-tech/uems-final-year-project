@@ -233,11 +233,18 @@ def my_events(request):
         )
         events = [registration.event for registration in registrations]
         role = "student"
+        attendance_event_ids = set(
+            Attendance.objects.filter(
+                student=request.user,
+                event_id__in=[event.id for event in events]
+            ).values_list("event_id", flat=True)
+        )
 
         # ADD FEEDBACK STATUS FOR EACH EVENT
         for registration in registrations:
             event = registration.event
             event.registration_date = registration.created_at
+            event.attendance_marked = event.id in attendance_event_ids
             event.has_feedback = Feedback.objects.filter(
                 event=event,
                 student=request.user
@@ -693,7 +700,7 @@ def mark_attendance(request, event_id):
         return render(request, "events/attendance_result.html", {
             "success": False,
             "event": event,
-            "message": "❌ You are not registered for this event."
+            "message": "You are not registered for this event."
         })
 
     # STEP 2: CREATE OR GET ATTENDANCE (NO DUPLICATE ISSUES)
@@ -706,7 +713,7 @@ def mark_attendance(request, event_id):
         return render(request, "events/attendance_result.html", {
             "success": True,
             "event": event,
-            "message": "✅ Attendance marked successfully!"
+            "message": "Attendance marked successfully!"
         })
 
     # STEP 3: ALREADY EXISTS
