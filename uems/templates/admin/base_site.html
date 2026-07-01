@@ -95,6 +95,13 @@
         width: 100%;
     }
 
+    #changelist .actions,
+    #result_list .action-checkbox,
+    #result_list .action-checkbox-column,
+    #result_list input.action-select {
+        display: none !important;
+    }
+
     #changelist .uems-changelist-footer {
         display: block;
         width: 100%;
@@ -136,6 +143,15 @@
     #result_list td {
         padding-top: 12px;
         padding-bottom: 12px;
+    }
+
+    #result_list th.column-name,
+    #result_list td.field-name {
+        text-align: left;
+    }
+
+    body.model-category #result_list th.field-name {
+        text-align: left;
     }
 
     .uems-admin-pagination {

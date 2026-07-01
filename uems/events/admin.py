@@ -125,6 +125,7 @@ class EventAdmin(admin.ModelAdmin):
 
     # list_filter = ('status', 'category')
     search_fields = ('name',)
+    actions = None
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == "organizer":
