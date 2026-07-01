@@ -64,12 +64,18 @@ def attendance_event_list(request):
             "total_attendance": present,
         })
 
+    rows_page = Paginator(
+        rows,
+        10
+    ).get_page(request.GET.get("page"))
+
     return TemplateResponse(
         request,
         "admin/attendance_report_list.html",
         {
             **admin.site.each_context(request),
-            "rows": rows,
+            "rows": rows_page.object_list,
+            "page_obj": rows_page,
             "title": "Attendance Report",
         }
     )
@@ -543,12 +549,18 @@ class EventReportAdmin(admin.ModelAdmin):
                 "feedback_count": feedback_count,
             })
 
+        rows_page = Paginator(
+            rows,
+            10
+        ).get_page(request.GET.get("page"))
+
         return TemplateResponse(
             request,
             "admin/event_report_list.html",
             {
                 **self.admin_site.each_context(request),
-                "rows": rows,
+                "rows": rows_page.object_list,
+                "page_obj": rows_page,
                 "title": "Feedback Report",
             }
         )

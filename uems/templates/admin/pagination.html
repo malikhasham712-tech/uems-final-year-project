@@ -1,0 +1,44 @@
+{% load i18n uems_admin_pagination %}
+{% uems_admin_pagination cl as pagination %}
+
+<nav class="paginator uems-admin-pagination" aria-labelledby="pagination">
+    <h2 id="pagination" class="visually-hidden">
+        {% blocktranslate with name=pagination.verbose_name_plural %}Pagination {{ name }}{% endblocktranslate %}
+    </h2>
+
+    <div>
+        {% if pagination.count %}
+            Showing {{ pagination.start }}-{{ pagination.end }} of {{ pagination.count }}
+        {% else %}
+            Showing 0 of 0
+        {% endif %}
+    </div>
+
+    <div class="uems-admin-pagination-links">
+        {% if pagination.has_previous %}
+            <a href="{{ pagination.previous_url }}" class="uems-admin-page-btn">Previous</a>
+        {% else %}
+            <span class="uems-admin-page-btn disabled">Previous</span>
+        {% endif %}
+
+        {% for page_item in pagination.page_items %}
+            {% if page_item.ellipsis %}
+                <span class="uems-admin-page-btn disabled">{{ page_item.label }}</span>
+            {% elif page_item.current %}
+                <span class="uems-admin-page-btn current">{{ page_item.label }}</span>
+            {% else %}
+                <a href="{{ page_item.url }}" class="uems-admin-page-btn">{{ page_item.label }}</a>
+            {% endif %}
+        {% endfor %}
+
+        {% if pagination.has_next %}
+            <a href="{{ pagination.next_url }}" class="uems-admin-page-btn">Next</a>
+        {% else %}
+            <span class="uems-admin-page-btn disabled">Next</span>
+        {% endif %}
+
+        {% if pagination.show_all_url %}
+            <a href="{{ pagination.show_all_url }}" class="uems-admin-page-btn">{% translate "Show all" %}</a>
+        {% endif %}
+    </div>
+</nav>

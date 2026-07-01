@@ -340,34 +340,7 @@
                     </table>
                 </div>
 
-                <div class="report-pagination">
-                    <div>
-                        {% if page_obj.paginator.count %}
-                            Showing {{ page_obj.start_index }}-{{ page_obj.end_index }} of {{ page_obj.paginator.count }}
-                        {% else %}
-                            Showing 0 of 0
-                        {% endif %}
-                    </div>
-                    <div class="report-pagination-links">
-                        {% if page_obj.has_previous %}
-                            <a href="?page={{ page_obj.previous_page_number }}" class="report-admin-btn secondary">Previous</a>
-                        {% else %}
-                            <span class="report-admin-btn secondary disabled">Previous</span>
-                        {% endif %}
-                        {% for page_number in page_obj.paginator.page_range %}
-                            {% if page_number == page_obj.number %}
-                                <span class="report-admin-btn secondary report-page-number current">{{ page_number }}</span>
-                            {% else %}
-                                <a href="?page={{ page_number }}" class="report-admin-btn secondary report-page-number">{{ page_number }}</a>
-                            {% endif %}
-                        {% endfor %}
-                        {% if page_obj.has_next %}
-                            <a href="?page={{ page_obj.next_page_number }}" class="report-admin-btn secondary">Next</a>
-                        {% else %}
-                            <span class="report-admin-btn secondary disabled">Next</span>
-                        {% endif %}
-                    </div>
-                </div>
+                {% include "admin/uems_pagination.html" %}
             </div>
         {% else %}
             <div class="report-card empty-box">This event does not have any feedback yet.</div>
