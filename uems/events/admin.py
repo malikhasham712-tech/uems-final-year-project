@@ -286,7 +286,10 @@ class EventAdmin(admin.ModelAdmin):
         )
 
         return format_html(
-            '<a class="button" href="{}">Message Organizer</a>',
+            '<a class="button message-organizer-btn" href="{}">'
+            '<span class="desktop-label">Message Organizer</span>'
+            '<span class="mobile-label">Message</span>'
+            '</a>',
             url
         )
 

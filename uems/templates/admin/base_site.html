@@ -99,6 +99,18 @@
         width: 100%;
     }
 
+    .uems-mobile-admin-nav {
+        display: none;
+    }
+
+    #result_list .message-organizer-btn .mobile-label {
+        display: none;
+    }
+
+    #result_list .message-organizer-btn .desktop-label {
+        display: inline;
+    }
+
     #changelist .actions,
     #result_list .action-checkbox,
     #result_list .action-checkbox-column,
@@ -245,6 +257,74 @@
     }
 
     @media (max-width: 767px) {
+        #toggle-nav-sidebar,
+        #nav-sidebar {
+            display: none !important;
+        }
+
+        body:not(.login) #container > .main {
+            display: block;
+        }
+
+        body:not(.login) .main.shifted > #nav-sidebar + .content {
+            max-width: none;
+            width: 100%;
+        }
+
+        .uems-mobile-admin-nav {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            padding: 10px 12px;
+            background: var(--darkened-bg);
+            border-bottom: 1px solid var(--hairline-color);
+        }
+
+        .uems-mobile-admin-nav::-webkit-scrollbar {
+            height: 4px;
+        }
+
+        .uems-mobile-nav-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            flex: 0 0 auto;
+            padding: 4px 0;
+            border: 0;
+            border-radius: 0;
+            color: var(--link-fg) !important;
+            background: transparent;
+            font-size: 12px;
+            font-weight: 600;
+            line-height: 1;
+            text-decoration: underline;
+        }
+
+        .uems-mobile-nav-link:hover,
+        .uems-mobile-nav-link:focus {
+            color: var(--link-selected-fg) !important;
+            text-decoration: underline;
+        }
+
+        .uems-mobile-nav-link .admin-sidebar-badge {
+            margin-left: 0;
+        }
+
+        #result_list a.message-organizer-btn {
+            min-width: 74px;
+            white-space: nowrap;
+        }
+
+        #result_list .message-organizer-btn .desktop-label {
+            display: none;
+        }
+
+        #result_list .message-organizer-btn .mobile-label {
+            display: inline;
+        }
+
         .admin-panel-footer.has-nav-sidebar {
             margin-left: 0;
         }
@@ -301,6 +381,21 @@
 
 {% block nav-global %}{% endblock %}
 
+{% block nav-breadcrumbs %}
+{{ block.super }}
+{% if has_permission %}
+<nav class="uems-mobile-admin-nav" aria-label="Mobile admin navigation">
+    <a href="{% url 'admin:accounts_profile_changelist' %}" class="uems-mobile-nav-link">Profiles</a>
+    <a href="{% url 'admin:auth_group_changelist' %}" class="uems-mobile-nav-link">Groups</a>
+    <a href="{% url 'admin:auth_user_changelist' %}" class="uems-mobile-nav-link">Users</a>
+    <a href="{% url 'admin:events_event_changelist' %}" class="uems-mobile-nav-link">Events</a>
+    <a href="{% url 'admin:events_category_changelist' %}" class="uems-mobile-nav-link">Categories</a>
+    <a href="{% url 'events:message_inbox' %}" class="uems-mobile-nav-link uems-mobile-messages-link">Messages</a>
+    <a href="{% url 'admin:event_report_module' %}" class="uems-mobile-nav-link">Reports</a>
+</nav>
+{% endif %}
+{% endblock %}
+
 {% block footer %}
 {% if has_permission %}
 <div class="admin-panel-footer{% if is_nav_sidebar_enabled %} has-nav-sidebar{% endif %}">
@@ -316,32 +411,34 @@
     (function(){
         const unreadMessagesUrl = "{% url 'events:unread_message_count' %}";
 
-        function getMessagesLink(){
-            return document.querySelector(
-                "#nav-sidebar tr.model-messages th a, .app-events tr.model-messages th a"
+        function getMessagesLinks(){
+            return document.querySelectorAll(
+                "#nav-sidebar tr.model-messages th a, .app-events tr.model-messages th a, .uems-mobile-messages-link"
             );
         }
 
         function updateMessagesBadge(count){
-            const link = getMessagesLink();
+            const links = getMessagesLinks();
 
-            if(!link){
+            if(!links.length){
                 return;
             }
 
-            let badge = link.querySelector(".admin-sidebar-badge");
+            links.forEach((link) => {
+                let badge = link.querySelector(".admin-sidebar-badge");
 
-            if(count > 0){
-                if(!badge){
-                    badge = document.createElement("span");
-                    badge.className = "admin-sidebar-badge";
-                    link.appendChild(badge);
+                if(count > 0){
+                    if(!badge){
+                        badge = document.createElement("span");
+                        badge.className = "admin-sidebar-badge";
+                        link.appendChild(badge);
+                    }
+
+                    badge.textContent = count;
+                } else if(badge){
+                    badge.remove();
                 }
-
-                badge.textContent = count;
-            } else if(badge){
-                badge.remove();
-            }
+            });
         }
 
         function refreshMessagesBadge(){
