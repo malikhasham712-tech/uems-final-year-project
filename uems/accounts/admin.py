@@ -1,7 +1,10 @@
 from django.contrib import admin
+from django.contrib.auth.models import User
 from django.urls import reverse
 from django.utils.html import format_html
 from .models import Profile
+
+User._meta.get_field('is_staff').verbose_name = 'Admin status'
 
 # Register Profile
 class ProfileAdmin(admin.ModelAdmin):

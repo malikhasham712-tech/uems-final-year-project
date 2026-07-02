@@ -156,7 +156,7 @@
 
             <div class="admin-profile-panel">
                 <h2>Account Settings</h2>
-                <p class="admin-profile-row"><strong>Staff Status:</strong> {{ request.user.is_staff|yesno:"Yes,No" }}</p>
+                <p class="admin-profile-row"><strong>Admin Status:</strong> {{ request.user.is_staff|yesno:"Yes,No" }}</p>
                 <p class="admin-profile-row"><strong>Superuser:</strong> {{ request.user.is_superuser|yesno:"Yes,No" }}</p>
                 <p class="admin-profile-row"><strong>Email Verified:</strong> {{ profile.email_verified|yesno:"Yes,No" }}</p>
             </div>
