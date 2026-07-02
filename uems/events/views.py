@@ -891,6 +891,12 @@ def submit_proposal(request, event_id):
     ):
         return redirect("events:my_events")
 
+    initial_data = {
+        "proposed_venue": event.venue or "",
+        "proposed_date": event.date,
+        "details": event.description or "",
+    }
+
     if request.method == "POST":
 
         form = ProposalForm(request.POST)
@@ -914,9 +920,11 @@ def submit_proposal(request, event_id):
                 "events:view_proposals",
                 event_id=event.id
             )
+    else:
+        form = ProposalForm(initial=initial_data)
 
     return render(request, "events/submit_proposal.html", {
-        "form": ProposalForm(),
+        "form": form,
         "event": event,
         "role": "organizer",
         **notif_context(request)

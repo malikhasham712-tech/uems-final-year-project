@@ -20,8 +20,8 @@ class ProposalForm(forms.ModelForm):
 
         widgets = {
             'proposed_venue': forms.TextInput(attrs={'class': 'form-control'}),
-            'details': forms.Textarea(attrs={'class': 'form-control'}),
-            'requirements': forms.Textarea(attrs={'class': 'form-control'}),
+            'details': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'requirements': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
         }
 
 

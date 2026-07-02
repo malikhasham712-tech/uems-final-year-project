@@ -21,23 +21,29 @@
 
                 <div class="mb-3">
                     <label class="form-label">Venue</label>
-                    <input type="text" name="proposed_venue" class="form-control" required>
+                    {{ form.proposed_venue }}
+                    {{ form.proposed_venue.errors }}
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label">Date</label>
-                    <input type="date" name="proposed_date" class="form-control" required>
+                    {{ form.proposed_date }}
+                    {{ form.proposed_date.errors }}
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label">Description</label>
-                    <textarea name="details" class="form-control" rows="3" required></textarea>
+                    {{ form.details }}
+                    {{ form.details.errors }}
                 </div>
 
+                {% comment %}
                 <div class="mb-3">
                     <label class="form-label">Requirements</label>
-                    <textarea name="requirements" class="form-control" rows="3" required></textarea>
+                    {{ form.requirements }}
+                    {{ form.requirements.errors }}
                 </div>
+                {% endcomment %}
 
                 <div class="d-flex justify-content-between gap-2 flex-wrap">
                     <a href="javascript:history.back()" class="btn btn-outline-secondary w-100 w-md-auto">

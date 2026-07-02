@@ -498,10 +498,17 @@ class EventProposalAdmin(admin.ModelAdmin):
             return [
                 f.name
                 for f in obj._meta.fields
-                if f.name != "status"
+                if f.name not in ("status", "requirements")
             ]
 
         return []
+
+    def get_fields(self, request, obj=None):
+        return [
+            field.name
+            for field in self.model._meta.fields
+            if field.name != "requirements"
+        ]
 
     @admin.action(description="Approve selected proposals")
     def approve_proposals(self, request, queryset):

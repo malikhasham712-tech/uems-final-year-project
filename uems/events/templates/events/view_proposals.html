@@ -6,13 +6,6 @@
 
 <div class="box">
 
-    <!-- BACK BUTTON -->
-    <div class="mb-3">
-        <button onclick="history.back()" class="btn btn-outline-secondary btn-sm">
-            ← Back
-        </button>
-    </div>
-
     <!-- HEADER -->
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-4">
         <h4 class="text-primary fw-bold mb-0">
@@ -24,15 +17,14 @@
 
     <div class="table-responsive">
 
-        <table class="table table-hover align-middle admin-table">
+        <table class="table table-hover align-middle text-center admin-table">
 
             <thead>
                 <tr>
-                    <th>Title</th>
                     <th>Submitted By</th>
                     <th>Date Submitted</th>
                     <th>Status</th>
-                    <th class="text-center">Action</th>
+                    <th>Action</th>
                 </tr>
             </thead>
 
@@ -40,11 +32,6 @@
 
                 {% for proposal in proposals %}
                 <tr>
-
-                    <!-- TITLE -->
-                    <td class="fw-semibold">
-                        {{ proposal.title }}
-                    </td>
 
                     <!-- ORGANIZER -->
                     <td>
@@ -83,7 +70,7 @@
                     </td>
 
                     <!-- ACTION -->
-                    <td class="text-start">
+                    <td>
                         <div class="small text-muted">
                             <div><strong>Venue:</strong> {{ proposal.proposed_venue }}</div>
                             <div><strong>Date:</strong> {{ proposal.proposed_date|date:"d M Y"|default:"-" }}</div>
