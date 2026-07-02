@@ -83,6 +83,77 @@
         white-space:normal;
     }
 
+    .student-events-pagination {
+        display:grid;
+        grid-template-columns:auto 1fr;
+        align-items:center;
+        gap:12px;
+        border-top:1px solid #dee2e6;
+        border-bottom:1px solid #dee2e6;
+        padding:12px 0;
+        margin-top:0;
+        color:#5f6f89;
+        font-size:14px;
+    }
+
+    .student-events-pagination-links {
+        display:flex;
+        flex-wrap:wrap;
+        justify-content:flex-end;
+        gap:8px;
+    }
+
+    .student-events-page-link {
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-width:34px;
+        min-height:34px;
+        padding:7px 13px;
+        border:1px solid #d7e2f2;
+        border-radius:5px;
+        background:#fff;
+        color:#0d6efd;
+        font-weight:600;
+        line-height:1;
+        text-decoration:none;
+    }
+
+    .student-events-page-link:hover {
+        background:#edf4ff;
+        color:#0a58ca;
+        text-decoration:none;
+    }
+
+    .student-events-page-link.current {
+        background:#0d6efd;
+        border-color:#0d6efd;
+        color:#fff;
+        pointer-events:none;
+    }
+
+    .student-events-page-link.disabled {
+        color:#9aa7b8;
+        background:#f8f9fa;
+        pointer-events:none;
+    }
+
+    @media(max-width:767px){
+        .student-events-pagination{
+            grid-template-columns:1fr;
+            align-items:stretch;
+            margin-top:14px;
+        }
+
+        .student-events-pagination-links{
+            justify-content:flex-end;
+        }
+
+        .student-events-page-link{
+            flex:0 0 auto;
+        }
+    }
+
     @media(max-width:420px){
         .student-event-row{
             flex-direction:column;
@@ -346,6 +417,36 @@
         {% endfor %}
 
     </div>
+
+    {% if page_obj %}
+        <div class="student-events-pagination">
+            <div>
+                Showing {{ page_obj.start_index }}-{{ page_obj.end_index }} of {{ page_obj.paginator.count }}
+            </div>
+
+            <div class="student-events-pagination-links">
+                {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}" class="student-events-page-link">Previous</a>
+                {% else %}
+                    <span class="student-events-page-link disabled">Previous</span>
+                {% endif %}
+
+                {% for page_number in page_obj.paginator.page_range %}
+                    {% if page_number == page_obj.number %}
+                        <span class="student-events-page-link current">{{ page_number }}</span>
+                    {% else %}
+                        <a href="?page={{ page_number }}" class="student-events-page-link">{{ page_number }}</a>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}" class="student-events-page-link">Next</a>
+                {% else %}
+                    <span class="student-events-page-link disabled">Next</span>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
 
     {% else %}
 

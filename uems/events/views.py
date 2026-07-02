@@ -6,6 +6,7 @@ from django.contrib import messages
 from django.contrib.auth.models import User
 from django.http import HttpResponse
 from django.http import JsonResponse
+from django.core.paginator import Paginator
 from django.urls import reverse
 from django.db.models import Q
 
@@ -170,11 +171,17 @@ def dashboard(request):
             "proposals",
             "registrations",
             "attendances"
-        )
+        ).order_by("-date", "name")
+
+        events_page = Paginator(
+            events,
+            10
+        ).get_page(request.GET.get("page"))
 
         return render(request, "accounts/dashboard.html", {
             "role": "organizer",
-            "events": events,
+            "events": events_page.object_list,
+            "page_obj": events_page,
             **notif_context(request)
         })
 
@@ -240,7 +247,7 @@ def my_events(request):
         ).select_related(
             "event",
             "event__organizer"
-        )
+        ).order_by("-created_at")
         events = [registration.event for registration in registrations]
         role = "student"
         attendance_event_ids = set(
@@ -260,8 +267,14 @@ def my_events(request):
                 student=request.user
             ).exists()
 
+    events_page = Paginator(
+        events,
+        10
+    ).get_page(request.GET.get("page"))
+
     return render(request, "events/my_events.html", {
-        "events": events,
+        "events": events_page.object_list,
+        "page_obj": events_page,
         "role": role,
         **notif_context(request)
     })
@@ -436,11 +449,17 @@ def event_registrations(request, event_id):
 
     regs = EventRegistration.objects.filter(
         event=event
-    ).select_related("student")
+    ).select_related("student").order_by("-created_at")
+
+    registrations_page = Paginator(
+        regs,
+        10
+    ).get_page(request.GET.get("page"))
 
     return render(request, "events/event_registrations.html", {
         "event": event,
-        "registrations": regs,
+        "registrations": registrations_page.object_list,
+        "page_obj": registrations_page,
         "total": regs.count(),
         "role": "organizer",
         **notif_context(request)
@@ -522,8 +541,14 @@ def message_inbox(request):
             ).count()
         })
 
+    conversations_page = Paginator(
+        conversations,
+        10
+    ).get_page(request.GET.get("page"))
+
     context = {
-        "conversations": conversations,
+        "conversations": conversations_page.object_list,
+        "page_obj": conversations_page,
         "role": role,
         **notif_context(request)
     }
@@ -807,9 +832,15 @@ def attendance_records(request, event_id):
 
     percentage = round((present_count / len(data)) * 100, 2) if data else 0
 
+    attendance_page = Paginator(
+        data,
+        10
+    ).get_page(request.GET.get("page"))
+
     return render(request, "events/view_attendance.html", {
         "event": event,
-        "data": data,
+        "data": attendance_page.object_list,
+        "page_obj": attendance_page,
         "total_students": len(data),
         "present": present_count,
         "absent": absent_count,
