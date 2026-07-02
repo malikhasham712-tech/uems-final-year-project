@@ -149,6 +149,46 @@
         padding-bottom: 12px;
     }
 
+    .uems-admin-detail-page {
+        width: 100%;
+        max-width: none;
+        box-sizing: border-box;
+    }
+
+    .uems-admin-detail-page .module {
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+
+    .uems-admin-detail-page .uems-detail-table-module,
+    .uems-admin-detail-page .uems-detail-table-module .results {
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .uems-admin-detail-page .uems-detail-table-module .results {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .uems-admin-detail-page .uems-detail-table-module #result_list {
+        width: 100%;
+        min-width: 760px;
+        table-layout: auto;
+    }
+
+    .uems-admin-detail-page .uems-detail-table-module #result_list th,
+    .uems-admin-detail-page .uems-detail-table-module #result_list td {
+        white-space: nowrap;
+    }
+
+    .uems-admin-detail-page .uems-detail-table-module #result_list .field-email,
+    .uems-admin-detail-page .uems-detail-table-module #result_list .field-message {
+        min-width: 220px;
+        white-space: normal;
+        overflow-wrap: anywhere;
+    }
+
     #result_list th.column-name,
     #result_list td.field-name {
         text-align: left;
