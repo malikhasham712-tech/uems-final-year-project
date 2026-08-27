@@ -4,6 +4,8 @@ Django settings for uems project.
 
 from pathlib import Path
 
+from decouple import config
+
 # ----------------------
 # BASE DIRECTORY
 # ----------------------
@@ -13,14 +15,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # ----------------------
 # SECURITY
 # ----------------------
-SECRET_KEY = 'django-insecure-l)qdv$kc40ro9&yjd6=$p&_fm6^b^22eii^v(r2ww1au1'
+SECRET_KEY = config('SECRET_KEY')
 
-DEBUG = True
+DEBUG = config('DEBUG', default=False, cast=bool)
 
 ALLOWED_HOSTS = [
     "127.0.0.1",
     "localhost",
-    "192.168.1.8"
+    "192.168.1.1"
 ]
 
 
@@ -30,7 +32,7 @@ ALLOWED_HOSTS = [
 CSRF_TRUSTED_ORIGINS = [
     "http://127.0.0.1:8000",
     "http://localhost:8000",
-    "http://192.168.1.8:8000",
+    "http://192.168.1.1:8000",
     "http://192.168.1.10:8000",
 ]
 CSRF_COOKIE_HTTPONLY = False
@@ -117,11 +119,11 @@ WSGI_APPLICATION = 'uems.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'uems_db',
-        'USER': 'uems_user',
-        'PASSWORD': 'root_mysql_2026',
-        'HOST': 'localhost',
-        'PORT': '3306',
+        'NAME': config('DB_NAME'),
+        'USER': config('DB_USER'),
+        'PASSWORD': config('DB_PASSWORD'),
+        'HOST': config('DB_HOST'),
+        'PORT': config('DB_PORT'),
         'OPTIONS': {
             'charset': 'utf8mb4',
         }
@@ -173,8 +175,8 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'uemsproject@gmail.com'
-EMAIL_HOST_PASSWORD = 'qpuumniyppqxmnhj'
+EMAIL_HOST_USER = config('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 
