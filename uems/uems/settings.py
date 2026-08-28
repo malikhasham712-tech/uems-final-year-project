@@ -19,10 +19,12 @@ SECRET_KEY = config('SECRET_KEY')
 
 DEBUG = config('DEBUG', default=False, cast=bool)
 
+LOCAL_IP = config('LOCAL_IP', default='127.0.0.1')
+
 ALLOWED_HOSTS = [
     "127.0.0.1",
     "localhost",
-    "192.168.1.1"
+    LOCAL_IP
 ]
 
 
@@ -32,11 +34,9 @@ ALLOWED_HOSTS = [
 CSRF_TRUSTED_ORIGINS = [
     "http://127.0.0.1:8000",
     "http://localhost:8000",
-    "http://192.168.1.1:8000",
-    "http://192.168.1.10:8000",
+    f"http://{LOCAL_IP}:8000",
 ]
-CSRF_COOKIE_HTTPONLY = False
-CSRF_COOKIE_SECURE = False
+
 
 # ----------------------
 # SESSION FIX (🔥 MOBILE LOGIN STABILITY)
